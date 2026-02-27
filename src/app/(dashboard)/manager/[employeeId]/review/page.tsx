@@ -53,7 +53,7 @@ export default async function ManagerReviewPage({
       )}
 
       {!appraisal?.manager_submitted_at && (
-        <form action={submitManagerRating} className="space-y-4 rounded border p-4">
+        <form action={async (fd: FormData) => { await submitManagerRating({ data: null, error: null }, fd) }} className="space-y-4 rounded border p-4">
           <h2 className="text-lg font-semibold">Your Rating</h2>
           <input type="hidden" name="cycle_id" value={cycleId} />
           <input type="hidden" name="employee_id" value={employeeId} />

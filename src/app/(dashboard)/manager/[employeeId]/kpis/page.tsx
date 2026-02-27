@@ -31,14 +31,14 @@ export default async function KpiSettingPage({
               <p className="font-medium">{kpi.title}</p>
               <p className="text-sm text-muted-foreground">Weight: {kpi.weight}%</p>
             </div>
-            <form action={deleteKpi.bind(null, kpi.id, employeeId)}>
+            <form action={async () => { await deleteKpi(kpi.id, employeeId) }}>
               <Button variant="ghost" size="sm" type="submit">Remove</Button>
             </form>
           </div>
         ))}
       </div>
 
-      <form action={addKpi} className="space-y-4 rounded border p-4">
+      <form action={async (fd: FormData) => { await addKpi(fd) }} className="space-y-4 rounded border p-4">
         <h2 className="text-lg font-semibold">Add KPI</h2>
         <input type="hidden" name="cycle_id" value={cycleId} />
         <input type="hidden" name="employee_id" value={employeeId} />
