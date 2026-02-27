@@ -18,30 +18,34 @@ export default async function AdminUsersPage() {
           <Button type="submit">Sync from Zimyo</Button>
         </form>
       </div>
-      <div className="rounded-md border">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/50">
-              <th className="p-3 text-left">Name</th>
-              <th className="p-3 text-left">Email</th>
-              <th className="p-3 text-left">Department</th>
-              <th className="p-3 text-left">Role</th>
-              <th className="p-3 text-left">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(users as User[] ?? []).map(u => (
-              <tr key={u.id} className="border-b">
-                <td className="p-3">{u.full_name}</td>
-                <td className="p-3">{u.email}</td>
-                <td className="p-3">{u.department}</td>
-                <td className="p-3"><Badge variant="outline">{u.role}</Badge></td>
-                <td className="p-3">{u.is_active ? 'Active' : 'Inactive'}</td>
+      {(!users || users.length === 0) ? (
+        <p className="text-muted-foreground">No users yet — upload a CSV or sync with Zimyo.</p>
+      ) : (
+        <div className="rounded-md border">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                <th className="p-3 text-left">Name</th>
+                <th className="p-3 text-left">Email</th>
+                <th className="p-3 text-left">Department</th>
+                <th className="p-3 text-left">Role</th>
+                <th className="p-3 text-left">Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {(users as User[]).map(u => (
+                <tr key={u.id} className="border-b">
+                  <td className="p-3">{u.full_name}</td>
+                  <td className="p-3">{u.email}</td>
+                  <td className="p-3">{u.department}</td>
+                  <td className="p-3"><Badge variant="outline">{u.role}</Badge></td>
+                  <td className="p-3">{u.is_active ? 'Active' : 'Inactive'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }
