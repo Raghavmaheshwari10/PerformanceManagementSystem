@@ -5,7 +5,7 @@ import { requireRole } from '@/lib/auth'
 import { fetchZimyoEmployees, transformZimyoEmployee } from '@/lib/zimyo'
 import { revalidatePath } from 'next/cache'
 
-export async function triggerZimyoSync() {
+export async function triggerZimyoSync(): Promise<void> {
   const user = await requireRole(['admin'])
   const supabase = await createServiceClient()
 
@@ -27,28 +27,38 @@ export async function triggerZimyoSync() {
       emailToId.set(transformed.email, existing.id)
       updated++
     } else {
-      const { data: newUser } = await supabase.from('users').insert({ ...transformed, synced_at: new Date().toISOString() }).select('id').single()
-      if (newUser) emailToId.set(transformed.email, newUser.id)
+      const { data: newUser } = await supabase.from('users').insert({ ...transformed, synced_at: new Date().toISOString() }).select('id, email').single()
+      if (newUser) emailToId.set(newUser.email, newUser.id)
       added++
     }
   }
 
+  // Build parallel arrays for bulk RPC — single UPDATE with unnest
+  const zimyoIds: string[] = []
+  const managerIds: string[] = []
   for (const emp of zimyoEmployees) {
     if (emp.reporting_manager_email) {
       const managerId = emailToId.get(emp.reporting_manager_email)
       if (managerId) {
-        await supabase.from('users').update({ manager_id: managerId }).eq('zimyo_id', emp.employee_id)
+        zimyoIds.push(emp.employee_id)
+        managerIds.push(managerId)
       }
     }
   }
+  if (zimyoIds.length > 0) {
+    await supabase.rpc('bulk_update_manager_links', {
+      p_zimyo_ids: zimyoIds,
+      p_manager_ids: managerIds,
+    })
+  }
 
+  // Deactivate users no longer in Zimyo
   const activeZimyoIds = zimyoEmployees.map(e => e.employee_id)
   const { data: allUsers } = await supabase.from('users').select('zimyo_id').eq('is_active', true)
-  for (const u of allUsers ?? []) {
-    if (!activeZimyoIds.includes(u.zimyo_id)) {
-      await supabase.from('users').update({ is_active: false }).eq('zimyo_id', u.zimyo_id)
-      deactivated++
-    }
+  const toDeactivate = (allUsers ?? []).filter(u => !activeZimyoIds.includes(u.zimyo_id)).map(u => u.zimyo_id)
+  if (toDeactivate.length > 0) {
+    await supabase.from('users').update({ is_active: false }).in('zimyo_id', toDeactivate)
+    deactivated = toDeactivate.length
   }
 
   await supabase.from('audit_logs').insert({
@@ -59,10 +69,9 @@ export async function triggerZimyoSync() {
   })
 
   revalidatePath('/admin/users')
-  return { added, updated, deactivated }
 }
 
-export async function updateUserRole(userId: string, role: string) {
+export async function updateUserRole(userId: string, role: string): Promise<void> {
   const user = await requireRole(['admin'])
   const supabase = await createServiceClient()
 
