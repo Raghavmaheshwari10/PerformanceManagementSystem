@@ -55,8 +55,9 @@ export default async function CalibrationPage({ searchParams }: { searchParams: 
                 <td className="p-3 font-medium">{a.final_rating ?? a.manager_rating}</td>
                 {isCalibrating && (
                   <td className="p-3">
-                    <form action={overrideRating} className="flex gap-2">
+                    <form action={async (fd: FormData) => { await overrideRating({ data: null, error: null }, fd) }} className="flex gap-2">
                       <input type="hidden" name="appraisal_id" value={a.id} />
+                      <input type="hidden" name="cycle_id" value={cycleId} />
                       <select name="final_rating" className="rounded border px-2 py-1 text-sm">
                         {RATING_TIERS.map(t => <option key={t.code} value={t.code}>{t.code}</option>)}
                       </select>
@@ -73,12 +74,12 @@ export default async function CalibrationPage({ searchParams }: { searchParams: 
 
       <div className="flex gap-3">
         {isCalibrating && (
-          <form action={lockCycle.bind(null, cycleId!)}>
+          <form action={async () => { await lockCycle(cycleId!) }}>
             <Button variant="destructive" type="submit">Lock Cycle</Button>
           </form>
         )}
         {isLocked && (
-          <form action={publishCycle.bind(null, cycleId!)}>
+          <form action={async () => { await publishCycle(cycleId!) }}>
             <Button type="submit">Publish Cycle</Button>
           </form>
         )}
