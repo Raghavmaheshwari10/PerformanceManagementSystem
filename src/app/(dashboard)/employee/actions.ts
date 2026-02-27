@@ -38,6 +38,17 @@ export async function submitSelfReview(_prev: ActionResult, formData: FormData):
   }, { onConflict: 'cycle_id,employee_id' })
 
   if (error) return { data: null, error: error.message }
+
+  // Notify the manager that the employee submitted their self-review
+  const { data: employee } = await supabase.from('users').select('manager_id').eq('id', user.id).single()
+  if (employee?.manager_id) {
+    await supabase.from('notifications').insert({
+      recipient_id: employee.manager_id,
+      type: 'review_submitted',
+      payload: { cycle_id: cycleId, employee_id: user.id },
+    })
+  }
+
   revalidatePath('/employee')
   return { data: null, error: null }
 }

@@ -4,22 +4,30 @@ const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
-const TEMPLATES: Record<string, { subject: string; bodyFn: (payload: any) => string }> = {
+const TEMPLATES: Record<string, { subject: string; bodyFn: (payload: any, recipientName: string) => string }> = {
   cycle_kpi_setting_open: {
     subject: 'KPI Setting is Open',
-    bodyFn: (p) => `Hi, the KPI setting phase for ${p.cycle_name ?? 'the current cycle'} is now open. Please set KPIs for your direct reports.`,
+    bodyFn: (p, name) => `Hi ${name},\n\nThe KPI setting phase for ${p.cycle_name ?? 'the current cycle'} is now open. Please set KPIs for your direct reports.\n\nThank you.`,
   },
   cycle_self_review_open: {
     subject: 'Self Review is Open',
-    bodyFn: (p) => `Hi, self-review for ${p.cycle_name ?? 'the current cycle'} is now open. Please submit your self-assessment.`,
+    bodyFn: (p, name) => `Hi ${name},\n\nSelf-review for ${p.cycle_name ?? 'the current cycle'} is now open. Please submit your self-assessment.\n\nThank you.`,
   },
   cycle_manager_review_open: {
     subject: 'Manager Review is Open',
-    bodyFn: (p) => `Hi, the manager review phase for ${p.cycle_name ?? 'the current cycle'} is now open. Please submit ratings for your direct reports.`,
+    bodyFn: (p, name) => `Hi ${name},\n\nThe manager review phase for ${p.cycle_name ?? 'the current cycle'} is now open. Please submit ratings for your direct reports.\n\nThank you.`,
   },
   cycle_published: {
     subject: 'Review Cycle Results Published',
-    bodyFn: (p) => `Hi, the results for ${p.cycle_name ?? 'the current cycle'} have been published. Log in to view your final rating.`,
+    bodyFn: (p, name) => `Hi ${name},\n\nThe results for ${p.cycle_name ?? 'the current cycle'} have been published. Please log in to view your final rating and payout details.\n\nThank you.`,
+  },
+  review_submitted: {
+    subject: 'Employee Submitted Self-Review',
+    bodyFn: (p, name) => `Hi ${name},\n\nAn employee has submitted their self-review for the current cycle. Please log in to review their submission.\n\nThank you.`,
+  },
+  manager_review_submitted: {
+    subject: 'Manager Submitted Rating',
+    bodyFn: (p, name) => `Hi ${name},\n\nA manager has submitted a rating for an employee in the current cycle. Please log in to review it during calibration.\n\nThank you.`,
   },
 }
 
@@ -36,10 +44,20 @@ Deno.serve(async () => {
 
   for (const n of notifications ?? []) {
     const template = TEMPLATES[n.type]
-    if (!template) continue
+    if (!template) {
+      // Unknown type — mark failed to avoid re-processing
+      await supabase.from('notifications').update({ status: 'failed', error_message: `Unknown notification type: ${n.type}` }).eq('id', n.id)
+      failed++
+      continue
+    }
 
     const email = (n as any).users?.email
-    if (!email) continue
+    const recipientName = (n as any).users?.full_name ?? 'there'
+    if (!email) {
+      await supabase.from('notifications').update({ status: 'failed', error_message: 'Recipient email not found' }).eq('id', n.id)
+      failed++
+      continue
+    }
 
     try {
       const res = await fetch('https://api.resend.com/emails', {
@@ -49,7 +67,7 @@ Deno.serve(async () => {
           from: 'PMS <noreply@yourdomain.com>',
           to: [email],
           subject: template.subject,
-          text: template.bodyFn(n.payload ?? {}),
+          text: template.bodyFn(n.payload ?? {}, recipientName),
         }),
       })
 

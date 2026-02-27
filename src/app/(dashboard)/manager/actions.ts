@@ -79,6 +79,19 @@ export async function submitManagerRating(_prev: ActionResult, formData: FormDat
   }, { onConflict: 'cycle_id,employee_id' })
 
   if (error) return { data: null, error: error.message }
+
+  // Notify all HRBPs that manager has submitted a rating
+  const { data: hrbps } = await supabase.from('users').select('id').eq('role', 'hrbp').eq('is_active', true)
+  if (hrbps && hrbps.length > 0) {
+    await supabase.from('notifications').insert(
+      hrbps.map(h => ({
+        recipient_id: h.id,
+        type: 'manager_review_submitted' as const,
+        payload: { cycle_id: cycleId, employee_id: employeeId, manager_id: user.id },
+      }))
+    )
+  }
+
   revalidatePath('/manager')
   return { data: null, error: null }
 }
