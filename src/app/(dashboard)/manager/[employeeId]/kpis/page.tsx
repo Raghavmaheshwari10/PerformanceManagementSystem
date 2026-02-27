@@ -1,30 +1,40 @@
 import { createClient } from '@/lib/supabase/server'
-import { requireRole } from '@/lib/auth'
+import { requireRole, requireManagerOwnership } from '@/lib/auth'
 import { addKpi, deleteKpi } from '../../actions'
-import { Button } from '@/components/ui/button'
+import { SubmitButton } from '@/components/submit-button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
 import type { Kpi, User } from '@/lib/types'
 
 export default async function KpiSettingPage({
   params, searchParams,
 }: {
   params: Promise<{ employeeId: string }>
-  searchParams: Promise<{ cycle?: string }>
+  searchParams: Promise<{ cycle?: string; error?: string }>
 }) {
-  await requireRole(['manager'])
+  const user = await requireRole(['manager'])
   const { employeeId } = await params
-  const { cycle: cycleId } = await searchParams
-  const supabase = await createClient()
+  const { cycle: cycleId, error: pageError } = await searchParams
 
+  await requireManagerOwnership(employeeId, user.id)
+
+  const supabase = await createClient()
   const { data: employee } = await supabase.from('users').select('*').eq('id', employeeId).single()
-  const { data: kpis } = await supabase.from('kpis').select('*').eq('cycle_id', cycleId).eq('employee_id', employeeId)
+  const { data: kpis } = await supabase.from('kpis').select('*').eq('cycle_id', cycleId ?? '').eq('employee_id', employeeId)
 
   return (
     <div className="max-w-2xl space-y-6">
       <h1 className="text-2xl font-bold">KPIs for {(employee as User)?.full_name}</h1>
 
+      {pageError && (
+        <p className="rounded bg-destructive/10 px-3 py-2 text-sm text-destructive">{pageError}</p>
+      )}
+
       <div className="space-y-2">
+        {(!kpis || kpis.length === 0) && (
+          <p className="text-muted-foreground">No KPIs set yet — add one below.</p>
+        )}
         {(kpis as Kpi[] ?? []).map(kpi => (
           <div key={kpi.id} className="flex items-center justify-between rounded border p-3">
             <div>
@@ -52,9 +62,9 @@ export default async function KpiSettingPage({
         </div>
         <div className="space-y-2">
           <Label htmlFor="weight">Weight (%)</Label>
-          <Input id="weight" name="weight" type="number" min="0" max="100" />
+          <Input id="weight" name="weight" type="number" min="1" max="100" />
         </div>
-        <Button type="submit">Add KPI</Button>
+        <SubmitButton pendingLabel="Adding...">Add KPI</SubmitButton>
       </form>
     </div>
   )
