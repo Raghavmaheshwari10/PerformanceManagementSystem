@@ -45,12 +45,14 @@ export default async function EmployeeReviewPage() {
       )}
 
       {/* Zone 1: Action Inbox */}
-      <ActionInbox cycle={cycle} kpis={kpis} review={review} />
+      <div data-tour="action-inbox">
+        <ActionInbox cycle={cycle} kpis={kpis} review={review} />
+      </div>
 
       {/* Zone 2: Two-column layout */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Left: KPI list */}
-        <section className="space-y-3">
+        <section className="space-y-3" data-tour="kpi-list">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Your KPIs
           </h2>
@@ -87,7 +89,9 @@ export default async function EmployeeReviewPage() {
 
       {/* Self-review form */}
       {isSelfReview && review?.status !== "submitted" && (
-        <SelfReviewForm cycleId={cycle.id} review={review} />
+        <div data-tour="self-review-form">
+          <SelfReviewForm cycleId={cycle.id} review={review} />
+        </div>
       )}
 
       {/* Published results */}

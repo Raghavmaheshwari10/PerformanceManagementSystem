@@ -1,12 +1,13 @@
 'use client'
 
-import { useActionState, useState, useRef } from 'react'
+import { useActionState, useState, useRef, useEffect } from 'react'
 import { submitSelfReview, saveDraftReview } from './actions'
 import { SubmitButton } from '@/components/submit-button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { RatingPillSelector, STANDARD_RATING_OPTIONS } from '@/components/rating-pill-selector'
 import { RATING_TIERS } from '@/lib/constants'
+import { useToast } from '@/lib/toast'
 import type { ActionResult, Review } from '@/lib/types'
 
 const INITIAL: ActionResult = { data: null, error: null }
@@ -30,9 +31,22 @@ export function SelfReviewForm({ cycleId, review }: SelfReviewFormProps) {
   const [draftState, draftAction] = useActionState(saveDraftReview, INITIAL)
   const [rating, setRating] = useState(review?.self_rating ?? '')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const { toast } = useToast()
 
   const error = submitState.error ?? draftState.error
   const selectedTier = RATING_TIERS.find(t => t.code === rating)
+
+  useEffect(() => {
+    if (submitState === INITIAL) return
+    if (submitState.error) toast.error(submitState.error)
+    else toast.success('Your self-review has been submitted.')
+  }, [submitState])
+
+  useEffect(() => {
+    if (draftState === INITIAL) return
+    if (draftState.error) toast.error(draftState.error)
+    else toast.success('Draft saved.')
+  }, [draftState])
 
   function appendStarter(starter: string) {
     const el = textareaRef.current
@@ -100,7 +114,7 @@ export function SelfReviewForm({ cycleId, review }: SelfReviewFormProps) {
           />
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2" data-tour="submit-review">
           <SubmitButton formAction={draftAction} variant="outline" pendingLabel="Saving…">
             Save Draft
           </SubmitButton>

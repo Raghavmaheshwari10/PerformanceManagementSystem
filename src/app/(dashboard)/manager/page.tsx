@@ -133,11 +133,12 @@ export default async function ManagerTeamPage() {
 
       {/* Employee cards */}
       {activeCycle && statuses.length > 0 && (
-        <div className="space-y-2">
-          {statuses.map(({ employee: emp, kpiCount, selfReviewStatus, managerReviewStatus }) => {
+        <div className="space-y-2" data-tour="team-table">
+          {statuses.map(({ employee: emp, kpiCount, selfReviewStatus, managerReviewStatus }, index) => {
             const reviewDone = managerReviewStatus === 'submitted'
             const selfDone   = selfReviewStatus === 'submitted'
             const needsReview = activeCycle.status === 'manager_review' && selfDone && !reviewDone
+            const isFirstRow = index === 0
 
             return (
               <div
@@ -185,6 +186,7 @@ export default async function ManagerTeamPage() {
                   <Link
                     href={`/manager/${emp.id}/kpis?cycle=${activeCycle.id}`}
                     className="rounded-md border px-2.5 py-1 text-xs hover:bg-accent"
+                    {...(isFirstRow ? { 'data-tour': 'kpi-button' } : {})}
                   >
                     KPIs
                   </Link>
@@ -196,6 +198,7 @@ export default async function ManagerTeamPage() {
                         ? 'bg-primary text-primary-foreground hover:bg-primary/90'
                         : 'border hover:bg-accent'
                     )}
+                    {...(isFirstRow ? { 'data-tour': 'review-button' } : {})}
                   >
                     {reviewDone ? 'View' : 'Review'}
                   </Link>
