@@ -28,11 +28,13 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Help', href: '/help' },
   ],
   admin: [
-    { label: 'Cycles', href: '/admin' },
-    { label: 'Users', href: '/admin/users' },
+    { label: 'Dashboard',     href: '/admin' },
+    { label: 'Cycles',        href: '/admin/cycles' },
+    { label: 'Users',         href: '/admin/users' },
+    { label: 'KPI Templates', href: '/admin/kpi-templates' },
+    { label: 'Notifications', href: '/admin/notifications' },
     { label: 'Feature Flags', href: '/admin/feature-flags' },
-    { label: 'Audit Log', href: '/admin/audit-log' },
-    { label: 'Help', href: '/help' },
+    { label: 'Audit Log',     href: '/admin/audit-log' },
   ],
 }
 
@@ -63,7 +65,7 @@ export function Sidebar({ role, userName }: { role: UserRole; userName: string }
             href={item.href}
             className={cn(
               "rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent",
-              pathname === item.href && "bg-accent font-medium"
+              (pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))) && "bg-accent font-medium"
             )}
           >
             {item.label}
