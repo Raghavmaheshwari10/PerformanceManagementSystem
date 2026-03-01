@@ -3,13 +3,10 @@ import { requireRole } from '@/lib/auth'
 import { notFound } from 'next/navigation'
 import { CycleStatusBadge } from '@/components/cycle-status-badge'
 import { Badge } from '@/components/ui/badge'
-import { SubmitButton } from '@/components/submit-button'
 import Link from 'next/link'
-import { advanceCycleStatus } from '../../actions'
-import { sendSelfReviewReminders, sendManagerReviewReminders } from './actions'
 import { getNextStatus } from '@/lib/cycle-machine'
-import { CYCLE_STATUS_LABELS } from '@/lib/constants'
 import type { Cycle, User, Review, Appraisal } from '@/lib/types'
+import { CycleActionsClient } from './cycle-actions-client'
 
 function daysUntil(d: string | null) {
   if (!d) return null
@@ -50,7 +47,7 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <Link href="/admin/cycles" className="text-muted-foreground hover:underline text-sm">← Cycles</Link>
           <div className="flex items-center gap-3">
@@ -66,28 +63,13 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
             )}
           </p>
         </div>
-        {next && (
-          <form action={advanceCycleStatus.bind(null, id, (cycle as Cycle).status) as unknown as (fd: FormData) => Promise<void>}>
-            <SubmitButton variant="outline">Advance to {CYCLE_STATUS_LABELS[next]}</SubmitButton>
-          </form>
-        )}
-      </div>
-
-      {/* Reminders */}
-      <div className="rounded-lg border p-4 space-y-3">
-        <h2 className="font-semibold text-sm">Send Reminders</h2>
-        <div className="flex gap-3 flex-wrap">
-          <form action={sendSelfReviewReminders.bind(null, id) as unknown as (fd: FormData) => Promise<void>}>
-            <SubmitButton variant="outline" size="sm" disabled={pendingSelfReviews === 0} pendingLabel="Notifying employees…">
-              Remind {pendingSelfReviews} pending self-review{pendingSelfReviews !== 1 ? 's' : ''}
-            </SubmitButton>
-          </form>
-          <form action={sendManagerReviewReminders.bind(null, id) as unknown as (fd: FormData) => Promise<void>}>
-            <SubmitButton variant="outline" size="sm" disabled={pendingManagerReviews === 0} pendingLabel="Notifying managers…">
-              Remind {pendingManagerReviews} pending manager review{pendingManagerReviews !== 1 ? 's' : ''}
-            </SubmitButton>
-          </form>
-        </div>
+        <CycleActionsClient
+          cycleId={id}
+          currentStatus={(cycle as Cycle).status}
+          nextStatus={next}
+          pendingSelfCount={pendingSelfReviews}
+          pendingManagerCount={pendingManagerReviews}
+        />
       </div>
 
       {/* Per-employee table */}

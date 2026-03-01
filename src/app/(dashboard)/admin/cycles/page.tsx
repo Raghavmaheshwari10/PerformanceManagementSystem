@@ -87,7 +87,7 @@ export default async function AdminCyclesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Cycle Management</h1>
-        <Link href="/admin/cycles/new">
+        <Link href="/admin/cycles/new" data-tour="create-cycle">
           <Button>Create Cycle</Button>
         </Link>
       </div>
@@ -164,15 +164,17 @@ export default async function AdminCyclesPage() {
                       {cycle.name}
                     </Link>
                   </td>
-                  <td className="p-3"><CycleStatusBadge status={cycle.status} /></td>
+                  <td className="p-3"><span data-tour="cycle-status"><CycleStatusBadge status={cycle.status} /></span></td>
                   <td className="p-3">{cycle.year}</td>
                   <td className="p-3">
                     {next && (
-                      <form action={advanceCycleStatus.bind(null, cycle.id, cycle.status) as unknown as (fd: FormData) => Promise<void>}>
-                        <Button variant="outline" size="sm" type="submit">
-                          Advance to {CYCLE_STATUS_LABELS[next]}
-                        </Button>
-                      </form>
+                      <div data-tour="advance-btn">
+                        <form action={advanceCycleStatus.bind(null, cycle.id, cycle.status) as unknown as (fd: FormData) => Promise<void>}>
+                          <Button variant="outline" size="sm" type="submit">
+                            Advance to {CYCLE_STATUS_LABELS[next]}
+                          </Button>
+                        </form>
+                      </div>
                     )}
                   </td>
                 </tr>
