@@ -17,6 +17,9 @@ export default async function AdminUsersPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">User Management</h1>
         <div className="flex gap-2">
+          <Link href="/admin/users/new">
+            <Button size="sm">+ New User</Button>
+          </Link>
           <Link href="/admin/users/upload">
             <Button variant="outline">Upload CSV</Button>
           </Link>

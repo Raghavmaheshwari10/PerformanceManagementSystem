@@ -1,9 +1,11 @@
 'use server'
 
 import { createServiceClient } from '@/lib/supabase/server'
-import { requireRole } from '@/lib/auth'
+import { requireRole, getCurrentUser } from '@/lib/auth'
 import { fetchZimyoEmployees, transformZimyoEmployee } from '@/lib/zimyo'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
+import type { ActionResult, UserRole } from '@/lib/types'
 
 export async function triggerZimyoSync(): Promise<{ error?: string }> {
   const user = await requireRole(['admin'])
@@ -75,6 +77,69 @@ export async function triggerZimyoSync(): Promise<{ error?: string }> {
 
   revalidatePath('/admin/users')
   return {}
+}
+
+export async function createUser(formData: FormData): Promise<ActionResult> {
+  await requireRole(['admin'])
+  const admin = await getCurrentUser()
+
+  const email         = (formData.get('email') as string)?.trim()
+  const full_name     = (formData.get('full_name') as string)?.trim()
+  const role          = formData.get('role') as UserRole
+  const department_id = (formData.get('department_id') as string) || null
+  const designation   = (formData.get('designation') as string)?.trim() || null
+  const variable_pay  = parseFloat(formData.get('variable_pay') as string) || 0
+  const manager_id    = (formData.get('manager_id') as string) || null
+  const is_also_employee = formData.get('is_also_employee') === 'true'
+  const send_invite   = formData.get('send_invite') === 'true'
+
+  if (!email || !full_name || !role) return { data: null, error: 'Email, name and role are required' }
+
+  const svc = await createServiceClient()
+
+  // Create auth user
+  const { data: authData, error: authErr } = await svc.auth.admin.createUser({
+    email,
+    email_confirm: true,
+  })
+  if (authErr) return { data: null, error: authErr.message }
+
+  // Insert public user
+  const { error: insertErr } = await svc.from('users').insert({
+    id: authData.user.id,
+    email,
+    full_name,
+    role,
+    department_id,
+    designation,
+    variable_pay,
+    manager_id,
+    is_also_employee: role === 'hrbp' ? is_also_employee : false,
+    is_active: true,
+  })
+  if (insertErr) {
+    // Cleanup: delete the auth user if public user insert fails
+    await svc.auth.admin.deleteUser(authData.user.id)
+    return { data: null, error: insertErr.message }
+  }
+
+  // Send magic link if requested
+  if (send_invite) {
+    const { error: linkErr } = await svc.auth.admin.generateLink({ type: 'magiclink', email })
+    if (linkErr) console.error('Magic link send failed:', linkErr.message)
+  }
+
+  // Audit log
+  await svc.from('audit_logs').insert({
+    changed_by: admin.id,
+    action: 'user_created',
+    entity_type: 'user',
+    entity_id: authData.user.id,
+    new_value: { email, full_name, role },
+  })
+
+  revalidatePath('/admin/users')
+  redirect('/admin/users')
 }
 
 export async function updateUserRole(userId: string, role: string): Promise<void> {
