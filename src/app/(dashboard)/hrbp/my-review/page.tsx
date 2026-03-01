@@ -52,8 +52,8 @@ export default async function HrbpMyReviewPage() {
 
   const [kpiRes, reviewRes, appraisalRes] = await Promise.all([
     supabase.from('kpis').select('*').eq('cycle_id', cycle.id).eq('employee_id', user.id),
-    supabase.from('reviews').select('*').eq('cycle_id', cycle.id).eq('employee_id', user.id).single(),
-    supabase.from('appraisals').select('*').eq('cycle_id', cycle.id).eq('employee_id', user.id).single(),
+    supabase.from('reviews').select('*').eq('cycle_id', cycle.id).eq('employee_id', user.id).maybeSingle(),
+    supabase.from('appraisals').select('*').eq('cycle_id', cycle.id).eq('employee_id', user.id).maybeSingle(),
   ])
 
   const kpis = kpiRes.data as Kpi[] ?? []

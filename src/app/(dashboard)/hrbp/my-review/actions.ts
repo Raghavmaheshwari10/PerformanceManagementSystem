@@ -57,8 +57,20 @@ export async function saveDraftReview(_prev: ActionResult, formData: FormData): 
   const user = await requireRole(['hrbp'])
   const supabase = await createClient()
 
+  const cycleId = formData.get('cycle_id') as string
+
+  const { data: cycle } = await supabase
+    .from('cycles')
+    .select('status')
+    .eq('id', cycleId)
+    .single()
+
+  if (!cycle || cycle.status !== 'self_review') {
+    return { data: null, error: 'Cycle is not in self-review phase' }
+  }
+
   const { error } = await supabase.from('reviews').upsert({
-    cycle_id: formData.get('cycle_id') as string,
+    cycle_id: cycleId,
     employee_id: user.id,
     self_rating: (formData.get('self_rating') as string) || null,
     self_comments: formData.get('self_comments') as string,
