@@ -27,6 +27,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Cycles', href: '/hrbp' },
     { label: 'Calibration', href: '/hrbp/calibration' },
     { label: 'Audit Log', href: '/hrbp/audit-log' },
+    { label: 'Docs', href: '/docs' },
     { label: 'Help', href: '#help' },
   ],
   admin: [
@@ -37,6 +38,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Notifications', href: '/admin/notifications' },
     { label: 'Feature Flags', href: '/admin/feature-flags' },
     { label: 'Audit Log',     href: '/admin/audit-log' },
+    { label: 'Docs',          href: '/docs' },
     { label: 'Help',          href: '#help' },
   ],
 }
