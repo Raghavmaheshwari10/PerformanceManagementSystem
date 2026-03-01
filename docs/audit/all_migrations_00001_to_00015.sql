@@ -577,10 +577,12 @@ CREATE TABLE IF NOT EXISTS kpi_templates (
 -- 2. RLS
 ALTER TABLE kpi_templates ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS kpi_templates_select_all ON kpi_templates;
 CREATE POLICY kpi_templates_select_all
   ON kpi_templates FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS kpi_templates_admin_all ON kpi_templates;
 CREATE POLICY kpi_templates_admin_all
   ON kpi_templates FOR ALL
   USING (public.user_role() = 'admin')
@@ -867,7 +869,6 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- ============ USERS ============
 
 DROP POLICY IF EXISTS users_employee_select ON users;
-DROP POLICY IF EXISTS users_employee_select ON users;
 CREATE POLICY users_employee_select ON users FOR SELECT
   USING (
     public.user_role() = 'employee'
@@ -875,7 +876,6 @@ CREATE POLICY users_employee_select ON users FOR SELECT
     AND (SELECT is_active FROM users WHERE id = public.user_id()) = true
   );
 
-DROP POLICY IF EXISTS users_manager_select ON users;
 DROP POLICY IF EXISTS users_manager_select ON users;
 CREATE POLICY users_manager_select ON users FOR SELECT
   USING (
@@ -887,7 +887,6 @@ CREATE POLICY users_manager_select ON users FOR SELECT
 -- ============ KPIS ============
 
 DROP POLICY IF EXISTS kpis_employee_select ON kpis;
-DROP POLICY IF EXISTS kpis_employee_select ON kpis;
 CREATE POLICY kpis_employee_select ON kpis FOR SELECT
   USING (
     public.user_role() = 'employee'
@@ -897,7 +896,6 @@ CREATE POLICY kpis_employee_select ON kpis FOR SELECT
   );
 
 DROP POLICY IF EXISTS kpis_manager_select ON kpis;
-DROP POLICY IF EXISTS kpis_manager_select ON kpis;
 CREATE POLICY kpis_manager_select ON kpis FOR SELECT
   USING (
     public.user_role() = 'manager'
@@ -905,7 +903,6 @@ CREATE POLICY kpis_manager_select ON kpis FOR SELECT
     AND (SELECT is_active FROM users WHERE id = public.user_id()) = true
   );
 
-DROP POLICY IF EXISTS kpis_manager_insert ON kpis;
 DROP POLICY IF EXISTS kpis_manager_insert ON kpis;
 CREATE POLICY kpis_manager_insert ON kpis FOR INSERT
   WITH CHECK (
@@ -915,7 +912,6 @@ CREATE POLICY kpis_manager_insert ON kpis FOR INSERT
     AND EXISTS (SELECT 1 FROM cycles c WHERE c.id = cycle_id AND c.status = 'kpi_setting')
   );
 
-DROP POLICY IF EXISTS kpis_manager_update ON kpis;
 DROP POLICY IF EXISTS kpis_manager_update ON kpis;
 CREATE POLICY kpis_manager_update ON kpis FOR UPDATE
   USING (
@@ -928,7 +924,6 @@ CREATE POLICY kpis_manager_update ON kpis FOR UPDATE
 -- ============ REVIEWS ============
 
 DROP POLICY IF EXISTS reviews_employee_select ON reviews;
-DROP POLICY IF EXISTS reviews_employee_select ON reviews;
 CREATE POLICY reviews_employee_select ON reviews FOR SELECT
   USING (
     public.user_role() = 'employee'
@@ -936,7 +931,6 @@ CREATE POLICY reviews_employee_select ON reviews FOR SELECT
     AND (SELECT is_active FROM users WHERE id = public.user_id()) = true
   );
 
-DROP POLICY IF EXISTS reviews_employee_insert ON reviews;
 DROP POLICY IF EXISTS reviews_employee_insert ON reviews;
 CREATE POLICY reviews_employee_insert ON reviews FOR INSERT
   WITH CHECK (
@@ -947,7 +941,6 @@ CREATE POLICY reviews_employee_insert ON reviews FOR INSERT
   );
 
 DROP POLICY IF EXISTS reviews_employee_update ON reviews;
-DROP POLICY IF EXISTS reviews_employee_update ON reviews;
 CREATE POLICY reviews_employee_update ON reviews FOR UPDATE
   USING (
     public.user_role() = 'employee'
@@ -957,7 +950,6 @@ CREATE POLICY reviews_employee_update ON reviews FOR UPDATE
     AND EXISTS (SELECT 1 FROM cycles c WHERE c.id = cycle_id AND c.status = 'self_review')
   );
 
-DROP POLICY IF EXISTS reviews_manager_select ON reviews;
 DROP POLICY IF EXISTS reviews_manager_select ON reviews;
 CREATE POLICY reviews_manager_select ON reviews FOR SELECT
   USING (
@@ -970,7 +962,6 @@ CREATE POLICY reviews_manager_select ON reviews FOR SELECT
 -- ============ APPRAISALS ============
 
 DROP POLICY IF EXISTS appraisals_employee_select ON appraisals;
-DROP POLICY IF EXISTS appraisals_employee_select ON appraisals;
 CREATE POLICY appraisals_employee_select ON appraisals FOR SELECT
   USING (
     public.user_role() = 'employee'
@@ -980,7 +971,6 @@ CREATE POLICY appraisals_employee_select ON appraisals FOR SELECT
   );
 
 DROP POLICY IF EXISTS appraisals_manager_select ON appraisals;
-DROP POLICY IF EXISTS appraisals_manager_select ON appraisals;
 CREATE POLICY appraisals_manager_select ON appraisals FOR SELECT
   USING (
     public.user_role() = 'manager'
@@ -988,7 +978,6 @@ CREATE POLICY appraisals_manager_select ON appraisals FOR SELECT
     AND (SELECT is_active FROM users WHERE id = public.user_id()) = true
   );
 
-DROP POLICY IF EXISTS appraisals_manager_insert ON appraisals;
 DROP POLICY IF EXISTS appraisals_manager_insert ON appraisals;
 CREATE POLICY appraisals_manager_insert ON appraisals FOR INSERT
   WITH CHECK (
@@ -998,7 +987,6 @@ CREATE POLICY appraisals_manager_insert ON appraisals FOR INSERT
     AND EXISTS (SELECT 1 FROM cycles c WHERE c.id = cycle_id AND c.status = 'manager_review')
   );
 
-DROP POLICY IF EXISTS appraisals_manager_update ON appraisals;
 DROP POLICY IF EXISTS appraisals_manager_update ON appraisals;
 CREATE POLICY appraisals_manager_update ON appraisals FOR UPDATE
   USING (

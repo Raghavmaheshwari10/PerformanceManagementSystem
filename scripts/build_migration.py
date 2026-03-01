@@ -88,7 +88,14 @@ def transform(sql):
             line = re.sub(r'CREATE FUNCTION\s+', 'CREATE OR REPLACE FUNCTION ', line, flags=re.I)
 
         # CREATE POLICY -> DROP first
+        # Handle both single-line and two-line formats:
+        #   CREATE POLICY foo ON bar ...
+        #   CREATE POLICY foo\n  ON bar ...
         m = re.match(r'CREATE POLICY\s+(\w+)\s+ON\s+(\w+)', s, re.I)
+        if not m and re.match(r'CREATE POLICY\s+(\w+)\s*$', s, re.I) and i+1 < len(lines):
+            next_s = lines[i+1].strip()
+            combined_line = s + ' ' + next_s
+            m = re.match(r'CREATE POLICY\s+(\w+)\s+ON\s+(\w+)', combined_line, re.I)
         if m:
             out.append("DROP POLICY IF EXISTS " + m.group(1) + " ON " + m.group(2) + ";")
 
@@ -134,6 +141,17 @@ for fname in files:
     )
 
 combined = '\n'.join(parts)
+
+# Remove duplicate consecutive DROP POLICY lines (artifact of 00004 + 00013 both dropping same policy)
+deduped = []
+prev = None
+for line in combined.split('\n'):
+    if line == prev and re.match(r'DROP POLICY IF EXISTS', line.strip(), re.I):
+        continue  # skip exact duplicate drop
+    deduped.append(line)
+    prev = line
+combined = '\n'.join(deduped)
+
 with open(out, 'w', encoding='utf-8') as f:
     f.write(combined)
 
@@ -151,10 +169,22 @@ checks = [
     ('DROP POLICY users_employee_select',         'DROP POLICY IF EXISTS users_employee_select ON users'),
     ('DROP POLICY kpis_manager_insert',           'DROP POLICY IF EXISTS kpis_manager_insert ON kpis'),
     ('CREATE TABLE IF NOT EXISTS cycles',         'CREATE TABLE IF NOT EXISTS cycles'),
+    ('DROP POLICY kpi_templates_select_all',      'DROP POLICY IF EXISTS kpi_templates_select_all ON kpi_templates'),
+    ('DROP POLICY kpi_templates_admin_all',       'DROP POLICY IF EXISTS kpi_templates_admin_all ON kpi_templates'),
+    ('no duplicate DROP lines',                   True),  # checked below
 ]
 all_ok = True
 for label, needle in checks:
-    found = needle in combined
+    if needle is True:
+        # special: check no duplicate consecutive DROP POLICY lines
+        lines_list = combined.split('\n')
+        dup_found = any(
+            lines_list[j] == lines_list[j-1] and re.match(r'DROP POLICY IF EXISTS', lines_list[j].strip(), re.I)
+            for j in range(1, len(lines_list))
+        )
+        found = not dup_found
+    else:
+        found = needle in combined
     if not found: all_ok = False
     print(("  OK  : " if found else "  FAIL: ") + label)
 
