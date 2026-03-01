@@ -11,6 +11,7 @@ interface AppraisalRow {
   final_rating: RatingTier | null
   payout_multiplier: number | null
   payout_amount: number | null
+  snapshotted_variable_pay: number | null
   users: { full_name: string; department: string | null } | null
 }
 
@@ -24,7 +25,7 @@ export default async function CalibrationPage({ searchParams }: { searchParams: 
   const { data: cycle } = await supabase.from('cycles').select('*').eq('id', cycleId).single()
   const { data: appraisals } = await supabase
     .from('appraisals')
-    .select('id, manager_rating, final_rating, payout_multiplier, payout_amount, users!appraisals_employee_id_fkey(full_name, department)')
+    .select('id, manager_rating, final_rating, payout_multiplier, payout_amount, snapshotted_variable_pay, users!appraisals_employee_id_fkey(full_name, department)')
     .eq('cycle_id', cycleId)
 
   const rows = (appraisals ?? []) as unknown as AppraisalRow[]
