@@ -31,14 +31,17 @@ export async function updatePayoutConfig(
     .eq('rating_tier', tier)
   if (error) return { data: null, error: error.message }
 
-  await supabase.from('audit_logs').insert({
-    changed_by: user.id,
+  const { error: auditErr } = await supabase.from('audit_logs').insert({
+    changed_by: user!.id,
     action: 'payout_config_updated',
     entity_type: 'payout_config',
-    entity_id: tier,
-    old_value: { multiplier: old?.multiplier },
-    new_value: { multiplier },
+    entity_id: null,
+    old_value: { tier, multiplier: old?.multiplier },
+    new_value: { tier, multiplier },
   })
+  // Include tier in old/new values so it's still identifiable
+  if (auditErr) console.error('Audit log write failed:', auditErr.message)
+  // Don't fail the whole action just because audit log failed
 
   revalidatePath('/admin/payout-config')
   return { data: null, error: null }
