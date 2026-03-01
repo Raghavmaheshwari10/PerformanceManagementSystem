@@ -71,16 +71,9 @@ export async function lockCycle(cycleId: string): Promise<ActionResult> {
   const user = await requireRole(['hrbp'])
   const supabase = await createClient()
 
-  const { data: cycle } = await supabase
-    .from('cycles')
-    .select('sme_multiplier')
-    .eq('id', cycleId)
-    .single()
-
   // Single UPDATE via RPC — eliminates N+1
   const { error } = await supabase.rpc('bulk_lock_appraisals', {
     p_cycle_id: cycleId,
-    p_sme_multiplier: cycle?.sme_multiplier ?? 0,
   })
 
   if (error) return { data: null, error: error.message }
