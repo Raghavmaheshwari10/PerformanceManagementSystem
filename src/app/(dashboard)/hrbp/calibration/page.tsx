@@ -91,7 +91,7 @@ export default async function CalibrationPage({ searchParams }: { searchParams: 
           {['locked', 'published'].includes(typedCycle?.status ?? '') && (
             <tfoot>
               <tr className="border-t font-semibold">
-                <td colSpan={4} className="py-2 pr-3 text-right text-sm">Total payout</td>
+                <td colSpan={5} className="py-2 pr-3 text-right text-sm">Total payout</td>
                 <td className="py-2 pr-3 text-right text-sm">
                   ₹{rows.reduce((s, a) => s + (a.payout_amount ?? 0), 0).toLocaleString('en-IN')}
                 </td>
