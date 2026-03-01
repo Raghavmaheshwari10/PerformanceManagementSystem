@@ -78,12 +78,12 @@ export default async function CalibrationPage({ searchParams }: { searchParams: 
 
       <div className="flex gap-3">
         {isCalibrating && (
-          <form action={async () => { await lockCycle(cycleId) }}>
+          <form action={lockCycle.bind(null, cycleId) as unknown as (fd: FormData) => Promise<void>}>
             <Button variant="destructive" type="submit">Lock Cycle</Button>
           </form>
         )}
         {isLocked && (
-          <form action={async () => { await publishCycle(cycleId) }}>
+          <form action={publishCycle.bind(null, cycleId) as unknown as (fd: FormData) => Promise<void>}>
             <Button type="submit">Publish Cycle</Button>
           </form>
         )}

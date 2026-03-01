@@ -1,11 +1,11 @@
--- Helper: extract role from JWT
-CREATE OR REPLACE FUNCTION auth.user_role()
+-- Helper: extract role from JWT (in public schema to avoid auth schema permission issues)
+CREATE OR REPLACE FUNCTION public.user_role()
 RETURNS user_role AS $$
   SELECT (current_setting('request.jwt.claims', true)::jsonb ->> 'user_role')::user_role;
 $$ LANGUAGE sql STABLE;
 
 -- Helper: extract user_id from JWT
-CREATE OR REPLACE FUNCTION auth.user_id()
+CREATE OR REPLACE FUNCTION public.user_id()
 RETURNS uuid AS $$
   SELECT (current_setting('request.jwt.claims', true)::jsonb ->> 'user_id')::uuid;
 $$ LANGUAGE sql STABLE;

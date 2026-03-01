@@ -6,7 +6,7 @@ ALTER TABLE cycles ADD CONSTRAINT cycles_sme_multiplier_bounds CHECK (sme_multip
 ALTER TABLE appraisals ADD COLUMN is_final boolean NOT NULL DEFAULT false;
 
 -- 3. Composite index on reviews
-CREATE INDEX IF NOT EXISTS idx_reviews_cycle_manager ON reviews(cycle_id, manager_id);
+CREATE INDEX IF NOT EXISTS idx_appraisals_cycle_manager ON appraisals(cycle_id, manager_id);
 
 -- 4. KPI weight sum trigger
 CREATE OR REPLACE FUNCTION check_kpi_weight_sum()
@@ -68,3 +68,4 @@ BEGIN
   WHERE u.zimyo_id = m.zimyo_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+

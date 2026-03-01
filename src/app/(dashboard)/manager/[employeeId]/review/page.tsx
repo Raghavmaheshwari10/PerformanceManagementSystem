@@ -17,7 +17,6 @@ export default async function ManagerReviewPage({
 
   const supabase = await createClient()
 
-  // Validate cycleId against DB
   if (cycleId) {
     const { data: cycle } = await supabase.from('cycles').select('id').eq('id', cycleId).single()
     if (!cycle) return <p className="text-muted-foreground">Cycle not found.</p>
@@ -34,42 +33,99 @@ export default async function ManagerReviewPage({
   const kpis = kpiRes.data as Kpi[] ?? []
   const review = reviewRes.data as Review | null
   const appraisal = appraisalRes.data as Appraisal | null
+  const submitted = !!appraisal?.manager_submitted_at
 
   return (
-    <div className="max-w-2xl space-y-6">
-      <h1 className="text-2xl font-bold">Review: {employee?.full_name}</h1>
+    <div className="space-y-4">
+      <div>
+        <h1 className="text-2xl font-bold">Review: {employee?.full_name}</h1>
+        {submitted && (
+          <p className="mt-1 text-sm text-green-600 font-medium">
+            ✓ Rating submitted: {appraisal?.manager_rating}
+          </p>
+        )}
+      </div>
 
-      <section className="space-y-2">
-        <h2 className="text-lg font-semibold">KPIs</h2>
-        {kpis.length === 0 && <p className="text-muted-foreground">No KPIs set.</p>}
-        {kpis.map(kpi => (
-          <div key={kpi.id} className="rounded border p-3">
-            <p className="font-medium">{kpi.title} ({kpi.weight}%)</p>
-            {kpi.description && <p className="text-sm text-muted-foreground">{kpi.description}</p>}
+      {/* Side-by-side layout */}
+      <div className="grid gap-6 xl:grid-cols-2">
+        {/* LEFT — Employee's self-assessment (read-only, scrollable) */}
+        <div className="rounded-lg border bg-muted/20 p-4 space-y-4 xl:max-h-[calc(100vh-12rem)] xl:overflow-y-auto">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground sticky top-0 bg-muted/20 py-1">
+            Employee Self-Assessment
+          </h2>
+
+          {/* KPIs */}
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">KPIs ({kpis.length})</p>
+            {kpis.length === 0 ? (
+              <p className="text-sm text-muted-foreground italic">No KPIs set for this cycle.</p>
+            ) : (
+              kpis.map(kpi => (
+                <div key={kpi.id} className="rounded border bg-background p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-medium">{kpi.title}</p>
+                    <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs">{kpi.weight}%</span>
+                  </div>
+                  {kpi.description && (
+                    <p className="mt-1 text-xs text-muted-foreground">{kpi.description}</p>
+                  )}
+                </div>
+              ))
+            )}
           </div>
-        ))}
-      </section>
 
-      {review && (
-        <section className="rounded border bg-muted/30 p-4 space-y-2">
-          <h2 className="text-lg font-semibold">Employee Self Assessment</h2>
-          <p>Rating: <span className="font-bold">{review.self_rating}</span></p>
-          <p className="whitespace-pre-wrap">{review.self_comments}</p>
-        </section>
-      )}
+          {/* Self-review */}
+          {review ? (
+            <div className="space-y-3">
+              <div className="rounded border bg-background p-3">
+                <p className="text-xs font-medium text-muted-foreground mb-1">Self Rating</p>
+                <span className="font-semibold">{review.self_rating ?? '—'}</span>
+              </div>
+              <div className="rounded border bg-background p-3">
+                <p className="text-xs font-medium text-muted-foreground mb-1">Self Comments</p>
+                <p className="text-sm whitespace-pre-wrap">{review.self_comments || <span className="italic text-muted-foreground">No comments</span>}</p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm italic text-muted-foreground">
+              Employee has not submitted their self-review yet.
+            </p>
+          )}
+        </div>
 
-      {!appraisal?.manager_submitted_at && cycleId && (
-        <ReviewForm
-          cycleId={cycleId}
-          employeeId={employeeId}
-          defaultRating={appraisal?.manager_rating ?? undefined}
-          defaultComments={appraisal?.manager_comments ?? undefined}
-        />
-      )}
-
-      {appraisal?.manager_submitted_at && (
-        <p className="text-green-600 font-medium">Rating submitted: {appraisal.manager_rating}</p>
-      )}
+        {/* RIGHT — Manager's assessment form */}
+        <div className="rounded-lg border p-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-4">
+            Your Assessment
+          </h2>
+          {submitted ? (
+            <div className="space-y-3">
+              <div className="rounded border p-3">
+                <p className="text-xs font-medium text-muted-foreground mb-1">Your Rating</p>
+                <span className="font-semibold text-green-700">{appraisal?.manager_rating}</span>
+              </div>
+              {appraisal?.manager_comments && (
+                <div className="rounded border p-3">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Your Comments</p>
+                  <p className="text-sm whitespace-pre-wrap">{appraisal.manager_comments}</p>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Submitted. Contact your HRBP to request changes.
+              </p>
+            </div>
+          ) : cycleId ? (
+            <ReviewForm
+              cycleId={cycleId}
+              employeeId={employeeId}
+              defaultRating={appraisal?.manager_rating ?? undefined}
+              defaultComments={appraisal?.manager_comments ?? undefined}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">No active cycle selected.</p>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

@@ -22,10 +22,13 @@ BEGIN
   event := jsonb_set(event, '{claims}', claims);
   RETURN event;
 END;
-$$ LANGUAGE plpgsql STABLE;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public;
 
 -- Grant execute to supabase_auth_admin
 GRANT EXECUTE ON FUNCTION public.custom_access_token_hook TO supabase_auth_admin;
+
+-- Allow hook to read user roles
+GRANT SELECT ON public.users TO supabase_auth_admin;
 
 -- Revoke from public
 REVOKE EXECUTE ON FUNCTION public.custom_access_token_hook FROM public;

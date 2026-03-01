@@ -123,4 +123,27 @@
   body {
     @apply bg-background text-foreground;
   }
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+      animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 1ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+/* =========================================================
+   Density toggle: comfortable (default) vs compact mode.
+   Applied via data-density="compact" on <html>.
+   ========================================================= */
+:root {
+  --row-height: 48px;
+  --gap: 1rem;            /* 16px */
+  --body-size: 0.9375rem; /* 15px */
+}
+
+[data-density="compact"] {
+  --row-height: 36px;
+  --gap: 0.5rem;          /* 8px */
+  --body-size: 0.8125rem; /* 13px */
 }

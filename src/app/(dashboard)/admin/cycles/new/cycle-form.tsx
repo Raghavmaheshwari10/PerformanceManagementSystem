@@ -35,8 +35,27 @@ export function CycleForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="sme_multiplier">SME Payout Multiplier (0–5)</Label>
+        <Label htmlFor="sme_multiplier">SME Payout Multiplier (0-5)</Label>
         <Input id="sme_multiplier" name="sme_multiplier" type="number" step="0.01" placeholder="0.50" required />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="business_multiplier">Business Multiplier (0-2.0)</Label>
+          <Input id="business_multiplier" name="business_multiplier" type="number" step="0.05" defaultValue={1.0} min={0} max={2} required />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="budget_currency">Currency</Label>
+          <select id="budget_currency" name="budget_currency" defaultValue="INR" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs">
+            <option value="INR">INR</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+          </select>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="total_budget">Total Budget (optional)</Label>
+        <Input id="total_budget" name="total_budget" type="number" step="1000" placeholder="Leave blank if not applicable" />
       </div>
 
       <div className="grid grid-cols-2 gap-4">

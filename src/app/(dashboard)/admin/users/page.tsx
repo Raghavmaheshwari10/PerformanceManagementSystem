@@ -14,7 +14,7 @@ export default async function AdminUsersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">User Management</h1>
-        <form action={async () => { await triggerZimyoSync() }}>
+        <form action={triggerZimyoSync}>
           <Button type="submit">Sync from Zimyo</Button>
         </form>
       </div>
