@@ -96,3 +96,21 @@ export async function updateUserRole(userId: string, role: string): Promise<void
 
   revalidatePath('/admin/users')
 }
+
+export async function toggleUserActive(userId: string, currentActive: boolean): Promise<void> {
+  const user = await requireRole(['admin'])
+  const supabase = await createServiceClient()
+
+  await supabase.from('users').update({ is_active: !currentActive }).eq('id', userId)
+
+  await supabase.from('audit_logs').insert({
+    changed_by: user.id,
+    action: 'toggle_active',
+    entity_type: 'user',
+    entity_id: userId,
+    old_value: { is_active: currentActive },
+    new_value: { is_active: !currentActive },
+  })
+
+  revalidatePath('/admin/users')
+}
