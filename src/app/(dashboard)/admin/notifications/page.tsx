@@ -9,7 +9,7 @@ export default async function AdminNotificationsPage() {
 
   const [usersRes, deptsRes, historyRes] = await Promise.all([
     supabase.from('users').select('id, full_name, email').eq('is_active', true).order('full_name'),
-    supabase.from('users').select('department').eq('is_active', true).not('department', 'is', null),
+    supabase.from('departments').select('name').order('name'),
     supabase
       .from('audit_logs')
       .select('id, created_at, new_value, users!audit_logs_changed_by_fkey(full_name)')
@@ -19,7 +19,7 @@ export default async function AdminNotificationsPage() {
   ])
 
   const users = (usersRes.data ?? []) as Pick<User, 'id' | 'full_name' | 'email'>[]
-  const departments = [...new Set((deptsRes.data ?? []).map(u => u.department as string))].sort()
+  const departments = (deptsRes.data ?? []).map(d => d.name as string)
 
   return (
     <div className="space-y-8 max-w-2xl">

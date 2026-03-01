@@ -40,7 +40,9 @@ export async function sendManualNotification(
   } else if (recipientType === 'department') {
     const depts = formData.getAll('departments') as string[]
     if (depts.length === 0) return { data: null, error: 'Select at least one department' }
-    const { data } = await supabase.from('users').select('id').in('department', depts).eq('is_active', true)
+    const { data: deptRows } = await supabase.from('departments').select('id').in('name', depts)
+    const deptIds = (deptRows ?? []).map(d => d.id)
+    const { data } = await supabase.from('users').select('id').in('department_id', deptIds).eq('is_active', true)
     userIds = (data ?? []).map(u => u.id)
     scope = `dept:${depts.join(',')}`
   } else {

@@ -38,12 +38,12 @@ export default async function AdminDashboard() {
 
   const [cyclesRes, usersRes, auditRes] = await Promise.all([
     supabase.from('cycles').select('*').order('created_at', { ascending: false }),
-    supabase.from('users').select('id, role, department, is_active').eq('is_active', true),
+    supabase.from('users').select('id, role, department:departments(name), is_active').eq('is_active', true),
     supabase.from('audit_logs').select('created_at').eq('action', 'csv_upload').order('created_at', { ascending: false }).limit(1),
   ])
 
   const allCycles = (cyclesRes.data as Cycle[]) ?? []
-  const activeUsers = (usersRes.data ?? []) as Pick<User, 'id' | 'role' | 'department' | 'is_active'>[]
+  const activeUsers = (usersRes.data ?? []) as unknown as Pick<User, 'id' | 'role' | 'department' | 'is_active'>[]
   const lastImport = auditRes.data?.[0]?.created_at ?? null
 
   const activeCycle = allCycles.find(c => !['draft', 'published'].includes(c.status))

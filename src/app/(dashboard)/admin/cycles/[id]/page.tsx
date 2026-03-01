@@ -22,12 +22,12 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
   if (!cycle) notFound()
 
   const [usersRes, reviewsRes, appraisalsRes] = await Promise.all([
-    supabase.from('users').select('id, full_name, department, manager_id, role').eq('is_active', true).neq('role', 'admin').neq('role', 'hrbp'),
+    supabase.from('users').select('id, full_name, department:departments(name), manager_id, role').eq('is_active', true).neq('role', 'admin').neq('role', 'hrbp'),
     supabase.from('reviews').select('employee_id, status').eq('cycle_id', id),
     supabase.from('appraisals').select('employee_id, manager_id, manager_submitted_at, final_rating').eq('cycle_id', id),
   ])
 
-  const users = (usersRes.data ?? []) as Pick<User, 'id' | 'full_name' | 'department' | 'manager_id' | 'role'>[]
+  const users = (usersRes.data ?? []) as unknown as Pick<User, 'id' | 'full_name' | 'department' | 'manager_id' | 'role'>[]
   const reviews = (reviewsRes.data ?? []) as Pick<Review, 'employee_id' | 'status'>[]
   const appraisals = (appraisalsRes.data ?? []) as Pick<Appraisal, 'employee_id' | 'manager_id' | 'manager_submitted_at' | 'final_rating'>[]
 
