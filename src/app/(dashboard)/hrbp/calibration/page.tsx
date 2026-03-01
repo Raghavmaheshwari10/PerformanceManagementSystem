@@ -1,9 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { BellCurveChart } from '@/components/bell-curve-chart'
-import { lockCycle, publishCycle } from '../actions'
 import { OverrideForm } from './override-form'
-import { Button } from '@/components/ui/button'
+import { CalibrationActionsClient } from './calibration-actions-client'
 import type { RatingTier, Cycle } from '@/lib/types'
 
 interface AppraisalRow {
@@ -41,9 +40,11 @@ export default async function CalibrationPage({ searchParams }: { searchParams: 
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Calibration — {typedCycle?.name}</h1>
 
-      <BellCurveChart distribution={distribution} total={rows.length} />
+      <div data-tour="bell-curve">
+        <BellCurveChart distribution={distribution} total={rows.length} />
+      </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border" data-tour="override-form">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-muted/50">
@@ -76,18 +77,12 @@ export default async function CalibrationPage({ searchParams }: { searchParams: 
         </table>
       </div>
 
-      <div className="flex gap-3">
-        {isCalibrating && (
-          <form action={lockCycle.bind(null, cycleId) as unknown as (fd: FormData) => Promise<void>}>
-            <Button variant="destructive" type="submit">Lock Cycle</Button>
-          </form>
-        )}
-        {isLocked && (
-          <form action={publishCycle.bind(null, cycleId) as unknown as (fd: FormData) => Promise<void>}>
-            <Button type="submit">Publish Cycle</Button>
-          </form>
-        )}
-      </div>
+      <CalibrationActionsClient
+        cycleId={cycleId}
+        canLock={isCalibrating}
+        canPublish={isLocked}
+        isLocked={isLocked}
+      />
     </div>
   )
 }
