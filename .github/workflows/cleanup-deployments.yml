@@ -1,0 +1,40 @@
+﻿name: Cleanup Old Vercel Deployments
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Vercel to finish deploying
+        run: sleep 120
+
+      - name: Delete old production deployments (keep latest only)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          TEAM_ID="team_42KTCyHWE46Hm7FtgOLL0igh"
+          PROJECT_ID="prj_qhb3kS0VjbPDR6dsq1wRFiW2eZaE"
+
+          DEPLOYMENTS=$(curl -s \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v6/deployments?projectId=$PROJECT_ID&teamId=$TEAM_ID&limit=50&target=production&state=READY" \
+            | jq -r '.deployments[].uid')
+
+          LATEST=$(echo "$DEPLOYMENTS" | head -1)
+          OLD=$(echo "$DEPLOYMENTS" | tail -n +2)
+
+          echo "Keeping latest: $LATEST"
+
+          for uid in $OLD; do
+            echo "Deleting: $uid"
+            curl -s -X DELETE \
+              -H "Authorization: Bearer $VERCEL_TOKEN" \
+              "https://api.vercel.com/v13/deployments/$uid?teamId=$TEAM_ID"
+            echo " done"
+          done
+
+          echo "Cleanup complete — only latest deployment remains"
