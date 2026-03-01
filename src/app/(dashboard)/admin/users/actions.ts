@@ -79,7 +79,7 @@ export async function triggerZimyoSync(): Promise<{ error?: string }> {
   return {}
 }
 
-export async function createUser(formData: FormData): Promise<ActionResult> {
+export async function createUser(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   await requireRole(['admin'])
   const admin = await getCurrentUser()
 
@@ -123,10 +123,10 @@ export async function createUser(formData: FormData): Promise<ActionResult> {
     return { data: null, error: insertErr.message }
   }
 
-  // Send magic link if requested
+  // Send invite email if requested
   if (send_invite) {
-    const { error: linkErr } = await svc.auth.admin.generateLink({ type: 'magiclink', email })
-    if (linkErr) console.error('Magic link send failed:', linkErr.message)
+    const { error: linkErr } = await svc.auth.admin.inviteUserByEmail(email)
+    if (linkErr) console.error('Invite email send failed:', linkErr.message)
   }
 
   // Audit log
