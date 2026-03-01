@@ -17,20 +17,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .order('created_at', { ascending: false })
     .limit(50)
 
-  const { data: userData } = await supabase
-    .from('users')
-    .select('full_name, role, is_also_employee')
-    .eq('id', user.id)
-    .single()
-
   return (
     <ClientProviders>
       <CommandPaletteProvider role={user.role}>
         <div className="flex h-screen">
           <Sidebar
-            role={userData?.role ?? user.role}
-            userName={userData?.full_name ?? user.full_name}
-            isAlsoEmployee={userData?.is_also_employee ?? false}
+            role={user.role}
+            userName={user.full_name}
+            isAlsoEmployee={user.is_also_employee ?? false}
           />
           <div className="flex flex-1 flex-col overflow-hidden">
             <header className="flex items-center justify-end border-b px-6 py-2">
