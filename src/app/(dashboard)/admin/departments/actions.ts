@@ -8,6 +8,7 @@ export async function createDepartment(formData: FormData): Promise<ActionResult
   await requireRole(['admin'])
   const name = (formData.get('name') as string)?.trim()
   if (!name) return { data: null, error: 'Name is required' }
+  if (name.length > 100) return { data: null, error: 'Name must be 100 characters or fewer' }
   const supabase = await createClient()
   const { error } = await supabase.from('departments').insert({ name })
   if (error) return { data: null, error: error.message }
@@ -19,6 +20,7 @@ export async function renameDepartment(id: string, formData: FormData): Promise<
   await requireRole(['admin'])
   const name = (formData.get('name') as string)?.trim()
   if (!name) return { data: null, error: 'Name is required' }
+  if (name.length > 100) return { data: null, error: 'Name must be 100 characters or fewer' }
   const supabase = await createClient()
   const { error } = await supabase.from('departments').update({ name }).eq('id', id)
   if (error) return { data: null, error: error.message }
