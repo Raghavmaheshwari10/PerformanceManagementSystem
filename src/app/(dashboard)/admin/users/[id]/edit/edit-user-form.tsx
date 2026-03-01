@@ -1,6 +1,7 @@
 'use client'
 import { useActionState } from 'react'
 import { updateUser, sendMagicLink, sendPasswordReset } from '../../actions'
+import type { ActionResult } from '@/lib/types'
 import { SubmitButton } from '@/components/submit-button'
 
 interface EditableUser {
@@ -25,7 +26,7 @@ interface Props {
 
 export function EditUserForm({ user, departments, managers, assignedDeptIds }: Props) {
   const [state, action] = useActionState(updateUser, null)
-  const [magicState, magicAction] = useActionState(sendMagicLink, null)
+  const [magicState, magicAction] = useActionState<ActionResult<{ link: string }> | null, FormData>(sendMagicLink, null)
   const [resetState, resetAction] = useActionState(sendPasswordReset, null)
 
   const assignedSet = new Set(assignedDeptIds)
@@ -149,23 +150,30 @@ export function EditUserForm({ user, departments, managers, assignedDeptIds }: P
             {magicState?.error || resetState?.error}
           </div>
         )}
-        {(magicState?.data !== undefined && magicState?.data === null && !magicState?.error) && (
-          <p className="text-sm text-green-600">Magic link sent!</p>
+        {magicState?.data?.link && (
+          <div className="space-y-1">
+            <p className="text-sm text-green-600">Login link generated — copy and share it with the user:</p>
+            <div className="rounded border bg-muted/40 px-3 py-2 text-xs break-all select-all font-mono">
+              {magicState.data.link}
+            </div>
+          </div>
         )}
         {(resetState?.data !== undefined && resetState?.data === null && !resetState?.error) && (
-          <p className="text-sm text-green-600">Password reset sent!</p>
+          <p className="text-sm text-green-600">Password reset email sent to {user.email}!</p>
         )}
         <div className="flex gap-2">
           <form action={magicAction}>
             <input type="hidden" name="user_id" value={user.id} />
-            <SubmitButton variant="outline" size="sm">Send Magic Link</SubmitButton>
+            <SubmitButton variant="outline" size="sm">Generate Login Link</SubmitButton>
           </form>
           <form action={resetAction}>
             <input type="hidden" name="user_id" value={user.id} />
             <SubmitButton variant="outline" size="sm">Send Password Reset</SubmitButton>
           </form>
         </div>
-        <p className="text-xs text-muted-foreground">These send an email to {user.email}</p>
+        <p className="text-xs text-muted-foreground">
+          Generate Login Link creates a one-time magic link to copy and share. Send Password Reset emails {user.email} a reset link.
+        </p>
       </div>
     </div>
   )

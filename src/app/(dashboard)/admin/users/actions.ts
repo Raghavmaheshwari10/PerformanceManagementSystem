@@ -1,6 +1,6 @@
 'use server'
 
-import { createServiceClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { requireRole, getCurrentUser } from '@/lib/auth'
 import { fetchZimyoEmployees, transformZimyoEmployee } from '@/lib/zimyo'
 import { revalidatePath } from 'next/cache'
@@ -181,6 +181,9 @@ export async function updateUser(_prev: ActionResult | null, formData: FormData)
       )
       if (deptErr) console.error('hrbp_departments update failed:', deptErr.message)
     }
+  } else if (old?.role === 'hrbp') {
+    // Role changed away from HRBP — clean up orphaned dept assignments
+    await svc.from('hrbp_departments').delete().eq('hrbp_id', userId)
   }
 
   // Audit log
@@ -198,7 +201,7 @@ export async function updateUser(_prev: ActionResult | null, formData: FormData)
   redirect('/admin/users')
 }
 
-export async function sendMagicLink(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+export async function sendMagicLink(_prev: ActionResult<{ link: string }> | null, formData: FormData): Promise<ActionResult<{ link: string }>> {
   await requireRole(['admin'])
   const admin = await getCurrentUser()
   const userId = formData.get('user_id') as string
@@ -208,15 +211,15 @@ export async function sendMagicLink(_prev: ActionResult | null, formData: FormDa
   const { data: u } = await svc.from('users').select('email').eq('id', userId).single()
   if (!u) return { data: null, error: 'User not found' }
 
-  const { error } = await svc.auth.admin.generateLink({ type: 'magiclink', email: u.email })
+  const { data: linkData, error } = await svc.auth.admin.generateLink({ type: 'magiclink', email: u.email })
   if (error) return { data: null, error: error.message }
 
   await svc.from('audit_logs').insert({
-    changed_by: admin!.id, action: 'magic_link_sent',
+    changed_by: admin!.id, action: 'magic_link_generated',
     entity_type: 'user', entity_id: userId,
     new_value: { email: u.email },
   })
-  return { data: null, error: null }
+  return { data: { link: linkData.properties.action_link }, error: null }
 }
 
 export async function sendPasswordReset(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
@@ -229,7 +232,10 @@ export async function sendPasswordReset(_prev: ActionResult | null, formData: Fo
   const { data: u } = await svc.from('users').select('email').eq('id', userId).single()
   if (!u) return { data: null, error: 'User not found' }
 
-  const { error } = await svc.auth.admin.generateLink({ type: 'recovery', email: u.email })
+  // Use the regular client's resetPasswordForEmail — this triggers the configured
+  // email template and actually delivers the email via Supabase SMTP
+  const supabase = await createClient()
+  const { error } = await supabase.auth.resetPasswordForEmail(u.email)
   if (error) return { data: null, error: error.message }
 
   await svc.from('audit_logs').insert({
