@@ -142,6 +142,104 @@ export async function createUser(_prev: ActionResult | null, formData: FormData)
   redirect('/admin/users')
 }
 
+export async function updateUser(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  await requireRole(['admin'])
+  const admin = await getCurrentUser()
+
+  const userId = formData.get('user_id') as string
+  if (!userId) return { data: null, error: 'User ID missing' }
+
+  const full_name     = (formData.get('full_name') as string)?.trim()
+  const role          = formData.get('role') as UserRole
+  const department_id = formData.get('department_id') as string || null
+  const designation   = (formData.get('designation') as string)?.trim() || null
+  const variable_pay  = parseFloat(formData.get('variable_pay') as string) || 0
+  const manager_id    = formData.get('manager_id') as string || null
+  const is_also_employee = formData.get('is_also_employee') === 'true'
+  const is_active     = formData.get('is_active') === 'true'
+
+  const svc = await createServiceClient()
+
+  // Get old values for audit
+  const { data: old } = await svc.from('users').select('role, department_id, is_active').eq('id', userId).single()
+
+  const { error } = await svc.from('users').update({
+    full_name, role, department_id, designation, variable_pay,
+    manager_id,
+    is_also_employee: role === 'hrbp' ? is_also_employee : false,
+    is_active,
+  }).eq('id', userId)
+  if (error) return { data: null, error: error.message }
+
+  // Update hrbp_departments if role is hrbp
+  if (role === 'hrbp') {
+    const deptIds = formData.getAll('hrbp_department_ids') as string[]
+    await svc.from('hrbp_departments').delete().eq('hrbp_id', userId)
+    if (deptIds.length > 0) {
+      const { error: deptErr } = await svc.from('hrbp_departments').insert(
+        deptIds.map(id => ({ hrbp_id: userId, department_id: id }))
+      )
+      if (deptErr) console.error('hrbp_departments update failed:', deptErr.message)
+    }
+  }
+
+  // Audit log
+  const { error: auditErr } = await svc.from('audit_logs').insert({
+    changed_by: admin!.id,
+    action: 'user_updated',
+    entity_type: 'user',
+    entity_id: userId,
+    old_value: { role: old?.role, department_id: old?.department_id, is_active: old?.is_active },
+    new_value: { role, department_id, is_active },
+  })
+  if (auditErr) console.error('Audit log failed:', auditErr.message)
+
+  revalidatePath('/admin/users')
+  redirect('/admin/users')
+}
+
+export async function sendMagicLink(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  await requireRole(['admin'])
+  const admin = await getCurrentUser()
+  const userId = formData.get('user_id') as string
+  if (!userId) return { data: null, error: 'User ID missing' }
+
+  const svc = await createServiceClient()
+  const { data: u } = await svc.from('users').select('email').eq('id', userId).single()
+  if (!u) return { data: null, error: 'User not found' }
+
+  const { error } = await svc.auth.admin.generateLink({ type: 'magiclink', email: u.email })
+  if (error) return { data: null, error: error.message }
+
+  await svc.from('audit_logs').insert({
+    changed_by: admin!.id, action: 'magic_link_sent',
+    entity_type: 'user', entity_id: userId,
+    new_value: { email: u.email },
+  })
+  return { data: null, error: null }
+}
+
+export async function sendPasswordReset(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  await requireRole(['admin'])
+  const admin = await getCurrentUser()
+  const userId = formData.get('user_id') as string
+  if (!userId) return { data: null, error: 'User ID missing' }
+
+  const svc = await createServiceClient()
+  const { data: u } = await svc.from('users').select('email').eq('id', userId).single()
+  if (!u) return { data: null, error: 'User not found' }
+
+  const { error } = await svc.auth.admin.generateLink({ type: 'recovery', email: u.email })
+  if (error) return { data: null, error: error.message }
+
+  await svc.from('audit_logs').insert({
+    changed_by: admin!.id, action: 'password_reset_sent',
+    entity_type: 'user', entity_id: userId,
+    new_value: { email: u.email },
+  })
+  return { data: null, error: null }
+}
+
 export async function updateUserRole(userId: string, role: string): Promise<void> {
   const user = await requireRole(['admin'])
   const supabase = await createServiceClient()

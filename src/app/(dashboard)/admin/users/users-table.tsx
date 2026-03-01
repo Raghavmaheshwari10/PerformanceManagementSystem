@@ -2,6 +2,7 @@
 
 import { useTransition } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { Input } from '@/components/ui/input'
 import { updateUserRole, toggleUserActive } from './actions'
 import type { User } from '@/lib/types'
@@ -86,6 +87,7 @@ export function UsersTable({ users }: { users: User[] }) {
               <th className="p-3 text-left">Designation</th>
               <th className="p-3 text-left">Role</th>
               <th className="p-3 text-left">Status</th>
+              <th className="p-3 text-left">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -116,10 +118,15 @@ export function UsersTable({ users }: { users: User[] }) {
                     {u.is_active ? 'Active' : 'Inactive'}
                   </button>
                 </td>
+                <td className="p-3">
+                  <Link href={`/admin/users/${u.id}/edit`} className="text-xs text-muted-foreground hover:underline">
+                    Edit
+                  </Link>
+                </td>
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">No users match your filters</td></tr>
+              <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">No users match your filters</td></tr>
             )}
           </tbody>
         </table>
