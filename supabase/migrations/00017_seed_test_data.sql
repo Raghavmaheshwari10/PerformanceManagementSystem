@@ -289,3 +289,66 @@ INSERT INTO kpis (cycle_id, employee_id, manager_id, title, description, weight)
   ('00000002-0000-0000-0000-000000000005','00000001-0000-0000-0000-000000000007','00000001-0000-0000-0000-000000000003','Delivery Quality','Maintain high standard across all deliverables',40),
   ('00000002-0000-0000-0000-000000000005','00000001-0000-0000-0000-000000000007','00000001-0000-0000-0000-000000000003','Collaboration & Communication','Effective teamwork and stakeholder communication',35),
   ('00000002-0000-0000-0000-000000000005','00000001-0000-0000-0000-000000000007','00000001-0000-0000-0000-000000000003','Learning & Development','Continuous skill growth and knowledge sharing',25);
+
+-- ──────────────────────────────────────────────────────────
+-- SECTION 5: REVIEWS
+-- Q1, Q2, Q3: all 6 submitted.
+-- Q4: 3 submitted (Bob, Dave, Grace), 3 draft (Eve, Henry, Irene).
+-- ──────────────────────────────────────────────────────────
+INSERT INTO reviews (cycle_id, employee_id, self_rating, self_comments, status, submitted_at) VALUES
+-- ── Q1 2025 (published) — all 6 submitted ───────────────
+  ('00000002-0000-0000-0000-000000000001','00000001-0000-0000-0000-000000000005',
+   'ME','I focused on shipping reliably this quarter and improved my code review turnaround. Areas to grow: proactive communication with cross-team stakeholders.','submitted','2025-02-08 10:00:00+00'),
+  ('00000002-0000-0000-0000-000000000001','00000001-0000-0000-0000-000000000006',
+   'ME','Delivered all sprint commitments on time. Strengthened documentation practices. Looking to take on more ownership next cycle.','submitted','2025-02-08 11:00:00+00'),
+  ('00000002-0000-0000-0000-000000000001','00000001-0000-0000-0000-000000000007',
+   'EE','Led the migration project end-to-end, mentored two junior engineers, and reduced CI flakiness by 60%. Exceeded my OKRs.','submitted','2025-02-07 14:00:00+00'),
+  ('00000002-0000-0000-0000-000000000001','00000001-0000-0000-0000-000000000008',
+   'ME','Completed all roadmap items with solid stakeholder alignment. Struggled with estimation accuracy in H2 — will focus on this next quarter.','submitted','2025-02-09 09:00:00+00'),
+  ('00000002-0000-0000-0000-000000000001','00000001-0000-0000-0000-000000000009',
+   'ME','Contributed to 3 major feature launches. My research quality improved, but collaboration with engineering was inconsistent at times.','submitted','2025-02-09 16:00:00+00'),
+  ('00000002-0000-0000-0000-000000000001','00000001-0000-0000-0000-000000000010',
+   'EE','Delivered the analytics dashboard ahead of schedule. Drove adoption across two teams and built self-serve reporting for stakeholders.','submitted','2025-02-08 15:00:00+00'),
+
+-- ── Q2 2025 (calibrating) — all 6 submitted ─────────────
+  ('00000002-0000-0000-0000-000000000002','00000001-0000-0000-0000-000000000005',
+   'EE','Shipped the auth redesign and improved p95 latency by 40%. Took on incident lead rotation and resolved 3 P1s.','submitted','2025-05-08 10:00:00+00'),
+  ('00000002-0000-0000-0000-000000000002','00000001-0000-0000-0000-000000000006',
+   'ME','Maintained steady delivery pace. Started contributing to architecture discussions. Want to take more initiative next half.','submitted','2025-05-08 11:00:00+00'),
+  ('00000002-0000-0000-0000-000000000002','00000001-0000-0000-0000-000000000007',
+   'EE','Completed platform unification ahead of schedule, enabled 2 new product lines. Strong cross-team collaboration throughout.','submitted','2025-05-07 14:00:00+00'),
+  ('00000002-0000-0000-0000-000000000002','00000001-0000-0000-0000-000000000008',
+   'ME','Feature roadmap on track. Discovery quality improved. Some miscommunications on scope with engineering — resolved quickly.','submitted','2025-05-09 09:00:00+00'),
+  ('00000002-0000-0000-0000-000000000002','00000001-0000-0000-0000-000000000009',
+   'ME','Good foundational work on design systems. Delivery was slower than expected due to scope changes outside my control.','submitted','2025-05-09 16:00:00+00'),
+  ('00000002-0000-0000-0000-000000000002','00000001-0000-0000-0000-000000000010',
+   'EE','Drove the data platform migration. Enabled 3 new data products and cut manual reporting effort by 70%.','submitted','2025-05-08 15:00:00+00'),
+
+-- ── Q3 2025 (manager_review) — all 6 submitted ──────────
+  ('00000002-0000-0000-0000-000000000003','00000001-0000-0000-0000-000000000005',
+   'EE','Led the backend API consolidation. Reduced service count from 12 to 7 with zero downtime. Strong quarter.','submitted','2025-08-08 10:00:00+00'),
+  ('00000002-0000-0000-0000-000000000003','00000001-0000-0000-0000-000000000006',
+   'ME','Delivered feature work consistently. Starting to own more complex scopes. Good progress on mentoring the intern.','submitted','2025-08-08 11:00:00+00'),
+  ('00000002-0000-0000-0000-000000000003','00000001-0000-0000-0000-000000000007',
+   'FEE','Defined and delivered the new observability stack used by 5 teams. Became the go-to for production debugging org-wide.','submitted','2025-08-07 14:00:00+00'),
+  ('00000002-0000-0000-0000-000000000003','00000001-0000-0000-0000-000000000008',
+   'ME','Ran successful beta for new pricing page. Good stakeholder communication throughout.','submitted','2025-08-09 09:00:00+00'),
+  ('00000002-0000-0000-0000-000000000003','00000001-0000-0000-0000-000000000009',
+   'EE','Redesigned onboarding flow — completion rate up 25%. Collaborated closely with product and engineering.','submitted','2025-08-09 16:00:00+00'),
+  ('00000002-0000-0000-0000-000000000003','00000001-0000-0000-0000-000000000010',
+   'ME','Delivered quarterly business review deck on time. Identified two cost optimisation opportunities worth ₹8L/year.','submitted','2025-08-08 15:00:00+00'),
+
+-- ── Q4 2025 (self_review) — 3 submitted, 3 draft ────────
+  ('00000002-0000-0000-0000-000000000004','00000001-0000-0000-0000-000000000005',
+   'EE','Shipped the real-time notifications feature. Users love it — 80% opt-in in first week.','submitted','2025-11-08 10:00:00+00'),
+  ('00000002-0000-0000-0000-000000000004','00000001-0000-0000-0000-000000000006',
+   'ME','Focused on tech debt reduction this quarter. Removed 4 deprecated services, cut build time by 30%.','submitted','2025-11-09 11:00:00+00'),
+  ('00000002-0000-0000-0000-000000000004','00000001-0000-0000-0000-000000000008',
+   'EE','Launched 3 key features ahead of schedule. NPS for product area up 8 points.','submitted','2025-11-08 09:00:00+00'),
+  -- Draft reviews (no self_rating, empty comments, no submitted_at)
+  ('00000002-0000-0000-0000-000000000004','00000001-0000-0000-0000-000000000007',
+   NULL,'','draft',NULL),
+  ('00000002-0000-0000-0000-000000000004','00000001-0000-0000-0000-000000000009',
+   NULL,'','draft',NULL),
+  ('00000002-0000-0000-0000-000000000004','00000001-0000-0000-0000-000000000010',
+   NULL,'','draft',NULL);
