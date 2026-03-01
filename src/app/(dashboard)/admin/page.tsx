@@ -64,7 +64,7 @@ export default async function AdminDashboard() {
 
   const roleCounts = { employee: 0, manager: 0, hrbp: 0, admin: 0 }
   for (const u of activeUsers) roleCounts[u.role as keyof typeof roleCounts]++
-  const deptCount = new Set(activeUsers.map(u => u.department).filter(Boolean)).size
+  const deptCount = new Set(activeUsers.map(u => u.department?.name).filter(Boolean)).size
 
   return (
     <div className="space-y-6">

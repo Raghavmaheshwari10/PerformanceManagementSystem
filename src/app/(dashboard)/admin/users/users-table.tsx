@@ -20,7 +20,7 @@ export function UsersTable({ users }: { users: User[] }) {
 
   const [, startTransition] = useTransition()
 
-  const departments = [...new Set(users.map(u => u.department).filter(Boolean))].sort() as string[]
+  const departments = [...new Set(users.map(u => u.department?.name).filter(Boolean))].sort() as string[]
 
   function updateParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString())
@@ -31,7 +31,7 @@ export function UsersTable({ users }: { users: User[] }) {
   const filtered = users.filter(u => {
     if (search && !u.full_name.toLowerCase().includes(search.toLowerCase()) && !u.email.toLowerCase().includes(search.toLowerCase())) return false
     if (roleFilter && u.role !== roleFilter) return false
-    if (deptFilter && u.department !== deptFilter) return false
+    if (deptFilter && u.department?.name !== deptFilter) return false
     if (activeFilter === 'active' && !u.is_active) return false
     if (activeFilter === 'inactive' && u.is_active) return false
     return true
@@ -93,7 +93,7 @@ export function UsersTable({ users }: { users: User[] }) {
               <tr key={u.id} className="border-t">
                 <td className="p-3 font-medium">{u.full_name}</td>
                 <td className="p-3 text-muted-foreground">{u.email}</td>
-                <td className="p-3 text-muted-foreground">{u.department ?? '—'}</td>
+                <td className="p-3 text-muted-foreground">{u.department?.name ?? '—'}</td>
                 <td className="p-3 text-muted-foreground">{u.designation ?? '—'}</td>
                 <td className="p-3">
                   <select

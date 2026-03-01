@@ -1,17 +1,29 @@
 import type { RatingTier, CycleStatus } from './types'
 
-export const RATING_TIERS: { code: RatingTier; name: string; fixedMultiplier: number | null }[] = [
-  { code: 'FEE', name: 'Far Exceeds Expectations', fixedMultiplier: 1.25 },
-  { code: 'EE', name: 'Exceeds Expectations', fixedMultiplier: 1.1 },
-  { code: 'ME', name: 'Meets Expectations', fixedMultiplier: 1.0 },
-  { code: 'SME', name: 'Some Meets Expectations', fixedMultiplier: null },
-  { code: 'BE', name: 'Below Expectations', fixedMultiplier: 0 },
+export const RATING_TIERS: { code: RatingTier; name: string }[] = [
+  { code: 'FEE', name: 'Far Exceeds Expectations' },
+  { code: 'EE', name: 'Exceeds Expectations' },
+  { code: 'ME', name: 'Meets Expectations' },
+  { code: 'SME', name: 'Some Meets Expectations' },
+  { code: 'BE', name: 'Below Expectations' },
 ]
 
-export function getPayoutMultiplier(rating: RatingTier, smeMultiplier: number): number {
-  if (rating === 'SME') return smeMultiplier
-  const tier = RATING_TIERS.find(t => t.code === rating)
-  return tier?.fixedMultiplier ?? 0
+// Config map type for UI payout preview (values from payout_config table)
+export type PayoutConfigMap = Record<RatingTier, number>
+
+// Default display values (used when payout_config hasn't loaded yet)
+export const DEFAULT_PAYOUT_CONFIG: PayoutConfigMap = {
+  FEE: 1.25, EE: 1.10, ME: 1.00, SME: 1.00, BE: 0.00,
+}
+
+// Updated: accepts explicit config map instead of hardcoded values
+export function getPayoutMultiplier(
+  rating: RatingTier,
+  smeMultiplier: number,
+  config: PayoutConfigMap = DEFAULT_PAYOUT_CONFIG
+): number {
+  if (rating === 'SME') return (config.SME ?? 1.0) + smeMultiplier
+  return config[rating] ?? 0
 }
 
 export const CYCLE_STATUS_ORDER: CycleStatus[] = [

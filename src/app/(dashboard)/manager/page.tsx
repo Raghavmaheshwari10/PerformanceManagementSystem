@@ -151,7 +151,7 @@ export default async function ManagerTeamPage() {
               >
                 <div className="space-y-0.5">
                   <p className="font-medium">{emp.full_name}</p>
-                  <p className="text-xs text-muted-foreground">{emp.department}</p>
+                  <p className="text-xs text-muted-foreground">{emp.department?.name ?? '—'}</p>
                 </div>
 
                 <div className="flex items-center gap-3 text-xs">

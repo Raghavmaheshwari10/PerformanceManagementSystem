@@ -7,13 +7,34 @@ export type ReviewStatus = "draft" | "submitted"
 export type NotificationType = "cycle_kpi_setting_open" | "cycle_self_review_open" | "cycle_manager_review_open" | "cycle_published" | "review_submitted" | "manager_review_submitted" | "admin_message" | "review_reminder"
 export type NotificationStatus = "pending" | "sent" | "failed"
 
+export interface Department {
+  id: string
+  name: string
+  created_at: string
+}
+
+export interface HrbpDepartment {
+  hrbp_id: string
+  department_id: string
+  department?: Department
+}
+
+export interface PayoutConfig {
+  rating_tier: RatingTier
+  multiplier: number
+  updated_by: string | null
+  updated_at: string
+}
+
 export interface User {
   id: string
   zimyo_id: string
   email: string
   full_name: string
   role: UserRole
-  department: string | null
+  department_id?: string | null
+  department?: Department        // joined, optional
+  is_also_employee: boolean
   designation: string | null
   manager_id: string | null
   variable_pay: number
@@ -41,6 +62,9 @@ export interface Cycle {
   created_by: string | null
   created_at: string
   updated_at: string
+  fee_multiplier?: number | null
+  ee_multiplier?:  number | null
+  me_multiplier?:  number | null
 }
 
 export interface Kpi {

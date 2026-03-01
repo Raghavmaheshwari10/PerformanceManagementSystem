@@ -97,7 +97,7 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
               return (
                 <tr key={emp.id} className="border-t">
                   <td className="p-3 font-medium">{emp.full_name}</td>
-                  <td className="p-3 text-muted-foreground">{emp.department ?? '—'}</td>
+                  <td className="p-3 text-muted-foreground">{emp.department?.name ?? '—'}</td>
                   <td className="p-3 text-muted-foreground">{manager?.full_name ?? '—'}</td>
                   <td className="p-3">
                     <Badge variant={selfDone ? 'default' : 'secondary'}
