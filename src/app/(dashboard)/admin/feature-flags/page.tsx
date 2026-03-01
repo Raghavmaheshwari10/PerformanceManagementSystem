@@ -50,7 +50,12 @@ export default async function FeatureFlagsPage() {
                         {flag.default_value ? ' · Default: On' : ' · Default: Off'}
                       </p>
                     </div>
-                    <FeatureFlagToggle flagKey={flag.key} value={currentValue} />
+                    <FeatureFlagToggle
+                      flagKey={flag.key}
+                      value={currentValue}
+                      name={flag.name}
+                      category={cat}
+                    />
                   </div>
                 )
               })}
