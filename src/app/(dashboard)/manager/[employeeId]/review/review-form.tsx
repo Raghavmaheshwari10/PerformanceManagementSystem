@@ -1,12 +1,13 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useState, useEffect } from 'react'
 import { submitManagerRating } from '../../actions'
 import { SubmitButton } from '@/components/submit-button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { RatingPillSelector, STANDARD_RATING_OPTIONS } from '@/components/rating-pill-selector'
 import { RATING_TIERS } from '@/lib/constants'
+import { useToast } from '@/lib/toast'
 import type { ActionResult } from '@/lib/types'
 
 const INITIAL: ActionResult = { data: null, error: null }
@@ -21,8 +22,15 @@ interface ReviewFormProps {
 export function ReviewForm({ cycleId, employeeId, defaultRating, defaultComments }: ReviewFormProps) {
   const [state, action] = useActionState(submitManagerRating, INITIAL)
   const [rating, setRating] = useState(defaultRating ?? '')
+  const { toast } = useToast()
 
   const selectedTier = RATING_TIERS.find(t => t.code === rating)
+
+  useEffect(() => {
+    if (state === INITIAL) return
+    if (state.error) toast.error(state.error)
+    else toast.success('Rating submitted successfully.')
+  }, [state])
 
   return (
     <form action={action} className="space-y-4">
@@ -60,7 +68,9 @@ export function ReviewForm({ cycleId, employeeId, defaultRating, defaultComments
         />
       </div>
 
-      <SubmitButton pendingLabel="Submitting your rating…">Submit Rating</SubmitButton>
+      <div data-tour="submit-review">
+        <SubmitButton pendingLabel="Submitting your rating…">Submit Rating</SubmitButton>
+      </div>
     </form>
   )
 }

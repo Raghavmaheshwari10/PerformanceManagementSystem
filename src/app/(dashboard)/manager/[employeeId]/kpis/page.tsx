@@ -28,7 +28,7 @@ export default async function KpiSettingPage({
     <div className="max-w-2xl space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">KPIs for {(employee as User)?.full_name}</h1>
-        {cycleId && <KpiTemplatePicker cycleId={cycleId} employeeId={employeeId} />}
+        {cycleId && <div data-tour="template-picker"><KpiTemplatePicker cycleId={cycleId} employeeId={employeeId} /></div>}
       </div>
 
       {pageError && (
@@ -66,9 +66,9 @@ export default async function KpiSettingPage({
         </div>
         <div className="space-y-2">
           <Label htmlFor="weight">Weight (%)</Label>
-          <Input id="weight" name="weight" type="number" min="1" max="100" />
+          <Input id="weight" name="weight" type="number" min="1" max="100" data-tour="weight-field" />
         </div>
-        <SubmitButton pendingLabel="Adding...">Add KPI</SubmitButton>
+        <SubmitButton pendingLabel="Adding..." data-tour="add-kpi-btn">Add KPI</SubmitButton>
       </form>
     </div>
   )
