@@ -1,40 +1,62 @@
-﻿name: Cleanup Old Vercel Deployments
+name: Cleanup Old Vercel Deployments
 
 on:
-  push:
-    branches:
-      - master
+  deployment_status:
 
 jobs:
   cleanup:
+    # Only run when Vercel marks a Production deployment as successful
+    if: |
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment.environment == 'Production'
     runs-on: ubuntu-latest
-    steps:
-      - name: Wait for Vercel to finish deploying
-        run: sleep 120
 
-      - name: Delete old production deployments (keep latest only)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Show deployed commit (git)
+        run: |
+          SHA="${{ github.event.deployment.sha }}"
+          echo "Deployed commit: $(git rev-parse --short $SHA) — $(git log -1 --pretty=%s $SHA)"
+
+      - name: Delete old production deployments (keep latest 3)
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          TEAM_ID: ${{ vars.VERCEL_TEAM_ID }}
+          PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
         run: |
-          TEAM_ID="team_42KTCyHWE46Hm7FtgOLL0igh"
-          PROJECT_ID="prj_qhb3kS0VjbPDR6dsq1wRFiW2eZaE"
+          KEEP=3
 
-          DEPLOYMENTS=$(curl -s \
+          echo "Fetching production deployments..."
+
+          RESPONSE=$(curl -sf \
             -H "Authorization: Bearer $VERCEL_TOKEN" \
-            "https://api.vercel.com/v6/deployments?projectId=$PROJECT_ID&teamId=$TEAM_ID&limit=50&target=production&state=READY" \
-            | jq -r '.deployments[].uid')
+            "https://api.vercel.com/v6/deployments?projectId=$PROJECT_ID&teamId=$TEAM_ID&limit=100&target=production&state=READY")
 
-          LATEST=$(echo "$DEPLOYMENTS" | head -1)
-          OLD=$(echo "$DEPLOYMENTS" | tail -n +2)
+          URLS=$(echo "$RESPONSE" | jq -r '.deployments[].url')
+          TOTAL=$(echo "$URLS" | grep -c . || true)
 
-          echo "Keeping latest: $LATEST"
+          echo "Found $TOTAL ready production deployments. Keeping latest $KEEP."
 
-          for uid in $OLD; do
-            echo "Deleting: $uid"
-            curl -s -X DELETE \
-              -H "Authorization: Bearer $VERCEL_TOKEN" \
-              "https://api.vercel.com/v13/deployments/$uid?teamId=$TEAM_ID"
-            echo " done"
+          if [ "$TOTAL" -le "$KEEP" ]; then
+            echo "Nothing to clean up."
+            exit 0
+          fi
+
+          OLD_URLS=$(echo "$URLS" | tail -n +$((KEEP + 1)))
+
+          for url in $OLD_URLS; do
+            echo "Removing: https://$url"
+            vercel remove "https://$url" \
+              --token "$VERCEL_TOKEN" \
+              --scope "$TEAM_ID" \
+              --yes
           done
 
-          echo "Cleanup complete — only latest deployment remains"
+          echo "Done. Kept latest $KEEP deployments."
