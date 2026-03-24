@@ -21,16 +21,16 @@ const makeUser = (id: string): User => ({
 describe('checkManagerOwnership', () => {
   it('returns true when user id matches managerId', () => {
     const user = makeUser('manager-1')
-    expect(checkManagerOwnership(user, 'manager-1')).toBe(true)
+    expect(checkManagerOwnership(user.id, 'manager-1')).toBe(true)
   })
 
   it('returns false when user id does not match managerId', () => {
     const user = makeUser('manager-1')
-    expect(checkManagerOwnership(user, 'manager-2')).toBe(false)
+    expect(checkManagerOwnership(user.id, 'manager-2')).toBe(false)
   })
 
   it('returns false for empty managerId', () => {
     const user = makeUser('manager-1')
-    expect(checkManagerOwnership(user, '')).toBe(false)
+    expect(checkManagerOwnership(user.id, '')).toBe(false)
   })
 })

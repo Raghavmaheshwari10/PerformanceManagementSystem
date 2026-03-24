@@ -1,20 +1,18 @@
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { FeatureFlagToggle } from './feature-flag-toggle'
 
 export default async function FeatureFlagsPage() {
   await requireRole(['admin'])
-  const supabase = await createClient()
-  
-  const { data: flags } = await supabase
-    .from('feature_flags')
-    .select('*, feature_flag_overrides(*)')
-    .order('category')
-    .order('name')
-  
+
+  const flags = await prisma.featureFlag.findMany({
+    orderBy: [{ category: 'asc' }, { name: 'asc' }],
+    include: { overrides: true },
+  })
+
   const categories = ['module', 'ui', 'notify'] as const
   const categoryLabels = { module: 'Modules', ui: 'UI Controls', notify: 'Notifications' }
-  
+
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
@@ -25,7 +23,7 @@ export default async function FeatureFlagsPage() {
         </p>
       </div>
       {categories.map(cat => {
-        const catFlags = (flags ?? []).filter(f => f.category === cat)
+        const catFlags = flags.filter(f => f.category === cat)
         if (!catFlags.length) return null
         return (
           <div key={cat} className="rounded-lg border p-4 space-y-3">
@@ -34,8 +32,8 @@ export default async function FeatureFlagsPage() {
             </h2>
             <div className="divide-y">
               {catFlags.map(flag => {
-                const orgOverride = flag.feature_flag_overrides?.find(
-                  (o: any) => o.scope === 'org' && o.scope_id === null
+                const orgOverride = flag.overrides?.find(
+                  o => o.scope === 'org' && o.scope_id === null
                 )
                 const currentValue = orgOverride?.value ?? flag.default_value
                 return (

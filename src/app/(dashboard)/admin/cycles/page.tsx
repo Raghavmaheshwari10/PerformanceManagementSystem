@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { CycleStatusBadge } from '@/components/cycle-status-badge'
 import { Button } from '@/components/ui/button'
@@ -17,7 +17,7 @@ interface CycleProgress {
   overdueManagerReviews: number
 }
 
-function daysUntil(d: string | null) {
+function daysUntil(d: Date | string | null) {
   if (!d) return null
   return Math.ceil((new Date(d).getTime() - Date.now()) / 86400000)
 }
@@ -51,36 +51,38 @@ function ProgressRing({ pct, label, sub }: { pct: number; label: string; sub: st
 
 export default async function AdminCyclesPage() {
   await requireRole(['admin'])
-  const supabase = await createClient()
 
-  const { data: cycles } = await supabase
-    .from('cycles')
-    .select('*')
-    .order('created_at', { ascending: false })
-
-  const allCycles = (cycles as Cycle[]) ?? []
+  const allCycles = await prisma.cycle.findMany({ orderBy: { created_at: 'desc' } })
 
   // For the most recent active cycle, fetch progress stats
   const activeCycle = allCycles.find(c => !['draft', 'published'].includes(c.status))
   let progress: CycleProgress | null = null
 
   if (activeCycle) {
-    const [usersRes, reviewsRes, appraisalsRes] = await Promise.all([
-      supabase.from('users').select('id').eq('is_active', true).neq('role', 'admin').neq('role', 'hrbp'),
-      supabase.from('reviews').select('employee_id, status').eq('cycle_id', activeCycle.id),
-      supabase.from('appraisals').select('employee_id, manager_submitted_at').eq('cycle_id', activeCycle.id),
+    const [users, reviews, appraisals] = await Promise.all([
+      prisma.user.findMany({
+        where: { is_active: true, role: { notIn: ['admin', 'hrbp'] } },
+        select: { id: true },
+      }),
+      prisma.review.findMany({
+        where: { cycle_id: activeCycle.id },
+        select: { employee_id: true, status: true },
+      }),
+      prisma.appraisal.findMany({
+        where: { cycle_id: activeCycle.id },
+        select: { employee_id: true, manager_submitted_at: true },
+      }),
     ])
 
-    const totalEmployees = usersRes.data?.length ?? 0
-    const selfReviewsDone = (reviewsRes.data ?? []).filter(r => r.status === 'submitted').length
-    const managerReviewsDone = (appraisalsRes.data ?? []).filter(a => a.manager_submitted_at).length
-    const deadline = activeCycle.manager_review_deadline
-    const days = daysUntil(deadline)
+    const totalEmployees = users.length
+    const selfReviewsDone = reviews.filter(r => r.status === 'submitted').length
+    const managerReviewsDone = appraisals.filter(a => a.manager_submitted_at).length
+    const days = daysUntil(activeCycle.manager_review_deadline)
     const overdueManagerReviews = days !== null && days < 0
       ? totalEmployees - managerReviewsDone
       : 0
 
-    progress = { cycle: activeCycle, totalEmployees, selfReviewsDone, managerReviewsDone, overdueManagerReviews }
+    progress = { cycle: activeCycle as unknown as Cycle, totalEmployees, selfReviewsDone, managerReviewsDone, overdueManagerReviews }
   }
 
   return (

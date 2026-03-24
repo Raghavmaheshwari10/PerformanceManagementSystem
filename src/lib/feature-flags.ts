@@ -1,35 +1,41 @@
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
+import { resolveFeatureFlag } from '@/lib/db/feature-flags'
 
 export type FeatureFlags = Record<string, boolean>
 
+/**
+ * Resolves all feature flags for a user in 2 round trips (flags + overrides).
+ */
 export async function getFeatureFlags(userId: string, role: string): Promise<FeatureFlags> {
-  const supabase = await createClient()
-  
-  // Fetch all flag keys
-  const { data: flags } = await supabase.from('feature_flags').select('key')
-  if (!flags) return {}
-  
-  // Resolve each flag
-  const entries = await Promise.all(
-    flags.map(async ({ key }) => {
-      const { data } = await supabase.rpc('resolve_feature_flag', {
-        p_key: key,
-        p_user_id: userId,
-        p_role: role,
-      })
-      return [key, data ?? false] as [string, boolean]
+  const [flags, overrides] = await Promise.all([
+    prisma.featureFlag.findMany(),
+    prisma.featureFlagOverride.findMany({
+      where: {
+        OR: [
+          { scope: 'user', scope_id: userId },
+          { scope: 'role', scope_id: role },
+          { scope: 'org' },
+        ],
+      },
+    }),
+  ])
+
+  return Object.fromEntries(
+    flags.map(flag => {
+      const userOverride = overrides.find(o => o.flag_key === flag.key && o.scope === 'user' && o.scope_id === userId)
+      if (userOverride) return [flag.key, userOverride.value]
+
+      const roleOverride = overrides.find(o => o.flag_key === flag.key && o.scope === 'role' && o.scope_id === role)
+      if (roleOverride) return [flag.key, roleOverride.value]
+
+      const orgOverride = overrides.find(o => o.flag_key === flag.key && o.scope === 'org')
+      if (orgOverride) return [flag.key, orgOverride.value]
+
+      return [flag.key, flag.default_value]
     })
   )
-  
-  return Object.fromEntries(entries)
 }
 
 export async function getFlag(key: string, userId: string, role: string): Promise<boolean> {
-  const supabase = await createClient()
-  const { data } = await supabase.rpc('resolve_feature_flag', {
-    p_key: key,
-    p_user_id: userId,
-    p_role: role,
-  })
-  return data ?? false
+  return resolveFeatureFlag(key, userId, role)
 }

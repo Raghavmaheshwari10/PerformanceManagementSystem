@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { DeadlineBanner } from '@/components/deadline-banner'
 import Link from 'next/link'
@@ -12,51 +12,51 @@ interface EmployeeStatus {
   managerReviewStatus: 'submitted' | 'pending'
 }
 
-function daysUntil(dateStr: string | null): number | null {
-  if (!dateStr) return null
-  return Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86400000)
+function daysUntil(d: Date | string | null): number | null {
+  if (!d) return null
+  return Math.ceil((new Date(d).getTime() - Date.now()) / 86400000)
 }
 
 export default async function ManagerTeamPage() {
   const user = await requireRole(['manager'])
-  const supabase = await createClient()
 
-  const { data: cycles } = await supabase
-    .from('cycles')
-    .select('*')
-    .neq('status', 'draft')
-    .neq('status', 'published')
-    .order('created_at', { ascending: false })
-    .limit(1)
+  const activeCycle = await prisma.cycle.findFirst({
+    where: { status: { notIn: ['draft', 'published'] } },
+    orderBy: { created_at: 'desc' },
+  })
 
-  const activeCycle = (cycles as Cycle[])?.[0]
-
-  const { data: reports } = await supabase
-    .from('users')
-    .select('*')
-    .eq('manager_id', user.id)
-    .eq('is_active', true)
-
-  const employees = (reports as User[]) ?? []
+  const employees = await prisma.user.findMany({
+    where: { manager_id: user.id, is_active: true },
+    include: { department: true },
+  })
 
   let statuses: EmployeeStatus[] = []
   if (activeCycle && employees.length > 0) {
     const employeeIds = employees.map(e => e.id)
-    const [kpisRes, reviewsRes, appraisalsRes] = await Promise.all([
-      supabase.from('kpis').select('employee_id').eq('cycle_id', activeCycle.id).in('employee_id', employeeIds),
-      supabase.from('reviews').select('employee_id, status').eq('cycle_id', activeCycle.id).in('employee_id', employeeIds),
-      supabase.from('appraisals').select('employee_id, manager_submitted_at').eq('cycle_id', activeCycle.id).in('employee_id', employeeIds),
+    const [kpis, reviews, appraisals] = await Promise.all([
+      prisma.kpi.findMany({
+        where: { cycle_id: activeCycle.id, employee_id: { in: employeeIds } },
+        select: { employee_id: true },
+      }),
+      prisma.review.findMany({
+        where: { cycle_id: activeCycle.id, employee_id: { in: employeeIds } },
+        select: { employee_id: true, status: true },
+      }),
+      prisma.appraisal.findMany({
+        where: { cycle_id: activeCycle.id, employee_id: { in: employeeIds } },
+        select: { employee_id: true, manager_submitted_at: true },
+      }),
     ])
 
     const kpiCounts = new Map<string, number>()
-    for (const k of kpisRes.data ?? []) {
+    for (const k of kpis) {
       kpiCounts.set(k.employee_id, (kpiCounts.get(k.employee_id) ?? 0) + 1)
     }
-    const reviewMap = new Map((reviewsRes.data ?? []).map(r => [r.employee_id, r.status]))
-    const appraisalMap = new Map((appraisalsRes.data ?? []).map(a => [a.employee_id, a.manager_submitted_at]))
+    const reviewMap = new Map(reviews.map(r => [r.employee_id, r.status]))
+    const appraisalMap = new Map(appraisals.map(a => [a.employee_id, a.manager_submitted_at]))
 
     statuses = employees.map(emp => ({
-      employee: emp,
+      employee: emp as unknown as User,
       kpiCount: kpiCounts.get(emp.id) ?? 0,
       selfReviewStatus: reviewMap.has(emp.id)
         ? (reviewMap.get(emp.id) === 'submitted' ? 'submitted' : 'draft')
@@ -65,7 +65,7 @@ export default async function ManagerTeamPage() {
     }))
   } else {
     statuses = employees.map(emp => ({
-      employee: emp, kpiCount: 0,
+      employee: emp as unknown as User, kpiCount: 0,
       selfReviewStatus: 'not_started', managerReviewStatus: 'pending',
     }))
   }
@@ -75,7 +75,7 @@ export default async function ManagerTeamPage() {
   const remaining = totalReviews - submitted
 
   const deadline = activeCycle?.manager_review_deadline
-  const daysLeft = daysUntil(deadline)
+  const daysLeft = daysUntil(deadline ?? null)
   const isOverdue = daysLeft !== null && daysLeft < 0
 
   return (
@@ -103,10 +103,10 @@ export default async function ManagerTeamPage() {
 
       {!activeCycle && <p className="text-muted-foreground">No active review cycle.</p>}
       {activeCycle?.status === 'kpi_setting' && (
-        <DeadlineBanner deadline={activeCycle.kpi_setting_deadline} label="KPI setting" />
+        <DeadlineBanner deadline={activeCycle.kpi_setting_deadline ? String(activeCycle.kpi_setting_deadline) : null} label="KPI setting" />
       )}
       {activeCycle?.status === 'manager_review' && !isOverdue && (
-        <DeadlineBanner deadline={activeCycle.manager_review_deadline} label="Manager review" />
+        <DeadlineBanner deadline={activeCycle.manager_review_deadline ? String(activeCycle.manager_review_deadline) : null} label="Manager review" />
       )}
 
       {employees.length === 0 && (
@@ -125,7 +125,7 @@ export default async function ManagerTeamPage() {
           <p className="text-xs text-muted-foreground">
             {submitted === totalReviews
               ? '✓ All reviews submitted!'
-              : `${remaining} remaining${daysLeft !== null && daysLeft >= 0 ? ` · ${daysLeft}d left` : ""}`
+              : `${remaining} remaining${daysLeft !== null && daysLeft >= 0 ? ` · ${daysLeft}d left` : ''}`
             }
           </p>
         </div>

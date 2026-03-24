@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { CycleStatusBadge } from '@/components/cycle-status-badge'
 import { DeadlineBanner } from '@/components/deadline-banner'
@@ -9,28 +9,29 @@ import { CycleTimeline } from '@/components/cycle-timeline'
 import type { Cycle, Kpi, Review, Appraisal } from '@/lib/types'
 
 export default async function EmployeeReviewPage() {
-  const user = await requireRole(["employee"])
-  const supabase = await createClient()
+  const user = await requireRole(['employee'])
 
-  const { data: cycles } = await supabase
-    .from("cycles").select("*")
-    .neq("status", "draft")
-    .order("created_at", { ascending: false }).limit(1)
-  const cycle = (cycles as Cycle[])?.[0]
+  const cycle = await prisma.cycle.findFirst({
+    where: { status: { not: 'draft' } },
+    orderBy: { created_at: 'desc' },
+  })
 
   if (!cycle) return <p className="text-muted-foreground">No active review cycle.</p>
 
-  const [kpiRes, reviewRes, appraisalRes] = await Promise.all([
-    supabase.from("kpis").select("*").eq("cycle_id", cycle.id).eq("employee_id", user.id),
-    supabase.from("reviews").select("*").eq("cycle_id", cycle.id).eq("employee_id", user.id).single(),
-    supabase.from("appraisals").select("*").eq("cycle_id", cycle.id).eq("employee_id", user.id).single(),
+  const [kpis, review, appraisal] = await Promise.all([
+    prisma.kpi.findMany({
+      where: { cycle_id: cycle.id, employee_id: user.id },
+    }),
+    prisma.review.findFirst({
+      where: { cycle_id: cycle.id, employee_id: user.id },
+    }),
+    prisma.appraisal.findFirst({
+      where: { cycle_id: cycle.id, employee_id: user.id },
+    }),
   ])
 
-  const kpis = kpiRes.data as Kpi[] ?? []
-  const review = reviewRes.data as Review | null
-  const appraisal = appraisalRes.data as Appraisal | null
-  const isSelfReview = cycle.status === "self_review"
-  const isPublished = cycle.status === "published"
+  const isSelfReview = cycle.status === 'self_review'
+  const isPublished = cycle.status === 'published'
 
   return (
     <div className="space-y-6">
@@ -41,12 +42,12 @@ export default async function EmployeeReviewPage() {
       </div>
 
       {isSelfReview && (
-        <DeadlineBanner deadline={cycle.self_review_deadline} label="Self-review" />
+        <DeadlineBanner deadline={cycle.self_review_deadline ? String(cycle.self_review_deadline) : null} label="Self-review" />
       )}
 
       {/* Zone 1: Action Inbox */}
       <div data-tour="action-inbox">
-        <ActionInbox cycle={cycle} kpis={kpis} review={review} />
+        <ActionInbox cycle={cycle as unknown as Cycle} kpis={kpis as unknown as Kpi[]} review={review as unknown as Review | null} />
       </div>
 
       {/* Zone 2: Two-column layout */}
@@ -72,7 +73,7 @@ export default async function EmployeeReviewPage() {
                       )}
                     </div>
                     <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
-                      {kpi.weight}%
+                      {String(kpi.weight)}%
                     </span>
                   </div>
                 </div>
@@ -88,9 +89,9 @@ export default async function EmployeeReviewPage() {
       </div>
 
       {/* Self-review form */}
-      {isSelfReview && review?.status !== "submitted" && (
+      {isSelfReview && review?.status !== 'submitted' && (
         <div data-tour="self-review-form">
-          <SelfReviewForm cycleId={cycle.id} review={review} />
+          <SelfReviewForm cycleId={cycle.id} review={review as unknown as Review | null} />
         </div>
       )}
 
@@ -101,11 +102,11 @@ export default async function EmployeeReviewPage() {
           <p>Final Rating: <span className="font-bold">{appraisal.final_rating}</span></p>
           {appraisal.payout_amount != null && (
             <PayoutBreakdown
-              snapshottedVariablePay={appraisal.snapshotted_variable_pay ?? 0}
-              rating={appraisal.final_rating ?? ""}
-              individualMultiplier={appraisal.payout_multiplier ?? 0}
-              businessMultiplier={cycle.business_multiplier ?? 1}
-              payoutAmount={appraisal.payout_amount}
+              snapshottedVariablePay={Number(appraisal.snapshotted_variable_pay ?? 0)}
+              rating={appraisal.final_rating ?? ''}
+              individualMultiplier={Number(appraisal.payout_multiplier ?? 0)}
+              businessMultiplier={Number(cycle.business_multiplier ?? 1)}
+              payoutAmount={Number(appraisal.payout_amount)}
             />
           )}
         </section>

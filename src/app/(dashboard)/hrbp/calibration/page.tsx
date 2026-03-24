@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { BellCurveChart } from '@/components/bell-curve-chart'
 import { OverrideForm } from './override-form'
@@ -12,30 +12,44 @@ interface AppraisalRow {
   payout_multiplier: number | null
   payout_amount: number | null
   snapshotted_variable_pay: number | null
-  users: { full_name: string; department: string | null } | null
+  employee: { full_name: string; department: { name: string } | null } | null
 }
 
 export default async function CalibrationPage({ searchParams }: { searchParams: Promise<{ cycle?: string }> }) {
   await requireRole(['hrbp'])
   const { cycle: cycleId } = await searchParams
-  const supabase = await createClient()
 
   if (!cycleId) return <p>Select a cycle from the overview page.</p>
 
-  const { data: cycle } = await supabase.from('cycles').select('*').eq('id', cycleId).single()
-  const { data: appraisals } = await supabase
-    .from('appraisals')
-    .select('id, manager_rating, final_rating, payout_multiplier, payout_amount, snapshotted_variable_pay, users!appraisals_employee_id_fkey(full_name, department)')
-    .eq('cycle_id', cycleId)
+  const [cycle, appraisals] = await Promise.all([
+    prisma.cycle.findUnique({ where: { id: cycleId } }),
+    prisma.appraisal.findMany({
+      where: { cycle_id: cycleId },
+      select: {
+        id: true,
+        manager_rating: true,
+        final_rating: true,
+        payout_multiplier: true,
+        payout_amount: true,
+        snapshotted_variable_pay: true,
+        employee: {
+          select: {
+            full_name: true,
+            department: { select: { name: true } },
+          },
+        },
+      },
+    }),
+  ])
 
-  const rows = (appraisals ?? []) as unknown as AppraisalRow[]
+  const rows = appraisals as unknown as AppraisalRow[]
   const distribution: Record<RatingTier, number> = { FEE: 0, EE: 0, ME: 0, SME: 0, BE: 0 }
   for (const a of rows) {
     const rating = a.final_rating ?? a.manager_rating
     if (rating) distribution[rating]++
   }
 
-  const typedCycle = cycle as Cycle | null
+  const typedCycle = cycle as unknown as Cycle | null
   const isCalibrating = typedCycle?.status === 'calibrating'
   const isLocked = typedCycle?.status === 'locked'
 
@@ -67,14 +81,14 @@ export default async function CalibrationPage({ searchParams }: { searchParams: 
           <tbody>
             {rows.map(a => (
               <tr key={a.id} className="border-b">
-                <td className="p-3">{a.users?.full_name}</td>
-                <td className="p-3">{a.users?.department}</td>
+                <td className="p-3">{a.employee?.full_name}</td>
+                <td className="p-3">{a.employee?.department?.name ?? '—'}</td>
                 <td className="p-3">{a.manager_rating}</td>
                 <td className="p-3 font-medium">{a.final_rating ?? a.manager_rating}</td>
                 {['locked', 'published'].includes(typedCycle?.status ?? '') && (
                   <>
-                    <td className="p-3 text-right">×{a.payout_multiplier?.toFixed(3) ?? '—'}</td>
-                    <td className="p-3 text-right">₹{(a.payout_amount ?? 0).toLocaleString('en-IN')}</td>
+                    <td className="p-3 text-right">x{Number(a.payout_multiplier)?.toFixed(3) ?? '—'}</td>
+                    <td className="p-3 text-right">Rs.{(Number(a.payout_amount) ?? 0).toLocaleString('en-IN')}</td>
                   </>
                 )}
                 {isCalibrating && (
@@ -94,7 +108,7 @@ export default async function CalibrationPage({ searchParams }: { searchParams: 
               <tr className="border-t font-semibold">
                 <td colSpan={5} className="py-2 pr-3 text-right text-sm">Total payout</td>
                 <td className="py-2 pr-3 text-right text-sm">
-                  ₹{rows.reduce((s, a) => s + (a.payout_amount ?? 0), 0).toLocaleString('en-IN')}
+                  Rs.{rows.reduce((s, a) => s + (Number(a.payout_amount) ?? 0), 0).toLocaleString('en-IN')}
                 </td>
               </tr>
             </tfoot>

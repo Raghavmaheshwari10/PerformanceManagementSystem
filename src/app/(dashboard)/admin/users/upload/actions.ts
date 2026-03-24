@@ -1,6 +1,6 @@
 'use server'
 
-import { createServiceClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { validateEmail } from '@/lib/validate'
 import { revalidatePath } from 'next/cache'
@@ -113,12 +113,9 @@ export async function uploadUsersWithMapping(
   const rows = parseCsvText(csvText)
   if (rows.length === 0) return { data: null, error: 'CSV is empty or could not be parsed.' }
 
-  const supabase = await createServiceClient()
   let added = 0, updated = 0, skipped = 0
   const skippedReasons: string[] = []
   const emailToId = new Map<string, string>()
-  const toInsert: object[] = []
-  const toUpdate: { email: string; data: object }[] = []
   const validRows: { original: Record<string, string>; mapped: Record<string, string> }[] = []
 
   for (const row of rows) {
@@ -136,9 +133,8 @@ export async function uploadUsersWithMapping(
     const userData: Record<string, unknown> = {
       email: mapped.email,
       full_name: mapped.full_name || mapped.email,
-      department: mapped.department || null,
       designation: mapped.designation || null,
-      synced_at: new Date().toISOString(),
+      synced_at: new Date(),
       data_source: 'manual',
     }
     if (mapped.zimyo_id) userData.zimyo_id = mapped.zimyo_id
@@ -147,31 +143,36 @@ export async function uploadUsersWithMapping(
       if (!isNaN(pay)) userData.variable_pay = pay
     }
 
-    const { data: existing } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', mapped.email)
-      .single()
+    // Handle department lookup by name if provided
+    if (mapped.department) {
+      const dept = await prisma.department.findFirst({ where: { name: mapped.department } })
+      if (dept) userData.department_id = dept.id
+    }
+
+    const existing = await prisma.user.findUnique({
+      where: { email: mapped.email },
+      select: { id: true },
+    })
 
     if (existing) {
       emailToId.set(mapped.email, existing.id)
-      toUpdate.push({ email: mapped.email, data: userData })
+      await prisma.user.update({
+        where: { email: mapped.email },
+        data: userData as Parameters<typeof prisma.user.update>[0]['data'],
+      })
+      updated++
     } else {
-      toInsert.push({ ...userData, is_active: true })
+      const newUser = await prisma.user.create({
+        data: {
+          ...(userData as Parameters<typeof prisma.user.create>[0]['data']),
+          is_active: true,
+          zimyo_id: (userData.zimyo_id as string | undefined) ?? `manual_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+        },
+      })
+      emailToId.set(mapped.email, newUser.id)
+      added++
     }
     validRows.push({ original: row, mapped })
-  }
-
-  if (toInsert.length > 0) {
-    const { data: inserted, error } = await supabase.from('users').insert(toInsert).select('id, email')
-    if (error) return { data: null, error: error.message }
-    added = inserted?.length ?? 0
-    for (const u of inserted ?? []) emailToId.set(u.email, u.id)
-  }
-
-  for (const { email, data } of toUpdate) {
-    await supabase.from('users').update(data).eq('email', email)
-    updated++
   }
 
   // Link managers
@@ -180,17 +181,22 @@ export async function uploadUsersWithMapping(
       if (mapped.manager_email && validateEmail(mapped.manager_email)) {
         const managerId = emailToId.get(mapped.manager_email)
         if (managerId) {
-          await supabase.from('users').update({ manager_id: managerId }).eq('email', mapped.email)
+          await prisma.user.update({
+            where: { email: mapped.email },
+            data: { manager_id: managerId },
+          })
         }
       }
     }
   }
 
-  await supabase.from('audit_logs').insert({
-    changed_by: user.id,
-    action: 'csv_upload',
-    entity_type: 'user',
-    new_value: { added, updated, skipped, source },
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'csv_upload',
+      entity_type: 'user',
+      new_value: { added, updated, skipped, source },
+    },
   })
 
   revalidatePath('/admin/users')

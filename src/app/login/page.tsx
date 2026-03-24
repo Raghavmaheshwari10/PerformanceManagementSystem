@@ -1,6 +1,6 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
+import { signIn } from 'next-auth/react'
 import { useState, useEffect, useRef } from 'react'
 
 const TEST_ACCOUNTS = [
@@ -88,39 +88,29 @@ export default function LoginPage() {
   async function handlePasswordLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true); setMessage(''); setIsError(false)
-    const supabase = createClient()
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) { setMessage(error.message); setIsError(true); setLoading(false); return }
-    const role = data.session?.access_token
-      ? JSON.parse(atob(data.session.access_token.split('.')[1])).user_role
-      : null
-    window.location.href = role === 'admin' ? '/admin' : role === 'hrbp' ? '/hrbp' : role === 'manager' ? '/manager' : '/employee'
+    const result = await signIn('credentials', {
+      email,
+      password,
+      redirect: false,
+    })
+    if (result?.error) {
+      setMessage('Invalid email or password.')
+      setIsError(true)
+      setLoading(false)
+      return
+    }
+    // Let middleware handle the redirect to role-specific dashboard
+    window.location.href = '/'
   }
 
   async function handleMagicLink() {
-    if (!email) { setMessage('Enter your email first.'); setIsError(true); return }
-    setLoading(true); setIsError(false)
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-    })
-    setMessage(error ? error.message : 'Check your inbox for the login link.')
-    setIsError(!!error)
-    setLoading(false)
+    setMessage('Magic link login is not yet configured.')
+    setIsError(true)
   }
 
   async function handleGoogleLogin() {
     setLoading(true)
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-        queryParams: { hd: 'embglobal.com', access_type: 'online', prompt: 'select_account' },
-      },
-    })
-    if (error) { setMessage(error.message); setIsError(true); setLoading(false) }
+    await signIn('google', { callbackUrl: '/' })
   }
 
   return (

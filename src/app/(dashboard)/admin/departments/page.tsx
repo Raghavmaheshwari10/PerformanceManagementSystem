@@ -1,18 +1,19 @@
 import { requireRole } from '@/lib/auth'
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { createDepartment, deleteDepartment, renameDepartment } from './actions'
 import { SubmitButton } from '@/components/submit-button'
-import type { Department } from '@/lib/types'
-
-type DeptWithCount = Department & { users: { count: number }[] }
 
 export default async function DepartmentsPage() {
   await requireRole(['admin'])
-  const supabase = await createClient()
-  const { data: departments } = await supabase
-    .from('departments')
-    .select('*, users(count)')
-    .order('name')
+
+  const departments = await prisma.department.findMany({
+    orderBy: { name: 'asc' },
+    select: {
+      id: true,
+      name: true,
+      _count: { select: { users: true } },
+    },
+  })
 
   return (
     <div className="space-y-6 max-w-xl">
@@ -29,12 +30,12 @@ export default async function DepartmentsPage() {
       </form>
 
       <div className="rounded-lg border divide-y">
-        {(departments ?? []).map((d: DeptWithCount) => (
+        {departments.map(d => (
           <div key={d.id} className="flex items-center justify-between px-4 py-3 gap-4">
             <div>
               <p className="text-sm font-medium">{d.name}</p>
               <p className="text-xs text-muted-foreground">
-                {d.users?.[0]?.count ?? 0} user(s)
+                {d._count.users} user(s)
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -60,7 +61,7 @@ export default async function DepartmentsPage() {
             </div>
           </div>
         ))}
-        {(departments ?? []).length === 0 && (
+        {departments.length === 0 && (
           <p className="px-4 py-6 text-sm text-muted-foreground text-center">
             No departments yet
           </p>

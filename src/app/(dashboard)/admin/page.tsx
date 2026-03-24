@@ -1,13 +1,12 @@
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { CycleStatusBadge } from '@/components/cycle-status-badge'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { CYCLE_STATUS_LABELS } from '@/lib/constants'
-import type { Cycle, User } from '@/lib/types'
 
-function daysUntil(d: string | null) {
+function daysUntil(d: Date | string | null) {
   if (!d) return null
   return Math.ceil((new Date(d).getTime() - Date.now()) / 86400000)
 }
@@ -34,30 +33,39 @@ function ProgressRing({ pct, label, sub }: { pct: number; label: string; sub: st
 
 export default async function AdminDashboard() {
   await requireRole(['admin'])
-  const supabase = await createClient()
 
-  const [cyclesRes, usersRes, auditRes] = await Promise.all([
-    supabase.from('cycles').select('*').order('created_at', { ascending: false }),
-    supabase.from('users').select('id, role, department:departments(name), is_active').eq('is_active', true),
-    supabase.from('audit_logs').select('created_at').eq('action', 'csv_upload').order('created_at', { ascending: false }).limit(1),
+  const [allCycles, activeUsers, lastImportLog] = await Promise.all([
+    prisma.cycle.findMany({ orderBy: { created_at: 'desc' } }),
+    prisma.user.findMany({
+      where: { is_active: true },
+      select: { id: true, role: true, department: { select: { name: true } }, is_active: true },
+    }),
+    prisma.auditLog.findFirst({
+      where: { action: 'csv_upload' },
+      orderBy: { created_at: 'desc' },
+      select: { created_at: true },
+    }),
   ])
 
-  const allCycles = (cyclesRes.data as Cycle[]) ?? []
-  const activeUsers = (usersRes.data ?? []) as unknown as Pick<User, 'id' | 'role' | 'department' | 'is_active'>[]
-  const lastImport = auditRes.data?.[0]?.created_at ?? null
-
+  const lastImport = lastImportLog?.created_at ?? null
   const activeCycle = allCycles.find(c => !['draft', 'published'].includes(c.status))
 
   let selfReviewsDone = 0, managerReviewsDone = 0, totalEmployees = 0, overdueManagerReviews = 0
 
   if (activeCycle) {
-    const [reviewsRes, appraisalsRes] = await Promise.all([
-      supabase.from('reviews').select('status').eq('cycle_id', activeCycle.id),
-      supabase.from('appraisals').select('manager_submitted_at').eq('cycle_id', activeCycle.id),
+    const [reviews, appraisals] = await Promise.all([
+      prisma.review.findMany({
+        where: { cycle_id: activeCycle.id },
+        select: { status: true },
+      }),
+      prisma.appraisal.findMany({
+        where: { cycle_id: activeCycle.id },
+        select: { manager_submitted_at: true },
+      }),
     ])
     totalEmployees = activeUsers.filter(u => u.role === 'employee').length
-    selfReviewsDone = (reviewsRes.data ?? []).filter(r => r.status === 'submitted').length
-    managerReviewsDone = (appraisalsRes.data ?? []).filter(a => a.manager_submitted_at).length
+    selfReviewsDone = reviews.filter(r => r.status === 'submitted').length
+    managerReviewsDone = appraisals.filter(a => a.manager_submitted_at).length
     const days = daysUntil(activeCycle.manager_review_deadline)
     overdueManagerReviews = days !== null && days < 0 ? totalEmployees - managerReviewsDone : 0
   }

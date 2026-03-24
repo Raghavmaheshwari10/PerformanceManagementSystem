@@ -1,11 +1,11 @@
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { CycleStatusBadge } from '@/components/cycle-status-badge'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import type { Cycle } from '@/lib/types'
 
-function daysUntil(dateStr: string | null): number | null {
+function daysUntil(dateStr: string | Date | null): number | null {
   if (!dateStr) return null
   return Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86400000)
 }
@@ -19,7 +19,7 @@ function CycleCard({ cycle, overdueCount }: { cycle: Cycle; overdueCount?: numbe
     ? cycle.kpi_setting_deadline
     : null
 
-  const days = daysUntil(deadline)
+  const days = daysUntil(deadline as string | null)
   const isOverdue = days !== null && days < 0
 
   return (
@@ -33,12 +33,12 @@ function CycleCard({ cycle, overdueCount }: { cycle: Cycle; overdueCount?: numbe
         <CycleStatusBadge status={cycle.status} />
         {isOverdue && deadline && (
           <p className="text-xs text-destructive font-medium">
-            ⚠ Deadline was {Math.abs(days!)} day{Math.abs(days!) !== 1 ? 's' : ''} ago
+            Deadline was {Math.abs(days!)} day{Math.abs(days!) !== 1 ? 's' : ''} ago
           </p>
         )}
         {!isOverdue && days !== null && days <= 3 && (
           <p className="text-xs text-amber-600 font-medium">
-            ⏰ {days === 0 ? 'Due today' : `Due in ${days} day${days !== 1 ? 's' : ''}`}
+            {days === 0 ? 'Due today' : `Due in ${days} day${days !== 1 ? 's' : ''}`}
           </p>
         )}
       </div>
@@ -60,10 +60,12 @@ function CycleCard({ cycle, overdueCount }: { cycle: Cycle; overdueCount?: numbe
 
 export default async function HrbpPage() {
   await requireRole(['hrbp'])
-  const supabase = await createClient()
-  const { data: cycles } = await supabase.from('cycles').select('*').order('created_at', { ascending: false })
 
-  const allCycles = (cycles as Cycle[]) ?? []
+  const allCyclesRaw = await prisma.cycle.findMany({
+    orderBy: { created_at: 'desc' },
+  })
+  const allCycles = allCyclesRaw as unknown as Cycle[]
+
   const active = allCycles.filter(c => c.status !== 'published')
   const published = allCycles.filter(c => c.status === 'published')
 
@@ -72,14 +74,12 @@ export default async function HrbpPage() {
   const overdueMap = new Map<string, number>()
   if (managerReviewCycles.length > 0) {
     for (const cycle of managerReviewCycles) {
-      const days = daysUntil(cycle.manager_review_deadline)
+      const days = daysUntil(cycle.manager_review_deadline as string | null)
       if (days !== null && days < 0) {
-        const { count } = await supabase
-          .from('appraisals')
-          .select('id', { count: 'exact', head: true })
-          .eq('cycle_id', cycle.id)
-          .is('manager_submitted_at', null)
-        overdueMap.set(cycle.id, count ?? 0)
+        const count = await prisma.appraisal.count({
+          where: { cycle_id: cycle.id, manager_submitted_at: null },
+        })
+        overdueMap.set(cycle.id, count)
       }
     }
   }
@@ -94,7 +94,7 @@ export default async function HrbpPage() {
       {totalOverdue > 0 && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/5 px-4 py-3">
           <p className="text-sm font-semibold text-destructive">
-            ⚠ {totalOverdue} manager review{totalOverdue !== 1 ? 's' : ''} overdue across active cycles
+            {totalOverdue} manager review{totalOverdue !== 1 ? 's' : ''} overdue across active cycles
           </p>
         </div>
       )}

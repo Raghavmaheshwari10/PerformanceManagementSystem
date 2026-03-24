@@ -1,22 +1,13 @@
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { notFound } from 'next/navigation'
 import { CycleStatusBadge } from '@/components/cycle-status-badge'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { getNextStatus } from '@/lib/cycle-machine'
-import type { Cycle, User, Review, Appraisal } from '@/lib/types'
 import { CycleActionsClient } from './cycle-actions-client'
 
-type PayoutRow = {
-  employee_id: string
-  final_rating: string | null
-  payout_multiplier: number | null
-  payout_amount: number | null
-  users: { full_name: string; base_salary: number; department: { name: string } | null } | null
-}
-
-function daysUntil(d: string | null) {
+function daysUntil(d: Date | string | null) {
   if (!d) return null
   return Math.ceil((new Date(d).getTime() - Date.now()) / 86400000)
 }
@@ -24,49 +15,53 @@ function daysUntil(d: string | null) {
 export default async function CycleDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireRole(['admin'])
   const { id } = await params
-  const supabase = await createClient()
 
-  const { data: cycle } = await supabase.from('cycles').select('*').eq('id', id).single()
+  const cycle = await prisma.cycle.findUnique({ where: { id } })
   if (!cycle) notFound()
 
-  const isLockedOrPublished = (cycle as Cycle).status === 'locked' || (cycle as Cycle).status === 'published'
+  const isLockedOrPublished = cycle.status === 'locked' || cycle.status === 'published'
 
-  const [usersRes, reviewsRes, appraisalsRes] = await Promise.all([
-    supabase.from('users').select('id, full_name, department:departments(name), manager_id, role').eq('is_active', true).neq('role', 'admin').neq('role', 'hrbp'),
-    supabase.from('reviews').select('employee_id, status').eq('cycle_id', id),
-    supabase.from('appraisals').select('employee_id, manager_id, manager_submitted_at, final_rating').eq('cycle_id', id),
+  const [users, reviews, appraisals] = await Promise.all([
+    prisma.user.findMany({
+      where: { is_active: true, role: { notIn: ['admin', 'hrbp'] } },
+      select: { id: true, full_name: true, department: { select: { name: true } }, manager_id: true, role: true },
+    }),
+    prisma.review.findMany({
+      where: { cycle_id: id },
+      select: { employee_id: true, status: true },
+    }),
+    prisma.appraisal.findMany({
+      where: { cycle_id: id },
+      select: { employee_id: true, manager_id: true, manager_submitted_at: true, final_rating: true },
+    }),
   ])
 
-  const payouts = isLockedOrPublished ? await supabase
-    .from('appraisals')
-    .select(`
-      employee_id,
-      final_rating,
-      payout_multiplier,
-      payout_amount,
-      users!appraisals_employee_id_fkey(full_name, department:departments(name))
-    `)
-    .eq('cycle_id', id)
-    .not('locked_at', 'is', null)
-    .order('payout_amount', { ascending: false })
-    .then(r => r.data as PayoutRow[] | null) : null
-
-  const users = (usersRes.data ?? []) as unknown as Pick<User, 'id' | 'full_name' | 'department' | 'manager_id' | 'role'>[]
-  const reviews = (reviewsRes.data ?? []) as Pick<Review, 'employee_id' | 'status'>[]
-  const appraisals = (appraisalsRes.data ?? []) as Pick<Appraisal, 'employee_id' | 'manager_id' | 'manager_submitted_at' | 'final_rating'>[]
+  const payouts = isLockedOrPublished ? await prisma.appraisal.findMany({
+    where: { cycle_id: id, locked_at: { not: null } },
+    select: {
+      employee_id: true,
+      final_rating: true,
+      payout_multiplier: true,
+      payout_amount: true,
+      employee: {
+        select: { full_name: true, department: { select: { name: true } } },
+      },
+    },
+    orderBy: { payout_amount: 'desc' },
+  }) : null
 
   const reviewMap = new Map(reviews.map(r => [r.employee_id, r]))
   const appraisalMap = new Map(appraisals.map(a => [a.employee_id, a]))
   const userMap = new Map(users.map(u => [u.id, u]))
 
   const employees = users.filter(u => u.role === 'employee')
-  const deadlineDays = daysUntil((cycle as Cycle).manager_review_deadline)
+  const deadlineDays = daysUntil(cycle.manager_review_deadline)
   const isOverdue = deadlineDays !== null && deadlineDays < 0
 
   const pendingSelfReviews = employees.filter(e => reviewMap.get(e.id)?.status !== 'submitted').length
   const pendingManagerReviews = employees.filter(e => !appraisalMap.get(e.id)?.manager_submitted_at).length
 
-  const next = getNextStatus((cycle as Cycle).status)
+  const next = getNextStatus(cycle.status)
 
   return (
     <div className="space-y-6">
@@ -75,13 +70,13 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
         <div className="space-y-1">
           <Link href="/admin/cycles" className="text-muted-foreground hover:underline text-sm">← Cycles</Link>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">{(cycle as Cycle).name}</h1>
-            <CycleStatusBadge status={(cycle as Cycle).status} />
+            <h1 className="text-2xl font-bold">{cycle.name}</h1>
+            <CycleStatusBadge status={cycle.status} />
           </div>
           <p className="text-sm text-muted-foreground">
-            {(cycle as Cycle).quarter} {(cycle as Cycle).year}
-            {(cycle as Cycle).manager_review_deadline && (
-              <> · Manager deadline: {new Date((cycle as Cycle).manager_review_deadline!).toLocaleDateString()}
+            {cycle.quarter} {cycle.year}
+            {cycle.manager_review_deadline && (
+              <> · Manager deadline: {new Date(cycle.manager_review_deadline).toLocaleDateString()}
                 {isOverdue && <span className="ml-1 text-destructive font-medium">(overdue)</span>}
               </>
             )}
@@ -89,7 +84,7 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
         </div>
         <CycleActionsClient
           cycleId={id}
-          currentStatus={(cycle as Cycle).status}
+          currentStatus={cycle.status}
           nextStatus={next}
           pendingSelfCount={pendingSelfReviews}
           pendingManagerCount={pendingManagerReviews}
@@ -97,13 +92,13 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
       </div>
 
       {/* Per-cycle multiplier overrides */}
-      {((cycle as Cycle).fee_multiplier != null || (cycle as Cycle).ee_multiplier != null || (cycle as Cycle).me_multiplier != null) && (
+      {(cycle.fee_multiplier != null || cycle.ee_multiplier != null || cycle.me_multiplier != null) && (
         <div className="text-sm">
           <p className="text-xs font-semibold text-muted-foreground mb-1">Per-cycle multiplier overrides:</p>
           <div className="flex gap-4">
-            {(cycle as Cycle).fee_multiplier != null && <span>FEE: ×{(cycle as Cycle).fee_multiplier}</span>}
-            {(cycle as Cycle).ee_multiplier != null && <span>EE: ×{(cycle as Cycle).ee_multiplier}</span>}
-            {(cycle as Cycle).me_multiplier != null && <span>ME: ×{(cycle as Cycle).me_multiplier}</span>}
+            {cycle.fee_multiplier != null && <span>FEE: ×{String(cycle.fee_multiplier)}</span>}
+            {cycle.ee_multiplier != null && <span>EE: ×{String(cycle.ee_multiplier)}</span>}
+            {cycle.me_multiplier != null && <span>ME: ×{String(cycle.me_multiplier)}</span>}
           </div>
         </div>
       )}
@@ -157,17 +152,18 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
           </tbody>
         </table>
       </div>
+
       {/* Payout summary table */}
       {isLockedOrPublished && payouts && payouts.length > 0 && (
         <div className="rounded-lg border p-5 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold">Payout Summary</h2>
             {(() => {
-              const totalPayout = payouts.reduce((s, p) => s + (p.payout_amount ?? 0), 0)
+              const totalPayout = payouts.reduce((s, p) => s + Number(p.payout_amount ?? 0), 0)
               return (
                 <span className="text-sm text-muted-foreground">
                   Total Payout: ₹{totalPayout.toLocaleString('en-IN')}
-                  {(cycle as Cycle).total_budget ? ` / ₹${(cycle as Cycle).total_budget!.toLocaleString('en-IN')} budget` : ''}
+                  {cycle.total_budget ? ` / ₹${Number(cycle.total_budget).toLocaleString('en-IN')} budget` : ''}
                 </span>
               )
             })()}
@@ -186,11 +182,11 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
               <tbody>
                 {payouts.map(p => (
                   <tr key={p.employee_id} className="border-b last:border-0">
-                    <td className="py-2">{p.users?.full_name}</td>
-                    <td className="py-2 text-muted-foreground">{p.users?.department?.name ?? '—'}</td>
+                    <td className="py-2">{p.employee?.full_name}</td>
+                    <td className="py-2 text-muted-foreground">{p.employee?.department?.name ?? '—'}</td>
                     <td className="py-2">{p.final_rating ?? '—'}</td>
-                    <td className="py-2 text-right">×{p.payout_multiplier?.toFixed(3) ?? '—'}</td>
-                    <td className="py-2 text-right font-medium">₹{(p.payout_amount ?? 0).toLocaleString('en-IN')}</td>
+                    <td className="py-2 text-right">×{Number(p.payout_multiplier)?.toFixed(3) ?? '—'}</td>
+                    <td className="py-2 text-right font-medium">₹{Number(p.payout_amount ?? 0).toLocaleString('en-IN')}</td>
                   </tr>
                 ))}
               </tbody>

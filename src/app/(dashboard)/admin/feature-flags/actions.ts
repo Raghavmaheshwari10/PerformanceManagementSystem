@@ -1,23 +1,28 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import type { ActionResult } from '@/lib/types'
 
 export async function toggleFeatureFlag(key: string, value: boolean): Promise<ActionResult> {
   try {
-    await requireRole(['admin'])
-    const supabase = await createClient()
+    const user = await requireRole(['admin'])
 
-    const { error } = await supabase
-      .from('feature_flag_overrides')
-      .upsert(
-        { flag_key: key, scope: 'org', scope_id: null, value },
-        { onConflict: 'flag_key,scope,scope_id' }
-      )
+    const existing = await prisma.featureFlagOverride.findFirst({
+      where: { flag_key: key, scope: 'org', scope_id: null },
+    })
 
-    if (error) return { data: null, error: error.message }
+    if (existing) {
+      await prisma.featureFlagOverride.update({
+        where: { id: existing.id },
+        data: { value, updated_by: user.id, updated_at: new Date() },
+      })
+    } else {
+      await prisma.featureFlagOverride.create({
+        data: { flag_key: key, scope: 'org', scope_id: null, value, updated_by: user.id },
+      })
+    }
 
     revalidatePath('/admin/feature-flags')
     return { data: null, error: null }

@@ -1,0 +1,373 @@
+// Prisma schema for Performance Management System (hRMS)
+// Target: NeonDB (serverless PostgreSQL) via @prisma/adapter-neon
+// Generated from 19 Supabase SQL migrations
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────
+
+enum UserRole {
+  employee
+  manager
+  hrbp
+  admin
+
+  @@map("user_role")
+}
+
+enum CycleStatus {
+  draft
+  kpi_setting
+  self_review
+  manager_review
+  calibrating
+  locked
+  published
+
+  @@map("cycle_status")
+}
+
+enum RatingTier {
+  FEE
+  EE
+  ME
+  SME
+  BE
+
+  @@map("rating_tier")
+}
+
+enum ReviewStatus {
+  draft
+  submitted
+
+  @@map("review_status")
+}
+
+enum NotificationType {
+  cycle_kpi_setting_open
+  cycle_self_review_open
+  cycle_manager_review_open
+  cycle_published
+  review_submitted
+  manager_review_submitted
+  admin_message
+  review_reminder
+
+  @@map("notification_type")
+}
+
+enum NotificationStatus {
+  pending
+  sent
+  failed
+
+  @@map("notification_status")
+}
+
+// ─────────────────────────────────────────
+// Models
+// ─────────────────────────────────────────
+
+model Department {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String   @unique
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  users           User[]
+  hrbp_departments HrbpDepartment[]
+
+  @@map("departments")
+}
+
+model User {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  zimyo_id      String    @unique
+  email         String    @unique
+  full_name     String
+  role          UserRole  @default(employee)
+  designation   String?
+  department_id String?   @db.Uuid
+  manager_id    String?   @db.Uuid
+  variable_pay  Decimal   @default(0) @db.Decimal(12, 2)
+  is_active     Boolean   @default(true)
+  is_also_employee Boolean @default(false)
+  password_hash    String?
+  synced_at     DateTime? @default(now()) @db.Timestamptz(6)
+  created_at    DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  department       Department?       @relation(fields: [department_id], references: [id])
+  manager          User?             @relation("UserManager", fields: [manager_id], references: [id])
+  direct_reports   User[]            @relation("UserManager")
+  hrbp_departments HrbpDepartment[]
+  kpis_as_employee Kpi[]             @relation("KpiEmployee")
+  kpis_as_manager  Kpi[]             @relation("KpiManager")
+  reviews          Review[]
+  appraisals_as_employee Appraisal[] @relation("AppraisalEmployee")
+  appraisals_as_manager  Appraisal[] @relation("AppraisalManager")
+  appraisals_finalized   Appraisal[] @relation("AppraisalFinalizedBy")
+  cycles_created   Cycle[]           @relation("CycleCreatedBy")
+  audit_logs       AuditLog[]
+  notifications    Notification[]
+  notification_preferences NotificationPreference[]
+  drafts           Draft[]
+  payout_configs_updated PayoutConfig[]
+  feature_flag_overrides_updated FeatureFlagOverride[]
+
+  @@index([manager_id], name: "idx_users_manager")
+  @@index([role], name: "idx_users_role")
+  @@map("users")
+}
+
+model HrbpDepartment {
+  hrbp_id       String @db.Uuid
+  department_id String @db.Uuid
+
+  hrbp       User       @relation(fields: [hrbp_id], references: [id], onDelete: Cascade)
+  department Department @relation(fields: [department_id], references: [id], onDelete: Cascade)
+
+  @@id([hrbp_id, department_id])
+  @@index([department_id], name: "idx_hrbp_departments_department_id")
+  @@map("hrbp_departments")
+}
+
+model Cycle {
+  id                      String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                    String
+  quarter                 String
+  year                    Int
+  status                  CycleStatus @default(draft)
+  kpi_setting_deadline    DateTime?   @db.Date
+  self_review_deadline    DateTime?   @db.Date
+  manager_review_deadline DateTime?   @db.Date
+  calibration_deadline    DateTime?   @db.Date
+  published_at            DateTime?   @db.Timestamptz(6)
+  sme_multiplier          Decimal?    @db.Decimal(5, 4)
+  business_multiplier     Decimal     @default(1.0) @db.Decimal
+  total_budget            Decimal?    @db.Decimal
+  budget_currency         String      @default("INR")
+  fee_multiplier          Decimal?    @db.Decimal
+  ee_multiplier           Decimal?    @db.Decimal
+  me_multiplier           Decimal?    @db.Decimal
+  created_by              String?     @db.Uuid
+  created_at              DateTime    @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime    @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  creator     User?      @relation("CycleCreatedBy", fields: [created_by], references: [id])
+  kpis        Kpi[]
+  reviews     Review[]
+  appraisals  Appraisal[]
+  audit_logs  AuditLog[]
+
+  @@map("cycles")
+}
+
+model Kpi {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cycle_id    String   @db.Uuid
+  employee_id String   @db.Uuid
+  manager_id  String   @db.Uuid
+  title       String
+  description String?
+  weight      Decimal? @db.Decimal(5, 2)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  cycle    Cycle @relation(fields: [cycle_id], references: [id])
+  employee User  @relation("KpiEmployee", fields: [employee_id], references: [id])
+  manager  User  @relation("KpiManager", fields: [manager_id], references: [id])
+
+  @@index([cycle_id, employee_id], name: "idx_kpis_cycle_employee")
+  @@map("kpis")
+}
+
+model KpiTemplate {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  role_slug   String
+  title       String
+  description String?
+  unit        String   @default("percent")
+  target      Decimal? @db.Decimal
+  weight      Decimal? @db.Decimal
+  category    String   @default("performance")
+  sort_order  Int      @default(0)
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("kpi_templates")
+}
+
+model Review {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cycle_id      String       @db.Uuid
+  employee_id   String       @db.Uuid
+  self_rating   RatingTier?
+  self_comments String       @default("")
+  status        ReviewStatus @default(draft)
+  submitted_at  DateTime?    @db.Timestamptz(6)
+  created_at    DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime     @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  cycle    Cycle @relation(fields: [cycle_id], references: [id])
+  employee User  @relation(fields: [employee_id], references: [id])
+
+  @@unique([cycle_id, employee_id])
+  @@index([cycle_id, employee_id], name: "idx_reviews_cycle_employee")
+  @@map("reviews")
+}
+
+model Appraisal {
+  id                     String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cycle_id               String     @db.Uuid
+  employee_id            String     @db.Uuid
+  manager_id             String     @db.Uuid
+  manager_rating         RatingTier?
+  manager_comments       String?
+  manager_submitted_at   DateTime?  @db.Timestamptz(6)
+  final_rating           RatingTier?
+  final_rating_set_by    String?    @db.Uuid
+  payout_multiplier      Decimal?   @db.Decimal(5, 4)
+  payout_amount          Decimal?   @db.Decimal(12, 2)
+  snapshotted_variable_pay Decimal? @db.Decimal
+  locked_at              DateTime?  @db.Timestamptz(6)
+  is_final               Boolean    @default(false)
+  created_at             DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime   @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  cycle              Cycle @relation(fields: [cycle_id], references: [id])
+  employee           User  @relation("AppraisalEmployee", fields: [employee_id], references: [id])
+  manager            User  @relation("AppraisalManager", fields: [manager_id], references: [id])
+  final_rating_setter User? @relation("AppraisalFinalizedBy", fields: [final_rating_set_by], references: [id])
+
+  @@unique([cycle_id, employee_id])
+  @@index([cycle_id, employee_id], name: "idx_appraisals_cycle_employee")
+  @@index([cycle_id, manager_id], name: "idx_appraisals_cycle_manager")
+  @@map("appraisals")
+}
+
+model AuditLog {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cycle_id    String?   @db.Uuid
+  changed_by  String    @db.Uuid
+  action      String
+  entity_type String
+  entity_id   String?   @db.Uuid
+  old_value   Json?
+  new_value   Json?
+  justification String?
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  cycle      Cycle? @relation(fields: [cycle_id], references: [id])
+  changed_by_user User @relation(fields: [changed_by], references: [id])
+
+  @@index([cycle_id], name: "idx_audit_logs_cycle")
+  @@map("audit_logs")
+}
+
+model Notification {
+  id            String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipient_id  String             @db.Uuid
+  type          NotificationType
+  payload       Json?
+  status        NotificationStatus @default(pending)
+  sent_at       DateTime?          @db.Timestamptz(6)
+  error_message String?
+  snoozed_until DateTime?          @db.Timestamptz(6)
+  dismissed_at  DateTime?          @db.Timestamptz(6)
+  created_at    DateTime           @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  recipient User @relation(fields: [recipient_id], references: [id])
+
+  @@index([status], name: "idx_notifications_status")
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id        String   @db.Uuid
+  notify_key     String
+  email_enabled  Boolean  @default(true)
+  in_app_enabled Boolean  @default(true)
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, notify_key])
+  @@map("notification_preferences")
+}
+
+model Draft {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String   @db.Uuid
+  entity_type String
+  entity_id   String?  @db.Uuid
+  form_data   Json     @default("{}")
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, entity_type, entity_id])
+  @@map("drafts")
+}
+
+model PayoutConfig {
+  rating_tier RatingTier @id
+  multiplier  Decimal    @db.Decimal
+  updated_by  String?    @db.Uuid
+  updated_at  DateTime   @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  updated_by_user User? @relation(fields: [updated_by], references: [id])
+
+  @@map("payout_config")
+}
+
+model FeatureFlag {
+  key           String   @id
+  name          String
+  category      String   @default("module")
+  default_value Boolean  @default(false)
+  description   String?
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  overrides FeatureFlagOverride[]
+
+  @@map("feature_flags")
+}
+
+model FeatureFlagOverride {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  flag_key   String
+  scope      String
+  scope_id   String?
+  value      Boolean
+  updated_by String?  @db.Uuid
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  feature_flag   FeatureFlag @relation(fields: [flag_key], references: [key], onDelete: Cascade)
+  updated_by_user User?      @relation(fields: [updated_by], references: [id])
+
+  @@unique([flag_key, scope, scope_id])
+  @@map("feature_flag_overrides")
+}

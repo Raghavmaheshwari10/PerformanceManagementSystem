@@ -1,25 +1,34 @@
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { NotificationForm } from './notification-form'
-import type { User } from '@/lib/types'
 
 export default async function AdminNotificationsPage() {
   await requireRole(['admin'])
-  const supabase = await createClient()
 
-  const [usersRes, deptsRes, historyRes] = await Promise.all([
-    supabase.from('users').select('id, full_name, email').eq('is_active', true).order('full_name'),
-    supabase.from('departments').select('name').order('name'),
-    supabase
-      .from('audit_logs')
-      .select('id, created_at, new_value, users!audit_logs_changed_by_fkey(full_name)')
-      .eq('action', 'manual_notification')
-      .order('created_at', { ascending: false })
-      .limit(20),
+  const [users, departments, historyLogs] = await Promise.all([
+    prisma.user.findMany({
+      where: { is_active: true },
+      select: { id: true, full_name: true, email: true },
+      orderBy: { full_name: 'asc' },
+    }),
+    prisma.department.findMany({
+      orderBy: { name: 'asc' },
+      select: { name: true },
+    }),
+    prisma.auditLog.findMany({
+      where: { action: 'manual_notification' },
+      orderBy: { created_at: 'desc' },
+      take: 20,
+      select: {
+        id: true,
+        created_at: true,
+        new_value: true,
+        changed_by_user: { select: { full_name: true } },
+      },
+    }),
   ])
 
-  const users = (usersRes.data ?? []) as Pick<User, 'id' | 'full_name' | 'email'>[]
-  const departments = (deptsRes.data ?? []).map(d => d.name as string)
+  const deptNames = departments.map(d => d.name)
 
   return (
     <div className="space-y-8 max-w-2xl">
@@ -28,18 +37,18 @@ export default async function AdminNotificationsPage() {
         <p className="text-sm text-muted-foreground mt-1">Send an in-app message to users</p>
       </div>
 
-      <NotificationForm users={users} departments={departments} />
+      <NotificationForm users={users} departments={deptNames} />
 
       {/* Sent history */}
-      {(historyRes.data ?? []).length > 0 && (
+      {historyLogs.length > 0 && (
         <div className="space-y-3">
           <h2 className="font-semibold">Recent Sends</h2>
           <div className="rounded-md border divide-y text-sm">
-            {(historyRes.data ?? []).map((log: any) => (
+            {historyLogs.map(log => (
               <div key={log.id} className="p-3 space-y-0.5">
-                <p className="font-medium truncate">{(log.new_value as any)?.message}</p>
+                <p className="font-medium truncate">{(log.new_value as Record<string, unknown>)?.message as string}</p>
                 <p className="text-xs text-muted-foreground">
-                  {(log.new_value as any)?.count} recipients · {(log.new_value as any)?.scope} · by {log.users?.full_name} · {new Date(log.created_at).toLocaleString()}
+                  {(log.new_value as Record<string, unknown>)?.count as number} recipients · {(log.new_value as Record<string, unknown>)?.scope as string} · by {log.changed_by_user?.full_name} · {new Date(log.created_at).toLocaleString()}
                 </p>
               </div>
             ))}

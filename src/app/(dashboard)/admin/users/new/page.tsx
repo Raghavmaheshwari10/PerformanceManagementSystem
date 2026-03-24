@@ -1,15 +1,18 @@
 import { requireRole } from '@/lib/auth'
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { NewUserForm } from './new-user-form'
 import Link from 'next/link'
 
 export default async function NewUserPage() {
   await requireRole(['admin'])
-  const supabase = await createClient()
 
-  const [deptsRes, managersRes] = await Promise.all([
-    supabase.from('departments').select('id, name').order('name'),
-    supabase.from('users').select('id, full_name').eq('role', 'manager').eq('is_active', true).order('full_name'),
+  const [departments, managers] = await Promise.all([
+    prisma.department.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true } }),
+    prisma.user.findMany({
+      where: { role: 'manager', is_active: true },
+      orderBy: { full_name: 'asc' },
+      select: { id: true, full_name: true },
+    }),
   ])
 
   return (
@@ -20,8 +23,8 @@ export default async function NewUserPage() {
       </div>
 
       <NewUserForm
-        departments={deptsRes.data ?? []}
-        managers={managersRes.data ?? []}
+        departments={departments}
+        managers={managers}
       />
     </div>
   )

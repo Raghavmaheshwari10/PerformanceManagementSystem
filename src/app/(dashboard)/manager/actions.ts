@@ -1,10 +1,11 @@
 'use server'
 
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { requireRole, requireManagerOwnership } from '@/lib/auth'
 import { validateWeight } from '@/lib/validate'
 import { revalidatePath } from 'next/cache'
 import type { ActionResult } from '@/lib/types'
+import type { RatingTier } from '@prisma/client'
 
 export async function addKpi(formData: FormData): Promise<ActionResult> {
   const user = await requireRole(['manager'])
@@ -21,25 +22,26 @@ export async function addKpi(formData: FormData): Promise<ActionResult> {
   const title = formData.get('title') as string
   const cycleId = formData.get('cycle_id') as string
 
-  const supabase = await createClient()
-  const { data: insertedKpi, error } = await supabase.from('kpis').insert({
-    cycle_id: cycleId,
-    employee_id: employeeId,
-    manager_id: user.id,
-    title,
-    description: (formData.get('description') as string) || null,
-    weight,
-  }).select('id').single()
+  const insertedKpi = await prisma.kpi.create({
+    data: {
+      cycle_id: cycleId,
+      employee_id: employeeId,
+      manager_id: user.id,
+      title,
+      description: (formData.get('description') as string) || null,
+      weight,
+    },
+    select: { id: true },
+  })
 
-  if (error) return { data: null, error: error.message }
-
-  const svc = await createServiceClient()
-  await svc.from('audit_logs').insert({
-    changed_by: user.id,
-    action: 'kpi_added',
-    entity_type: 'kpi',
-    entity_id: insertedKpi.id,
-    new_value: { title, employee_id: employeeId, cycle_id: cycleId },
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'kpi_added',
+      entity_type: 'kpi',
+      entity_id: insertedKpi.id,
+      new_value: { title, employee_id: employeeId, cycle_id: cycleId },
+    },
   })
 
   revalidatePath(`/manager/${employeeId}/kpis`)
@@ -49,17 +51,17 @@ export async function addKpi(formData: FormData): Promise<ActionResult> {
 export async function deleteKpi(kpiId: string, employeeId: string): Promise<ActionResult> {
   const user = await requireRole(['manager'])
   await requireManagerOwnership(employeeId, user.id)
-  const supabase = await createClient()
-  const { error } = await supabase.from('kpis').delete().eq('id', kpiId)
-  if (error) return { data: null, error: error.message }
 
-  const svc = await createServiceClient()
-  await svc.from('audit_logs').insert({
-    changed_by: user.id,
-    action: 'kpi_deleted',
-    entity_type: 'kpi',
-    entity_id: kpiId,
-    old_value: { kpi_id: kpiId },
+  await prisma.kpi.delete({ where: { id: kpiId } })
+
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'kpi_deleted',
+      entity_type: 'kpi',
+      entity_id: kpiId,
+      old_value: { kpi_id: kpiId },
+    },
   })
 
   revalidatePath(`/manager/${employeeId}/kpis`)
@@ -73,14 +75,12 @@ export async function submitManagerRating(_prev: ActionResult, formData: FormDat
   await requireManagerOwnership(employeeId, user.id)
 
   const cycleId = formData.get('cycle_id') as string
-  const supabase = await createClient()
 
   // Deadline check: cycle must be in manager_review status and deadline not passed
-  const { data: cycle } = await supabase
-    .from('cycles')
-    .select('status, manager_review_deadline')
-    .eq('id', cycleId)
-    .single()
+  const cycle = await prisma.cycle.findUnique({
+    where: { id: cycleId },
+    select: { status: true, manager_review_deadline: true },
+  })
 
   if (!cycle || cycle.status !== 'manager_review') {
     return { data: null, error: 'Cycle is not in manager review phase' }
@@ -92,27 +92,37 @@ export async function submitManagerRating(_prev: ActionResult, formData: FormDat
   const rating = formData.get('manager_rating') as string
   const comments = formData.get('manager_comments') as string
 
-  const { error } = await supabase.from('appraisals').upsert({
-    cycle_id: cycleId,
-    employee_id: employeeId,
-    manager_id: user.id,
-    manager_rating: rating,
-    manager_comments: comments,
-    manager_submitted_at: new Date().toISOString(),
-  }, { onConflict: 'cycle_id,employee_id' })
-
-  if (error) return { data: null, error: error.message }
+  await prisma.appraisal.upsert({
+    where: { cycle_id_employee_id: { cycle_id: cycleId, employee_id: employeeId } },
+    update: {
+      manager_rating: rating as RatingTier,
+      manager_comments: comments,
+      manager_submitted_at: new Date(),
+      updated_at: new Date(),
+    },
+    create: {
+      cycle_id: cycleId,
+      employee_id: employeeId,
+      manager_id: user.id,
+      manager_rating: rating as RatingTier,
+      manager_comments: comments,
+      manager_submitted_at: new Date(),
+    },
+  })
 
   // Notify all HRBPs that manager has submitted a rating
-  const { data: hrbps } = await supabase.from('users').select('id').eq('role', 'hrbp').eq('is_active', true)
-  if (hrbps && hrbps.length > 0) {
-    await supabase.from('notifications').insert(
-      hrbps.map(h => ({
+  const hrbps = await prisma.user.findMany({
+    where: { role: 'hrbp', is_active: true },
+    select: { id: true },
+  })
+  if (hrbps.length > 0) {
+    await prisma.notification.createMany({
+      data: hrbps.map(h => ({
         recipient_id: h.id,
         type: 'manager_review_submitted' as const,
         payload: { cycle_id: cycleId, employee_id: employeeId, manager_id: user.id },
-      }))
-    )
+      })),
+    })
   }
 
   revalidatePath('/manager')

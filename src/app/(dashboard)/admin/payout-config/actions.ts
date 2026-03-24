@@ -1,8 +1,9 @@
 'use server'
 
-import { createServiceClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { requireRole, getCurrentUser } from '@/lib/auth'
 import type { ActionResult, RatingTier } from '@/lib/types'
+import type { RatingTier as PrismaRatingTier } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 
 export async function updatePayoutConfig(
@@ -16,32 +17,31 @@ export async function updatePayoutConfig(
   if (isNaN(multiplier) || multiplier < 0)
     return { data: null, error: 'Must be a non-negative number' }
 
-  const supabase = await createServiceClient()
-
   // Get old value for audit log
-  const { data: old } = await supabase
-    .from('payout_config')
-    .select('multiplier')
-    .eq('rating_tier', tier)
-    .single()
-
-  const { error } = await supabase
-    .from('payout_config')
-    .update({ multiplier, updated_by: user.id, updated_at: new Date().toISOString() })
-    .eq('rating_tier', tier)
-  if (error) return { data: null, error: error.message }
-
-  const { error: auditErr } = await supabase.from('audit_logs').insert({
-    changed_by: user!.id,
-    action: 'payout_config_updated',
-    entity_type: 'payout_config',
-    entity_id: null,
-    old_value: { tier, multiplier: old?.multiplier },
-    new_value: { tier, multiplier },
+  const old = await prisma.payoutConfig.findUnique({
+    where: { rating_tier: tier as PrismaRatingTier },
+    select: { multiplier: true },
   })
-  // Include tier in old/new values so it's still identifiable
-  if (auditErr) console.error('Audit log write failed:', auditErr.message)
-  // Don't fail the whole action just because audit log failed
+
+  await prisma.payoutConfig.update({
+    where: { rating_tier: tier as PrismaRatingTier },
+    data: { multiplier, updated_by: user.id, updated_at: new Date() },
+  })
+
+  try {
+    await prisma.auditLog.create({
+      data: {
+        changed_by: user.id,
+        action: 'payout_config_updated',
+        entity_type: 'payout_config',
+        old_value: { tier, multiplier: old?.multiplier },
+        new_value: { tier, multiplier },
+      },
+    })
+  } catch (e) {
+    // Don't fail the whole action just because audit log failed
+    console.error('Audit log write failed:', e)
+  }
 
   revalidatePath('/admin/payout-config')
   return { data: null, error: null }

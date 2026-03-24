@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import { triggerZimyoSync } from './actions'
@@ -9,8 +9,11 @@ import type { User } from '@/lib/types'
 
 export default async function AdminUsersPage() {
   await requireRole(['admin'])
-  const supabase = await createClient()
-  const { data: users } = await supabase.from('users').select('*').order('full_name')
+
+  const users = await prisma.user.findMany({
+    orderBy: { full_name: 'asc' },
+    include: { department: true },
+  })
 
   return (
     <div className="space-y-6">
@@ -29,10 +32,10 @@ export default async function AdminUsersPage() {
         </div>
       </div>
 
-      {(!users || users.length === 0) ? (
+      {users.length === 0 ? (
         <p className="text-muted-foreground">No users yet — upload a CSV or sync with Zimyo.</p>
       ) : (
-        <UsersTable users={users as User[]} />
+        <UsersTable users={users as unknown as User[]} />
       )}
     </div>
   )

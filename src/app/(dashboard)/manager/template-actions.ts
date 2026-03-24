@@ -1,7 +1,7 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
+import { applyKpiTemplate as applyKpiTemplateDb } from '@/lib/db/kpi-templates'
 import { revalidatePath } from 'next/cache'
 import type { ActionResult } from '@/lib/types'
 
@@ -10,16 +10,13 @@ export async function applyKpiTemplate(
   cycleId: string,
   employeeId: string,
 ): Promise<ActionResult> {
-  const user = await requireRole(["manager", "admin"])
-  const supabase = await createClient()
+  await requireRole(['manager', 'admin'])
 
-  const { error } = await supabase.rpc("apply_kpi_template", {
-    p_role_slug: roleSlug,
-    p_cycle_id: cycleId,
-    p_employee_id: employeeId,
-  })
-
-  if (error) return { data: null, error: error.message }
-  revalidatePath(`/manager/${employeeId}/kpis`)
-  return { data: null, error: null }
+  try {
+    await applyKpiTemplateDb(roleSlug, cycleId, employeeId)
+    revalidatePath(`/manager/${employeeId}/kpis`)
+    return { data: null, error: null }
+  } catch (e) {
+    return { data: null, error: e instanceof Error ? e.message : 'Failed to apply template' }
+  }
 }

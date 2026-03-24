@@ -1,33 +1,30 @@
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { CycleStatusBadge } from '@/components/cycle-status-badge'
-import type { Cycle, Kpi, Review, Appraisal } from '@/lib/types'
 
 export default async function ManagerMyReviewPage() {
   const user = await requireRole(['manager'])
-  const supabase = await createClient()
 
   // Managers are also employees — show their own review status
-  const { data: cycles } = await supabase
-    .from('cycles')
-    .select('*')
-    .neq('status', 'draft')
-    .order('created_at', { ascending: false })
-    .limit(1)
-
-  const cycle = (cycles as Cycle[])?.[0]
+  const cycle = await prisma.cycle.findFirst({
+    where: { status: { not: 'draft' } },
+    orderBy: { created_at: 'desc' },
+  })
 
   if (!cycle) return <p className="text-muted-foreground">No active review cycle.</p>
 
-  const [kpiRes, reviewRes, appraisalRes] = await Promise.all([
-    supabase.from('kpis').select('*').eq('cycle_id', cycle.id).eq('employee_id', user.id),
-    supabase.from('reviews').select('*').eq('cycle_id', cycle.id).eq('employee_id', user.id).single(),
-    supabase.from('appraisals').select('*').eq('cycle_id', cycle.id).eq('employee_id', user.id).single(),
+  const [kpis, review, appraisal] = await Promise.all([
+    prisma.kpi.findMany({
+      where: { cycle_id: cycle.id, employee_id: user.id },
+    }),
+    prisma.review.findFirst({
+      where: { cycle_id: cycle.id, employee_id: user.id },
+    }),
+    prisma.appraisal.findFirst({
+      where: { cycle_id: cycle.id, employee_id: user.id },
+    }),
   ])
 
-  const kpis = kpiRes.data as Kpi[] ?? []
-  const review = reviewRes.data as Review | null
-  const appraisal = appraisalRes.data as Appraisal | null
   const isPublished = cycle.status === 'published'
 
   return (
@@ -44,7 +41,7 @@ export default async function ManagerMyReviewPage() {
           <div key={kpi.id} className="rounded border p-3">
             <p className="font-medium">{kpi.title}</p>
             {kpi.description && <p className="text-sm text-muted-foreground">{kpi.description}</p>}
-            <p className="text-sm">Weight: {kpi.weight}%</p>
+            <p className="text-sm">Weight: {String(kpi.weight)}%</p>
           </div>
         ))}
       </section>
@@ -67,9 +64,9 @@ export default async function ManagerMyReviewPage() {
         <section className="rounded border bg-muted/30 p-4 space-y-2">
           <h2 className="text-lg font-semibold">Final Result</h2>
           <p>Final Rating: <span className="font-bold">{appraisal.final_rating}</span></p>
-          <p>Payout Multiplier: <span className="font-bold">{appraisal.payout_multiplier ? `${(appraisal.payout_multiplier * 100).toFixed(0)}%` : 'N/A'}</span></p>
+          <p>Payout Multiplier: <span className="font-bold">{appraisal.payout_multiplier ? `${(Number(appraisal.payout_multiplier) * 100).toFixed(0)}%` : 'N/A'}</span></p>
           {appraisal.payout_amount !== null && (
-            <p>Payout Amount: <span className="font-bold">₹{appraisal.payout_amount.toLocaleString()}</span></p>
+            <p>Payout Amount: <span className="font-bold">₹{Number(appraisal.payout_amount).toLocaleString()}</span></p>
           )}
         </section>
       )}

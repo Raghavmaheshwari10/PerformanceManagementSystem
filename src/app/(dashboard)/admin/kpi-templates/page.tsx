@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -19,14 +19,13 @@ export default async function KpiTemplatesPage({
 }) {
   await requireRole(['admin'])
   const { category } = await searchParams
-  const supabase = await createClient()
 
-  let query = supabase.from('kpi_templates').select('*').order('role_slug').order('sort_order')
-  if (category) query = query.eq('category', category)
+  const templates = await prisma.kpiTemplate.findMany({
+    where: category ? { category } : undefined,
+    orderBy: [{ role_slug: 'asc' }, { sort_order: 'asc' }],
+  })
 
-  const { data: templates } = await query
-
-  const grouped = ((templates ?? []) as KpiTemplate[]).reduce<Record<string, KpiTemplate[]>>((acc, t) => {
+  const grouped = (templates as unknown as KpiTemplate[]).reduce<Record<string, KpiTemplate[]>>((acc, t) => {
     acc[t.role_slug] = [...(acc[t.role_slug] ?? []), t]
     return acc
   }, {})
@@ -79,7 +78,7 @@ export default async function KpiTemplatesPage({
                     <Badge variant="outline">{CATEGORY_LABELS[t.category] ?? t.category}</Badge>
                   </td>
                   <td className="p-3 text-muted-foreground">{t.unit}</td>
-                  <td className="p-3 text-muted-foreground">{t.target ?? '—'}</td>
+                  <td className="p-3 text-muted-foreground">{t.target != null ? String(t.target) : '—'}</td>
                   <td className="p-3 text-muted-foreground">{t.weight ? `${t.weight}%` : '—'}</td>
                   <td className="p-3">
                     <form action={toggleTemplateActive.bind(null, t.id, t.is_active) as unknown as (fd: FormData) => Promise<void>}>

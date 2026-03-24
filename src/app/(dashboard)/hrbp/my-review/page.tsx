@@ -1,6 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
-import { redirect } from 'next/navigation'
 import { CycleStatusBadge } from '@/components/cycle-status-badge'
 import { DeadlineBanner } from '@/components/deadline-banner'
 import { PayoutBreakdown } from '@/components/payout-breakdown'
@@ -10,14 +9,12 @@ import type { Cycle, Kpi, Review, Appraisal } from '@/lib/types'
 
 export default async function HrbpMyReviewPage() {
   const user = await requireRole(['hrbp'])
-  const supabase = await createClient()
 
   // Check is_also_employee
-  const { data: profile } = await supabase
-    .from('users')
-    .select('is_also_employee, full_name, manager_id')
-    .eq('id', user.id)
-    .single()
+  const profile = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { is_also_employee: true, full_name: true, manager_id: true },
+  })
 
   if (!profile?.is_also_employee) {
     return (
@@ -32,14 +29,12 @@ export default async function HrbpMyReviewPage() {
   }
 
   // Find active cycle
-  const { data: cycles } = await supabase
-    .from('cycles')
-    .select('*')
-    .in('status', ['self_review', 'manager_review', 'calibrating', 'locked', 'published'])
-    .order('created_at', { ascending: false })
-    .limit(1)
-
-  const cycle = (cycles as Cycle[])?.[0]
+  const cycle = await prisma.cycle.findFirst({
+    where: {
+      status: { in: ['self_review', 'manager_review', 'calibrating', 'locked', 'published'] },
+    },
+    orderBy: { created_at: 'desc' },
+  })
 
   if (!cycle) {
     return (
@@ -50,15 +45,15 @@ export default async function HrbpMyReviewPage() {
     )
   }
 
-  const [kpiRes, reviewRes, appraisalRes] = await Promise.all([
-    supabase.from('kpis').select('*').eq('cycle_id', cycle.id).eq('employee_id', user.id),
-    supabase.from('reviews').select('*').eq('cycle_id', cycle.id).eq('employee_id', user.id).maybeSingle(),
-    supabase.from('appraisals').select('*').eq('cycle_id', cycle.id).eq('employee_id', user.id).maybeSingle(),
+  const [kpis, review, appraisal] = await Promise.all([
+    prisma.kpi.findMany({ where: { cycle_id: cycle.id, employee_id: user.id } }),
+    prisma.review.findFirst({ where: { cycle_id: cycle.id, employee_id: user.id } }),
+    prisma.appraisal.findFirst({ where: { cycle_id: cycle.id, employee_id: user.id } }),
   ])
 
-  const kpis = kpiRes.data as Kpi[] ?? []
-  const review = reviewRes.data as Review | null
-  const appraisal = appraisalRes.data as Appraisal | null
+  const typedCycle = cycle as unknown as Cycle
+  const typedReview = review as unknown as Review | null
+  const typedAppraisal = appraisal as unknown as Appraisal | null
   const isSelfReview = cycle.status === 'self_review'
   const isPublished = cycle.status === 'published'
 
@@ -71,7 +66,7 @@ export default async function HrbpMyReviewPage() {
       </div>
 
       {isSelfReview && (
-        <DeadlineBanner deadline={cycle.self_review_deadline} label="Self-review" />
+        <DeadlineBanner deadline={cycle.self_review_deadline ? String(cycle.self_review_deadline) : null} label="Self-review" />
       )}
 
       {/* Two-column layout */}
@@ -87,7 +82,7 @@ export default async function HrbpMyReviewPage() {
             </p>
           ) : (
             <div className="space-y-2">
-              {kpis.map(kpi => (
+              {(kpis as unknown as Kpi[]).map(kpi => (
                 <div key={kpi.id} className="rounded border p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div>
@@ -97,7 +92,7 @@ export default async function HrbpMyReviewPage() {
                       )}
                     </div>
                     <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
-                      {kpi.weight}%
+                      {String(kpi.weight)}%
                     </span>
                   </div>
                 </div>
@@ -113,23 +108,23 @@ export default async function HrbpMyReviewPage() {
       </div>
 
       {/* Self-review form — only shown during self_review phase and when not yet submitted */}
-      {isSelfReview && review?.status !== 'submitted' && (
-        <SelfReviewForm cycleId={cycle.id} review={review} />
+      {isSelfReview && typedReview?.status !== 'submitted' && (
+        <SelfReviewForm cycleId={cycle.id} review={typedReview} />
       )}
 
       {/* Submitted review read-only view */}
-      {review?.status === 'submitted' && !isPublished && (
+      {typedReview?.status === 'submitted' && !isPublished && (
         <section className="space-y-2">
           <h2 className="text-lg font-semibold">Self Assessment</h2>
           <div className="rounded border bg-muted/30 p-3 space-y-1">
-            <p>Rating: <span className="font-bold">{review.self_rating}</span></p>
-            <p className="whitespace-pre-wrap text-sm">{review.self_comments}</p>
+            <p>Rating: <span className="font-bold">{typedReview.self_rating}</span></p>
+            <p className="whitespace-pre-wrap text-sm">{typedReview.self_comments}</p>
           </div>
         </section>
       )}
 
       {/* Draft notice */}
-      {review?.status === 'draft' && !isSelfReview && (
+      {typedReview?.status === 'draft' && !isSelfReview && (
         <section className="space-y-2">
           <h2 className="text-lg font-semibold">Self Assessment</h2>
           <p className="text-yellow-600 text-sm">Draft saved — self-review phase has ended.</p>
@@ -137,17 +132,17 @@ export default async function HrbpMyReviewPage() {
       )}
 
       {/* Published results */}
-      {isPublished && appraisal && (
+      {isPublished && typedAppraisal && (
         <section className="rounded border bg-muted/30 p-4 space-y-2">
           <h2 className="text-lg font-semibold">Final Result</h2>
-          <p>Final Rating: <span className="font-bold">{appraisal.final_rating}</span></p>
-          {appraisal.payout_amount != null && (
+          <p>Final Rating: <span className="font-bold">{typedAppraisal.final_rating}</span></p>
+          {typedAppraisal.payout_amount != null && (
             <PayoutBreakdown
-              snapshottedVariablePay={appraisal.snapshotted_variable_pay ?? 0}
-              rating={appraisal.final_rating ?? ''}
-              individualMultiplier={appraisal.payout_multiplier ?? 0}
-              businessMultiplier={cycle.business_multiplier ?? 1}
-              payoutAmount={appraisal.payout_amount}
+              snapshottedVariablePay={Number(typedAppraisal.snapshotted_variable_pay ?? 0)}
+              rating={typedAppraisal.final_rating ?? ''}
+              individualMultiplier={Number(typedAppraisal.payout_multiplier ?? 0)}
+              businessMultiplier={Number(typedCycle.business_multiplier ?? 1)}
+              payoutAmount={Number(typedAppraisal.payout_amount)}
             />
           )}
         </section>

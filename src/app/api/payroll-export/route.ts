@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { generatePayrollCsv } from '@/lib/payroll-csv'
 import { NextResponse } from 'next/server'
@@ -9,25 +9,37 @@ export async function GET(request: Request) {
   const cycleId = searchParams.get('cycle')
   if (!cycleId) return NextResponse.json({ error: 'cycle required' }, { status: 400 })
 
-  const supabase = await createClient()
-
-  const { data: cycle } = await supabase.from('cycles').select('status, name').eq('id', cycleId).single()
+  const cycle = await prisma.cycle.findUnique({
+    where: { id: cycleId },
+    select: { status: true, name: true },
+  })
   if (!cycle || !['locked', 'published'].includes(cycle.status)) {
     return NextResponse.json({ error: 'Cycle must be locked or published' }, { status: 400 })
   }
 
-  const { data: rows } = await supabase
-    .from('appraisals')
-    .select('final_rating, payout_multiplier, payout_amount, users!appraisals_employee_id_fkey(zimyo_id, full_name, department)')
-    .eq('cycle_id', cycleId)
+  const appraisals = await prisma.appraisal.findMany({
+    where: { cycle_id: cycleId },
+    select: {
+      final_rating: true,
+      payout_multiplier: true,
+      payout_amount: true,
+      employee: {
+        select: {
+          zimyo_id: true,
+          full_name: true,
+          department: { select: { name: true } },
+        },
+      },
+    },
+  })
 
-  const csvData = (rows ?? []).map((r: any) => ({
-    zimyo_id: r.users.zimyo_id,
-    full_name: r.users.full_name,
-    department: r.users.department ?? '',
+  const csvData = appraisals.map(r => ({
+    zimyo_id: r.employee.zimyo_id,
+    full_name: r.employee.full_name,
+    department: r.employee.department?.name ?? '',
     final_rating: r.final_rating ?? '',
-    payout_multiplier: r.payout_multiplier ?? 0,
-    payout_amount: r.payout_amount ?? 0,
+    payout_multiplier: Number(r.payout_multiplier ?? 0),
+    payout_amount: Number(r.payout_amount ?? 0),
   }))
 
   const csv = generatePayrollCsv(csvData)

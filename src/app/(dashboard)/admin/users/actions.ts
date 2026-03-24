@@ -1,15 +1,15 @@
 'use server'
 
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { requireRole, getCurrentUser } from '@/lib/auth'
 import { fetchZimyoEmployees, transformZimyoEmployee } from '@/lib/zimyo'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import type { ActionResult, UserRole } from '@/lib/types'
+import bcrypt from 'bcryptjs'
 
 export async function triggerZimyoSync(): Promise<{ error?: string }> {
   const user = await requireRole(['admin'])
-  const supabase = await createServiceClient()
 
   let zimyoEmployees
   try {
@@ -23,24 +23,33 @@ export async function triggerZimyoSync(): Promise<{ error?: string }> {
 
   for (const emp of zimyoEmployees) {
     const transformed = transformZimyoEmployee(emp)
-    const { data: existing } = await supabase
-      .from('users')
-      .select('id')
-      .eq('zimyo_id', transformed.zimyo_id)
-      .single()
+    const existing = await prisma.user.findUnique({
+      where: { zimyo_id: transformed.zimyo_id },
+      select: { id: true },
+    })
 
     if (existing) {
-      await supabase.from('users').update({ ...transformed, is_active: true, synced_at: new Date().toISOString() }).eq('zimyo_id', transformed.zimyo_id)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { department: _dept, ...transformedWithoutDept } = transformed
+      await prisma.user.update({
+        where: { zimyo_id: transformed.zimyo_id },
+        data: { ...transformedWithoutDept, is_active: true, synced_at: new Date() },
+      })
       emailToId.set(transformed.email, existing.id)
       updated++
     } else {
-      const { data: newUser } = await supabase.from('users').insert({ ...transformed, synced_at: new Date().toISOString() }).select('id, email').single()
-      if (newUser) emailToId.set(newUser.email, newUser.id)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { department: _dept, ...transformedWithoutDept } = transformed
+      const newUser = await prisma.user.create({
+        data: { ...transformedWithoutDept, synced_at: new Date() },
+        select: { id: true, email: true },
+      })
+      emailToId.set(newUser.email, newUser.id)
       added++
     }
   }
 
-  // Build parallel arrays for bulk RPC — single UPDATE with unnest
+  // Bulk update manager links
   const zimyoIds: string[] = []
   const managerIds: string[] = []
   for (const emp of zimyoEmployees) {
@@ -53,26 +62,40 @@ export async function triggerZimyoSync(): Promise<{ error?: string }> {
     }
   }
   if (zimyoIds.length > 0) {
-    await supabase.rpc('bulk_update_manager_links', {
-      p_zimyo_ids: zimyoIds,
-      p_manager_ids: managerIds,
-    })
+    await prisma.$transaction(
+      zimyoIds.map((zimyoId, i) =>
+        prisma.user.update({
+          where: { zimyo_id: zimyoId },
+          data: { manager_id: managerIds[i] },
+        })
+      )
+    )
   }
 
   // Deactivate users no longer in Zimyo
   const activeZimyoIds = zimyoEmployees.map(e => e.employee_id)
-  const { data: allUsers } = await supabase.from('users').select('zimyo_id').eq('is_active', true)
-  const toDeactivate = (allUsers ?? []).filter(u => !activeZimyoIds.includes(u.zimyo_id)).map(u => u.zimyo_id)
+  const allUsers = await prisma.user.findMany({
+    where: { is_active: true },
+    select: { zimyo_id: true },
+  })
+  const toDeactivate = allUsers
+    .filter(u => !activeZimyoIds.includes(u.zimyo_id))
+    .map(u => u.zimyo_id)
   if (toDeactivate.length > 0) {
-    await supabase.from('users').update({ is_active: false }).in('zimyo_id', toDeactivate)
+    await prisma.user.updateMany({
+      where: { zimyo_id: { in: toDeactivate } },
+      data: { is_active: false },
+    })
     deactivated = toDeactivate.length
   }
 
-  await supabase.from('audit_logs').insert({
-    changed_by: user.id,
-    action: 'zimyo_sync',
-    entity_type: 'user',
-    new_value: { added, updated, deactivated },
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'zimyo_sync',
+      entity_type: 'user',
+      new_value: { added, updated, deactivated },
+    },
   })
 
   revalidatePath('/admin/users')
@@ -91,51 +114,41 @@ export async function createUser(_prev: ActionResult | null, formData: FormData)
   const variable_pay  = parseFloat(formData.get('variable_pay') as string) || 0
   const manager_id    = (formData.get('manager_id') as string) || null
   const is_also_employee = formData.get('is_also_employee') === 'true'
-  const send_invite   = formData.get('send_invite') === 'true'
+  const password      = (formData.get('password') as string)?.trim()
 
   if (!email || !full_name || !role) return { data: null, error: 'Email, name and role are required' }
+  if (!password) return { data: null, error: 'Password is required' }
 
-  const svc = await createServiceClient()
+  const password_hash = await bcrypt.hash(password, 12)
 
-  // Create auth user
-  const { data: authData, error: authErr } = await svc.auth.admin.createUser({
-    email,
-    email_confirm: true,
+  // Generate a zimyo_id placeholder for manually created users
+  const zimyo_id = `manual_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+
+  const newUser = await prisma.user.create({
+    data: {
+      email,
+      full_name,
+      role: role as import('@prisma/client').UserRole,
+      department_id,
+      designation,
+      variable_pay,
+      manager_id,
+      is_also_employee: role === 'hrbp' ? is_also_employee : false,
+      is_active: true,
+      zimyo_id,
+      password_hash,
+    },
+    select: { id: true },
   })
-  if (authErr) return { data: null, error: authErr.message }
 
-  // Insert public user
-  const { error: insertErr } = await svc.from('users').insert({
-    id: authData.user.id,
-    email,
-    full_name,
-    role,
-    department_id,
-    designation,
-    variable_pay,
-    manager_id,
-    is_also_employee: role === 'hrbp' ? is_also_employee : false,
-    is_active: true,
-  })
-  if (insertErr) {
-    // Cleanup: delete the auth user if public user insert fails
-    await svc.auth.admin.deleteUser(authData.user.id)
-    return { data: null, error: insertErr.message }
-  }
-
-  // Send invite email if requested
-  if (send_invite) {
-    const { error: linkErr } = await svc.auth.admin.inviteUserByEmail(email)
-    if (linkErr) console.error('Invite email send failed:', linkErr.message)
-  }
-
-  // Audit log
-  await svc.from('audit_logs').insert({
-    changed_by: admin.id,
-    action: 'user_created',
-    entity_type: 'user',
-    entity_id: authData.user.id,
-    new_value: { email, full_name, role },
+  await prisma.auditLog.create({
+    data: {
+      changed_by: admin.id,
+      action: 'user_created',
+      entity_type: 'user',
+      entity_id: newUser.id,
+      new_value: { email, full_name, role },
+    },
   })
 
   revalidatePath('/admin/users')
@@ -158,44 +171,54 @@ export async function updateUser(_prev: ActionResult | null, formData: FormData)
   const is_also_employee = formData.get('is_also_employee') === 'true'
   const is_active     = formData.get('is_active') === 'true'
 
-  const svc = await createServiceClient()
-
   // Get old values for audit
-  const { data: old } = await svc.from('users').select('role, department_id, is_active').eq('id', userId).single()
+  const old = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true, department_id: true, is_active: true },
+  })
 
-  const { error } = await svc.from('users').update({
-    full_name, role, department_id, designation, variable_pay,
-    manager_id,
-    is_also_employee: role === 'hrbp' ? is_also_employee : false,
-    is_active,
-  }).eq('id', userId)
-  if (error) return { data: null, error: error.message }
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      full_name,
+      role: role as import('@prisma/client').UserRole,
+      department_id,
+      designation,
+      variable_pay,
+      manager_id,
+      is_also_employee: role === 'hrbp' ? is_also_employee : false,
+      is_active,
+    },
+  })
 
   // Update hrbp_departments if role is hrbp
   if (role === 'hrbp') {
     const deptIds = formData.getAll('hrbp_department_ids') as string[]
-    await svc.from('hrbp_departments').delete().eq('hrbp_id', userId)
+    await prisma.hrbpDepartment.deleteMany({ where: { hrbp_id: userId } })
     if (deptIds.length > 0) {
-      const { error: deptErr } = await svc.from('hrbp_departments').insert(
-        deptIds.map(id => ({ hrbp_id: userId, department_id: id }))
-      )
-      if (deptErr) console.error('hrbp_departments update failed:', deptErr.message)
+      await prisma.hrbpDepartment.createMany({
+        data: deptIds.map(id => ({ hrbp_id: userId, department_id: id })),
+      })
     }
   } else if (old?.role === 'hrbp') {
     // Role changed away from HRBP — clean up orphaned dept assignments
-    await svc.from('hrbp_departments').delete().eq('hrbp_id', userId)
+    await prisma.hrbpDepartment.deleteMany({ where: { hrbp_id: userId } })
   }
 
-  // Audit log
-  const { error: auditErr } = await svc.from('audit_logs').insert({
-    changed_by: admin!.id,
-    action: 'user_updated',
-    entity_type: 'user',
-    entity_id: userId,
-    old_value: { role: old?.role, department_id: old?.department_id, is_active: old?.is_active },
-    new_value: { role, department_id, is_active },
-  })
-  if (auditErr) console.error('Audit log failed:', auditErr.message)
+  try {
+    await prisma.auditLog.create({
+      data: {
+        changed_by: admin.id,
+        action: 'user_updated',
+        entity_type: 'user',
+        entity_id: userId,
+        old_value: { role: old?.role, department_id: old?.department_id, is_active: old?.is_active },
+        new_value: { role, department_id, is_active },
+      },
+    })
+  } catch (e) {
+    console.error('Audit log failed:', e)
+  }
 
   revalidatePath('/admin/users')
   redirect('/admin/users')
@@ -203,64 +226,45 @@ export async function updateUser(_prev: ActionResult | null, formData: FormData)
 
 export async function sendMagicLink(_prev: ActionResult<{ link: string }> | null, formData: FormData): Promise<ActionResult<{ link: string }>> {
   await requireRole(['admin'])
-  const admin = await getCurrentUser()
-  const userId = formData.get('user_id') as string
-  if (!userId) return { data: null, error: 'User ID missing' }
-
-  const svc = await createServiceClient()
-  const { data: u } = await svc.from('users').select('email').eq('id', userId).single()
-  if (!u) return { data: null, error: 'User not found' }
-
-  const { data: linkData, error } = await svc.auth.admin.generateLink({ type: 'magiclink', email: u.email })
-  if (error) return { data: null, error: error.message }
-
-  await svc.from('audit_logs').insert({
-    changed_by: admin!.id, action: 'magic_link_generated',
-    entity_type: 'user', entity_id: userId,
-    new_value: { email: u.email },
-  })
-  return { data: { link: linkData.properties.action_link }, error: null }
+  // Magic link generation requires Supabase Auth admin API.
+  // With Auth.js (NextAuth), users log in via credentials or OAuth.
+  // This feature is no longer available after the Supabase migration.
+  return { data: null, error: 'Magic links are not supported with the current auth provider. Use the password reset flow instead.' }
 }
 
 export async function sendPasswordReset(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   await requireRole(['admin'])
-  const admin = await getCurrentUser()
-  const userId = formData.get('user_id') as string
-  if (!userId) return { data: null, error: 'User ID missing' }
-
-  const svc = await createServiceClient()
-  const { data: u } = await svc.from('users').select('email').eq('id', userId).single()
-  if (!u) return { data: null, error: 'User not found' }
-
-  // Use the regular client's resetPasswordForEmail — this triggers the configured
-  // email template and actually delivers the email via Supabase SMTP
-  const supabase = await createClient()
-  const { error } = await supabase.auth.resetPasswordForEmail(u.email)
-  if (error) return { data: null, error: error.message }
-
-  await svc.from('audit_logs').insert({
-    changed_by: admin!.id, action: 'password_reset_sent',
-    entity_type: 'user', entity_id: userId,
-    new_value: { email: u.email },
-  })
-  return { data: null, error: null }
+  // Password reset via email requires an email provider configured in Auth.js.
+  // For now, admins can set a new password directly via the admin panel.
+  return { data: null, error: 'Email-based password reset is not configured. Please set the password directly.' }
 }
 
 export async function updateUserRole(userId: string, role: string): Promise<void> {
   const user = await requireRole(['admin'])
-  const supabase = await createServiceClient()
 
-  const { data: target } = await supabase.from('users').select('role').eq('id', userId).single()
+  const target = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true },
+  })
 
-  await supabase.from('users').update({ role }).eq('id', userId)
+  try {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { role: role as import('@prisma/client').UserRole },
+    })
+  } catch (e) {
+    throw new Error(e instanceof Error ? e.message : 'Failed to update role')
+  }
 
-  await supabase.from('audit_logs').insert({
-    changed_by: user.id,
-    action: 'role_change',
-    entity_type: 'user',
-    entity_id: userId,
-    old_value: { role: target?.role },
-    new_value: { role },
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'role_change',
+      entity_type: 'user',
+      entity_id: userId,
+      old_value: { role: target?.role },
+      new_value: { role },
+    },
   })
 
   revalidatePath('/admin/users')
@@ -268,17 +272,25 @@ export async function updateUserRole(userId: string, role: string): Promise<void
 
 export async function toggleUserActive(userId: string, currentActive: boolean): Promise<void> {
   const user = await requireRole(['admin'])
-  const supabase = await createServiceClient()
 
-  await supabase.from('users').update({ is_active: !currentActive }).eq('id', userId)
+  try {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { is_active: !currentActive },
+    })
+  } catch (e) {
+    throw new Error(e instanceof Error ? e.message : 'Failed to toggle user status')
+  }
 
-  await supabase.from('audit_logs').insert({
-    changed_by: user.id,
-    action: 'toggle_active',
-    entity_type: 'user',
-    entity_id: userId,
-    old_value: { is_active: currentActive },
-    new_value: { is_active: !currentActive },
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'toggle_active',
+      entity_type: 'user',
+      entity_id: userId,
+      old_value: { is_active: currentActive },
+      new_value: { is_active: !currentActive },
+    },
   })
 
   revalidatePath('/admin/users')

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { requireRole, requireManagerOwnership } from '@/lib/auth'
 import { addKpi, deleteKpi } from '../../actions'
 import { SubmitButton } from '@/components/submit-button'
@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { KpiTemplatePicker } from '@/components/kpi-template-picker'
-import type { Kpi, User } from '@/lib/types'
+import type { Kpi } from '@/lib/types'
 
 export default async function KpiSettingPage({
   params, searchParams,
@@ -20,14 +20,17 @@ export default async function KpiSettingPage({
 
   await requireManagerOwnership(employeeId, user.id)
 
-  const supabase = await createClient()
-  const { data: employee } = await supabase.from("users").select("*").eq("id", employeeId).single()
-  const { data: kpis } = await supabase.from("kpis").select("*").eq("cycle_id", cycleId ?? "").eq("employee_id", employeeId)
+  const [employee, kpis] = await Promise.all([
+    prisma.user.findUnique({ where: { id: employeeId } }),
+    cycleId
+      ? prisma.kpi.findMany({ where: { cycle_id: cycleId, employee_id: employeeId } })
+      : Promise.resolve([] as Kpi[]),
+  ])
 
   return (
     <div className="max-w-2xl space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">KPIs for {(employee as User)?.full_name}</h1>
+        <h1 className="text-2xl font-bold">KPIs for {employee?.full_name}</h1>
         {cycleId && <div data-tour="template-picker"><KpiTemplatePicker cycleId={cycleId} employeeId={employeeId} /></div>}
       </div>
 
@@ -36,10 +39,10 @@ export default async function KpiSettingPage({
       )}
 
       <div className="space-y-2">
-        {(!kpis || kpis.length === 0) && (
+        {kpis.length === 0 && (
           <p className="text-muted-foreground">No KPIs set yet - add one below.</p>
         )}
-        {(kpis as Kpi[] ?? []).map(kpi => (
+        {(kpis as unknown as Kpi[]).map(kpi => (
           <div key={kpi.id} className="flex items-center justify-between rounded border p-3">
             <div>
               <p className="font-medium">{kpi.title}</p>

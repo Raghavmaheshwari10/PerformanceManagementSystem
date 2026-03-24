@@ -3,12 +3,12 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { signOut } from 'next-auth/react'
 import type { UserRole } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { CommandPaletteTrigger } from '@/components/command-palette-trigger'
 import { DensityToggle } from '@/components/density-toggle'
 import { HelpPanel } from '@/components/help-panel'
-import { createClient } from '@/lib/supabase/client'
 
 interface NavItem { label: string; href: string; requireAlsoEmployee?: boolean }
 
@@ -63,8 +63,7 @@ export function Sidebar({
   )
 
   async function handleSignOut() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
+    await signOut({ redirect: false })
     router.push('/login')
   }
 

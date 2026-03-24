@@ -1,23 +1,31 @@
-import { createClient } from '@/lib/supabase/server'
+import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
-import type { User, UserRole } from './types'
+import { prisma } from '@/lib/prisma'
+import type { UserRole } from '@prisma/client'
 
-export async function getCurrentUser(): Promise<User> {
-  const supabase = await createClient()
-  const { data: { user: authUser } } = await supabase.auth.getUser()
-  if (!authUser) redirect('/login')
+// Full DB user type — use this when you need all user fields
+export type AppUser = Awaited<ReturnType<typeof getCurrentUser>>
 
-  const { data: dbUser, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('email', authUser.email)
-    .single()
+/**
+ * Returns the full user record from DB.
+ * Redirects to /login if not authenticated.
+ */
+export async function getCurrentUser() {
+  const session = await auth()
+  if (!session?.user?.id) redirect('/login')
 
-  if (error || !dbUser) redirect('/login')
-  return dbUser as User
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+  })
+  if (!user || !user.is_active) redirect('/login')
+  return user
 }
 
-export async function requireRole(allowedRoles: UserRole[]): Promise<User> {
+/**
+ * Returns the current user and verifies they have one of the allowed roles.
+ * Redirects to /unauthorized otherwise.
+ */
+export async function requireRole(allowedRoles: UserRole[]) {
   const user = await getCurrentUser()
   if (!allowedRoles.includes(user.role)) {
     redirect('/unauthorized')
@@ -25,23 +33,20 @@ export async function requireRole(allowedRoles: UserRole[]): Promise<User> {
   return user
 }
 
-/** Pure testable check — returns true if user is the manager of the given employee. */
-export function checkManagerOwnership(user: User, managerId: string): boolean {
-  return user.id === managerId
+/** Pure testable check — returns true if managerId matches the user's id. */
+export function checkManagerOwnership(userId: string, managerId: string): boolean {
+  return userId === managerId
 }
 
 /**
- * DB-backed ownership check. Fetches the employee and verifies the current manager
+ * DB-backed ownership check. Fetches the employee and verifies the given managerId
  * owns that record. Redirects to /unauthorized on failure.
  */
 export async function requireManagerOwnership(employeeId: string, managerId: string): Promise<void> {
-  const supabase = await createClient()
-  const { data: employee } = await supabase
-    .from('users')
-    .select('manager_id')
-    .eq('id', employeeId)
-    .single()
-
+  const employee = await prisma.user.findUnique({
+    where: { id: employeeId },
+    select: { manager_id: true },
+  })
   if (!employee || employee.manager_id !== managerId) {
     redirect('/unauthorized')
   }
@@ -50,8 +55,8 @@ export async function requireManagerOwnership(employeeId: string, managerId: str
 export function getRoleDashboardPath(role: UserRole): string {
   switch (role) {
     case 'employee': return '/employee'
-    case 'manager': return '/manager'
-    case 'hrbp': return '/hrbp'
-    case 'admin': return '/admin'
+    case 'manager':  return '/manager'
+    case 'hrbp':     return '/hrbp'
+    case 'admin':    return '/admin'
   }
 }

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { requireRole, requireManagerOwnership } from '@/lib/auth'
 import { ReviewForm } from './review-form'
 import type { User, Kpi, Review, Appraisal } from '@/lib/types'
@@ -15,33 +15,33 @@ export default async function ManagerReviewPage({
 
   await requireManagerOwnership(employeeId, user.id)
 
-  const supabase = await createClient()
-
   if (cycleId) {
-    const { data: cycle } = await supabase.from('cycles').select('id').eq('id', cycleId).single()
+    const cycle = await prisma.cycle.findUnique({ where: { id: cycleId }, select: { id: true } })
     if (!cycle) return <p className="text-muted-foreground">Cycle not found.</p>
   }
 
-  const [empRes, kpiRes, reviewRes, appraisalRes] = await Promise.all([
-    supabase.from('users').select('*').eq('id', employeeId).single(),
-    supabase.from('kpis').select('*').eq('cycle_id', cycleId ?? '').eq('employee_id', employeeId),
-    supabase.from('reviews').select('*').eq('cycle_id', cycleId ?? '').eq('employee_id', employeeId).single(),
-    supabase.from('appraisals').select('*').eq('cycle_id', cycleId ?? '').eq('employee_id', employeeId).single(),
+  const [employee, kpis, review, appraisal] = await Promise.all([
+    prisma.user.findUnique({ where: { id: employeeId } }),
+    cycleId
+      ? prisma.kpi.findMany({ where: { cycle_id: cycleId, employee_id: employeeId } })
+      : Promise.resolve([]),
+    cycleId
+      ? prisma.review.findFirst({ where: { cycle_id: cycleId, employee_id: employeeId } })
+      : Promise.resolve(null),
+    cycleId
+      ? prisma.appraisal.findFirst({ where: { cycle_id: cycleId, employee_id: employeeId } })
+      : Promise.resolve(null),
   ])
 
-  const employee = empRes.data as User
-  const kpis = kpiRes.data as Kpi[] ?? []
-  const review = reviewRes.data as Review | null
-  const appraisal = appraisalRes.data as Appraisal | null
-  const submitted = !!appraisal?.manager_submitted_at
+  const submitted = !!(appraisal as Appraisal | null)?.manager_submitted_at
 
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Review: {employee?.full_name}</h1>
+        <h1 className="text-2xl font-bold">Review: {(employee as unknown as User)?.full_name}</h1>
         {submitted && (
           <p className="mt-1 text-sm text-green-600 font-medium">
-            ✓ Rating submitted: {appraisal?.manager_rating}
+            ✓ Rating submitted: {(appraisal as Appraisal | null)?.manager_rating}
           </p>
         )}
       </div>
@@ -60,7 +60,7 @@ export default async function ManagerReviewPage({
             {kpis.length === 0 ? (
               <p className="text-sm text-muted-foreground italic">No KPIs set for this cycle.</p>
             ) : (
-              kpis.map(kpi => (
+              (kpis as unknown as Kpi[]).map(kpi => (
                 <div key={kpi.id} className="rounded border bg-background p-3">
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-sm font-medium">{kpi.title}</p>
@@ -79,11 +79,11 @@ export default async function ManagerReviewPage({
             <div className="space-y-3">
               <div className="rounded border bg-background p-3">
                 <p className="text-xs font-medium text-muted-foreground mb-1">Self Rating</p>
-                <span className="font-semibold">{review.self_rating ?? '—'}</span>
+                <span className="font-semibold">{(review as unknown as Review).self_rating ?? '—'}</span>
               </div>
               <div className="rounded border bg-background p-3">
                 <p className="text-xs font-medium text-muted-foreground mb-1">Self Comments</p>
-                <p className="text-sm whitespace-pre-wrap">{review.self_comments || <span className="italic text-muted-foreground">No comments</span>}</p>
+                <p className="text-sm whitespace-pre-wrap">{(review as unknown as Review).self_comments || <span className="italic text-muted-foreground">No comments</span>}</p>
               </div>
             </div>
           ) : (
@@ -102,12 +102,12 @@ export default async function ManagerReviewPage({
             <div className="space-y-3">
               <div className="rounded border p-3">
                 <p className="text-xs font-medium text-muted-foreground mb-1">Your Rating</p>
-                <span className="font-semibold text-green-700">{appraisal?.manager_rating}</span>
+                <span className="font-semibold text-green-700">{(appraisal as Appraisal | null)?.manager_rating}</span>
               </div>
-              {appraisal?.manager_comments && (
+              {(appraisal as Appraisal | null)?.manager_comments && (
                 <div className="rounded border p-3">
                   <p className="text-xs font-medium text-muted-foreground mb-1">Your Comments</p>
-                  <p className="text-sm whitespace-pre-wrap">{appraisal.manager_comments}</p>
+                  <p className="text-sm whitespace-pre-wrap">{(appraisal as Appraisal | null)?.manager_comments}</p>
                 </div>
               )}
               <p className="text-xs text-muted-foreground">
@@ -118,8 +118,8 @@ export default async function ManagerReviewPage({
             <ReviewForm
               cycleId={cycleId}
               employeeId={employeeId}
-              defaultRating={appraisal?.manager_rating ?? undefined}
-              defaultComments={appraisal?.manager_comments ?? undefined}
+              defaultRating={(appraisal as Appraisal | null)?.manager_rating ?? undefined}
+              defaultComments={(appraisal as Appraisal | null)?.manager_comments ?? undefined}
             />
           ) : (
             <p className="text-sm text-muted-foreground">No active cycle selected.</p>

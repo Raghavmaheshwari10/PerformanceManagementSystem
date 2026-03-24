@@ -1,6 +1,6 @@
 'use server'
 
-import { createServiceClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
@@ -22,14 +22,16 @@ function parseTemplateForm(formData: FormData) {
 
 export async function createKpiTemplate(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   await requireRole(['admin'])
-  const supabase = await createServiceClient()
   const data = parseTemplateForm(formData)
 
   if (!data.role_slug) return { data: null, error: 'Role slug is required' }
   if (!data.title) return { data: null, error: 'Title is required' }
 
-  const { error } = await supabase.from('kpi_templates').insert(data)
-  if (error) return { data: null, error: error.message }
+  try {
+    await prisma.kpiTemplate.create({ data })
+  } catch (e) {
+    return { data: null, error: e instanceof Error ? e.message : 'Failed to create KPI template' }
+  }
 
   revalidatePath('/admin/kpi-templates')
   redirect('/admin/kpi-templates')
@@ -37,14 +39,16 @@ export async function createKpiTemplate(_prev: ActionResult, formData: FormData)
 
 export async function updateKpiTemplate(id: string, _prev: ActionResult, formData: FormData): Promise<ActionResult> {
   await requireRole(['admin'])
-  const supabase = await createServiceClient()
   const data = parseTemplateForm(formData)
 
   if (!data.role_slug) return { data: null, error: 'Role slug is required' }
   if (!data.title) return { data: null, error: 'Title is required' }
 
-  const { error } = await supabase.from('kpi_templates').update(data).eq('id', id)
-  if (error) return { data: null, error: error.message }
+  try {
+    await prisma.kpiTemplate.update({ where: { id }, data })
+  } catch (e) {
+    return { data: null, error: e instanceof Error ? e.message : 'Failed to update KPI template' }
+  }
 
   revalidatePath('/admin/kpi-templates')
   redirect('/admin/kpi-templates')
@@ -52,7 +56,9 @@ export async function updateKpiTemplate(id: string, _prev: ActionResult, formDat
 
 export async function toggleTemplateActive(id: string, current: boolean): Promise<void> {
   await requireRole(['admin'])
-  const supabase = await createServiceClient()
-  await supabase.from('kpi_templates').update({ is_active: !current }).eq('id', id)
+  await prisma.kpiTemplate.update({
+    where: { id },
+    data: { is_active: !current },
+  })
   revalidatePath('/admin/kpi-templates')
 }
