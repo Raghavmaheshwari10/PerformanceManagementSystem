@@ -136,3 +136,37 @@ export interface KpiTemplate {
   is_active: boolean
   created_at: string
 }
+
+export type GoalType = "business" | "development" | "behavior"
+export type GoalStatus = "draft" | "submitted" | "approved" | "rejected" | "completed" | "closed"
+
+export interface Goal {
+  id: string
+  cycle_id: string
+  employee_id: string
+  title: string
+  description: string | null
+  goal_type: GoalType
+  target_value: number | null
+  current_value: number | null
+  unit: string | null
+  weight: number | null
+  start_date: string | null
+  due_date: string | null
+  status: GoalStatus
+  manager_comment: string | null
+  approved_by: string | null
+  approved_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface GoalUpdate {
+  id: string
+  goal_id: string
+  updated_by: string
+  previous_value: number | null
+  new_value: number | null
+  note: string | null
+  created_at: string
+}
