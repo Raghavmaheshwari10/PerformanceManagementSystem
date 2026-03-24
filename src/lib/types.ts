@@ -185,3 +185,19 @@ export interface Feedback {
   created_at: string
   from_user?: { full_name: string }
 }
+
+export type PeerReviewStatus = "requested" | "accepted" | "declined" | "submitted"
+
+export interface PeerReviewRequest {
+  id: string
+  cycle_id: string
+  reviewee_id: string
+  peer_user_id: string
+  requested_by: string
+  status: PeerReviewStatus
+  peer_rating: RatingTier | null
+  peer_comments: string | null
+  created_at: string
+  reviewee?: { full_name: string }
+  peer_user?: { full_name: string }
+}
