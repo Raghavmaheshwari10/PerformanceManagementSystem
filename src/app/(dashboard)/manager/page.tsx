@@ -184,6 +184,12 @@ export default async function ManagerTeamPage() {
 
                 <div className="flex gap-2 shrink-0">
                   <Link
+                    href={`/manager/${emp.id}/goals?cycle=${activeCycle.id}`}
+                    className="rounded-md border px-2.5 py-1 text-xs hover:bg-accent"
+                  >
+                    Goals
+                  </Link>
+                  <Link
                     href={`/manager/${emp.id}/kpis?cycle=${activeCycle.id}`}
                     className="rounded-md border px-2.5 py-1 text-xs hover:bg-accent"
                     {...(isFirstRow ? { 'data-tour': 'kpi-button' } : {})}
