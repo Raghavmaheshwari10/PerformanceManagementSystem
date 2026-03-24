@@ -201,3 +201,31 @@ export interface PeerReviewRequest {
   reviewee?: { full_name: string }
   peer_user?: { full_name: string }
 }
+
+export type AnswerType = "rating" | "text" | "mixed"
+
+export interface Competency {
+  id: string
+  name: string
+  description: string | null
+  created_at: string
+}
+
+export interface ReviewTemplate {
+  id: string
+  name: string
+  description: string | null
+  created_by: string
+  created_at: string
+  questions?: ReviewQuestion[]
+}
+
+export interface ReviewQuestion {
+  id: string
+  template_id: string
+  competency_id: string | null
+  question_text: string
+  answer_type: AnswerType
+  is_required: boolean
+  order_index: number
+}

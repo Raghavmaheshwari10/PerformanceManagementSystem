@@ -119,6 +119,14 @@ enum PeerReviewStatus {
   @@map("peer_review_status")
 }
 
+enum AnswerType {
+  rating
+  text
+  mixed
+
+  @@map("answer_type")
+}
+
 // ─────────────────────────────────────────
 // Models
 // ─────────────────────────────────────────
@@ -177,6 +185,7 @@ model User {
   peer_reviews_as_reviewee  PeerReviewRequest[] @relation("PeerReviewReviewee")
   peer_reviews_as_peer      PeerReviewRequest[] @relation("PeerReviewPeer")
   peer_reviews_requested    PeerReviewRequest[] @relation("PeerReviewRequester")
+  review_templates_created ReviewTemplate[] @relation("ReviewTemplateCreator")
 
   @@index([manager_id], name: "idx_users_manager")
   @@index([role], name: "idx_users_role")
@@ -466,6 +475,45 @@ model PeerReviewRequest {
   @@unique([cycle_id, reviewee_id, peer_user_id])
   @@index([cycle_id, reviewee_id], name: "idx_peer_review_cycle_reviewee")
   @@map("peer_review_requests")
+}
+
+model Competency {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @unique
+  description String?
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  review_questions ReviewQuestion[]
+
+  @@map("competencies")
+}
+
+model ReviewTemplate {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  description String?
+  created_by  String   @db.Uuid
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  creator   User             @relation("ReviewTemplateCreator", fields: [created_by], references: [id])
+  questions ReviewQuestion[]
+
+  @@map("review_templates")
+}
+
+model ReviewQuestion {
+  id             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  template_id    String     @db.Uuid
+  competency_id  String?    @db.Uuid
+  question_text  String
+  answer_type    AnswerType @default(rating)
+  is_required    Boolean    @default(true)
+  order_index    Int        @default(0)
+
+  template   ReviewTemplate @relation(fields: [template_id], references: [id], onDelete: Cascade)
+  competency Competency?    @relation(fields: [competency_id], references: [id])
+
+  @@map("review_questions")
 }
 
 model PayoutConfig {
