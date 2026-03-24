@@ -2,6 +2,7 @@
 
 import { signIn } from 'next-auth/react'
 import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 
 const TEST_ACCOUNTS = [
   { label: 'Admin',   email: 'admin@test.com',    password: 'admin123' },
@@ -400,6 +401,12 @@ export default function LoginPage() {
                     }
                   </button>
                 </div>
+              </div>
+
+              <div className="text-right">
+                <Link href="/login/forgot-password" className="text-xs text-muted-foreground hover:underline" style={{ color: '#7a7268', fontSize: '0.75rem' }}>
+                  Forgot password?
+                </Link>
               </div>
 
               <button type="submit" className="btn-primary" disabled={loading}>

@@ -156,6 +156,8 @@ model User {
   is_active     Boolean   @default(true)
   is_also_employee Boolean @default(false)
   password_hash    String?
+  reset_token            String?
+  reset_token_expires_at DateTime? @db.Timestamptz(6)
   synced_at     DateTime? @default(now()) @db.Timestamptz(6)
   created_at    DateTime  @default(now()) @db.Timestamptz(6)
 
