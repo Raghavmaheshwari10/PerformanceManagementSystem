@@ -92,6 +92,24 @@ enum NotificationStatus {
   @@map("notification_status")
 }
 
+enum FeedbackCategory {
+  teamwork
+  leadership
+  ownership
+  communication
+  innovation
+
+  @@map("feedback_category")
+}
+
+enum FeedbackVisibility {
+  private
+  recipient_and_manager
+  public_team
+
+  @@map("feedback_visibility")
+}
+
 // ─────────────────────────────────────────
 // Models
 // ─────────────────────────────────────────
@@ -145,6 +163,8 @@ model User {
   goals_as_employee Goal[] @relation("GoalEmployee")
   goals_approved    Goal[] @relation("GoalApprover")
   goal_updates      GoalUpdate[] @relation("GoalUpdater")
+  feedback_given    Feedback[] @relation("FeedbackFrom")
+  feedback_received Feedback[] @relation("FeedbackTo")
 
   @@index([manager_id], name: "idx_users_manager")
   @@index([role], name: "idx_users_role")
@@ -394,6 +414,23 @@ model GoalUpdate {
   updater    User @relation("GoalUpdater", fields: [updated_by], references: [id])
 
   @@map("goal_updates")
+}
+
+model Feedback {
+  id              String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  from_user_id    String             @db.Uuid
+  to_user_id      String             @db.Uuid
+  category        FeedbackCategory
+  message         String
+  visibility      FeedbackVisibility @default(recipient_and_manager)
+  linked_goal_id  String?            @db.Uuid
+  created_at      DateTime           @default(now()) @db.Timestamptz(6)
+
+  from_user User  @relation("FeedbackFrom", fields: [from_user_id], references: [id])
+  to_user   User  @relation("FeedbackTo", fields: [to_user_id], references: [id])
+
+  @@index([to_user_id], name: "idx_feedback_to_user")
+  @@map("feedback")
 }
 
 model PayoutConfig {

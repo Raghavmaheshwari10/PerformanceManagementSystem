@@ -170,3 +170,18 @@ export interface GoalUpdate {
   note: string | null
   created_at: string
 }
+
+export type FeedbackCategory = "teamwork" | "leadership" | "ownership" | "communication" | "innovation"
+export type FeedbackVisibility = "private" | "recipient_and_manager" | "public_team"
+
+export interface Feedback {
+  id: string
+  from_user_id: string
+  to_user_id: string
+  category: FeedbackCategory
+  message: string
+  visibility: FeedbackVisibility
+  linked_goal_id: string | null
+  created_at: string
+  from_user?: { full_name: string }
+}
