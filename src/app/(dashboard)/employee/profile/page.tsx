@@ -10,16 +10,19 @@ async function getManagerChain(
 
   for (let i = 0; i < maxDepth; i++) {
     if (!currentId) break
-    const user = await prisma.user.findUnique({
+    const row: {
+      manager_id: string | null
+      manager: { id: string; full_name: string; designation: string | null } | null
+    } | null = await prisma.user.findUnique({
       where: { id: currentId },
       select: {
         manager_id: true,
         manager: { select: { id: true, full_name: true, designation: true } },
       },
     })
-    if (!user?.manager) break
-    chain.push(user.manager)
-    currentId = user.manager.id
+    if (!row?.manager) break
+    chain.push(row.manager)
+    currentId = row.manager.id
   }
 
   return chain
