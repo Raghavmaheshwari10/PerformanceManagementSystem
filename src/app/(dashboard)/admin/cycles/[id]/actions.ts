@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import type { ActionResult } from '@/lib/types'
+import { dispatchPendingNotifications } from '@/lib/email'
 
 export async function sendSelfReviewReminders(cycleId: string): Promise<ActionResult<{ sent: number }>> {
   const user = await requireRole(['admin'])
@@ -29,6 +30,10 @@ export async function sendSelfReviewReminders(cycleId: string): Promise<ActionRe
       payload: { cycle_id: cycleId, kind: 'self_review' },
     })),
   })
+
+  for (const u of pending) {
+    dispatchPendingNotifications(u.id).catch(console.error)
+  }
 
   await prisma.auditLog.create({
     data: {
@@ -65,6 +70,10 @@ export async function sendManagerReviewReminders(cycleId: string): Promise<Actio
       payload: { cycle_id: cycleId, kind: 'manager_review' },
     })),
   })
+
+  for (const id of pendingManagerIds) {
+    dispatchPendingNotifications(id).catch(console.error)
+  }
 
   await prisma.auditLog.create({
     data: {
