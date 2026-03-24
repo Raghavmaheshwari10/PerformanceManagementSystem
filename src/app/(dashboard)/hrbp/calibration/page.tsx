@@ -3,6 +3,7 @@ import { requireRole } from '@/lib/auth'
 import { BellCurveChart } from '@/components/bell-curve-chart'
 import { OverrideForm } from './override-form'
 import { CalibrationActionsClient } from './calibration-actions-client'
+import { CalculateScoresButton } from './calculate-scores-button'
 import type { RatingTier, Cycle } from '@/lib/types'
 
 interface AppraisalRow {
@@ -55,7 +56,10 @@ export default async function CalibrationPage({ searchParams }: { searchParams: 
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Calibration — {typedCycle?.name}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Calibration — {typedCycle?.name}</h1>
+        {isCalibrating && <CalculateScoresButton cycleId={cycleId} />}
+      </div>
 
       <div data-tour="bell-curve">
         <BellCurveChart distribution={distribution} total={rows.length} />
