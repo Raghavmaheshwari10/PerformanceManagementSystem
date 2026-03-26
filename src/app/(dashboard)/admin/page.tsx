@@ -5,30 +5,19 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { CYCLE_STATUS_LABELS } from '@/lib/constants'
+import { AdminMetricCard } from './admin-metric-card'
+import { AnimatedDonut } from './animated-donut'
 
 function daysUntil(d: Date | string | null) {
   if (!d) return null
   return Math.ceil((new Date(d).getTime() - Date.now()) / 86400000)
 }
 
-function ProgressRing({ pct, label, sub }: { pct: number; label: string; sub: string }) {
-  const r = 28, circ = 2 * Math.PI * r, dash = circ * Math.min(pct / 100, 1)
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <svg width="72" height="72" viewBox="0 0 72 72">
-        <circle cx="36" cy="36" r={r} fill="none" stroke="currentColor" strokeWidth="6" className="text-muted/40" />
-        <circle cx="36" cy="36" r={r} fill="none" stroke="currentColor" strokeWidth="6"
-          strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" transform="rotate(-90 36 36)"
-          className={pct >= 100 ? 'text-green-500' : pct >= 50 ? 'text-primary' : 'text-amber-500'}
-        />
-        <text x="36" y="40" textAnchor="middle" fill="currentColor" fontSize="13" className="text-xs font-bold">
-          {Math.round(pct)}%
-        </text>
-      </svg>
-      <p className="text-xs font-medium">{label}</p>
-      <p className="text-[10px] text-muted-foreground">{sub}</p>
-    </div>
-  )
+const ROLE_COLORS: Record<string, string> = {
+  employee: 'oklch(0.7 0.17 160)',   // emerald
+  manager:  'oklch(0.7 0.17 85)',    // amber
+  hrbp:     'oklch(0.65 0.22 310)',  // purple
+  admin:    'oklch(0.65 0.22 265)',  // indigo
 }
 
 export default async function AdminDashboard() {
@@ -72,19 +61,29 @@ export default async function AdminDashboard() {
 
   const roleCounts = { employee: 0, manager: 0, hrbp: 0, admin: 0 }
   for (const u of activeUsers) roleCounts[u.role as keyof typeof roleCounts]++
+  const totalUsers = activeUsers.length
   const deptCount = new Set(activeUsers.map(u => u.department?.name).filter(Boolean)).size
+
+  const selfPct = totalEmployees > 0 ? (selfReviewsDone / totalEmployees) * 100 : 0
+  const mgrPct = totalEmployees > 0 ? (managerReviewsDone / totalEmployees) * 100 : 0
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+        <div className="flex items-center gap-4 text-sm">
+          <Link href="/admin/cycles" className="text-primary hover:text-primary/80 transition-colors">All cycles &rarr;</Link>
+          <Link href="/admin/users" className="text-primary hover:text-primary/80 transition-colors">Manage users &rarr;</Link>
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Cycle Health Panel */}
-        <div className={cn('rounded-lg border p-5 space-y-4', overdueManagerReviews > 0 && 'border-destructive/40')}>
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold">Cycle Health</h2>
-            <Link href="/admin/cycles" className="text-xs text-muted-foreground hover:underline">All cycles →</Link>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Cycle Health — spans 2 cols */}
+        <div className={cn(
+          'lg:col-span-2 glass p-6 space-y-4',
+          overdueManagerReviews > 0 ? 'glass-glow-strong border-destructive/40' : 'glass-glow'
+        )}>
+          <h2 className="font-semibold">Cycle Health</h2>
 
           {activeCycle ? (
             <>
@@ -93,59 +92,73 @@ export default async function AdminDashboard() {
                 <CycleStatusBadge status={activeCycle.status} />
               </div>
               {overdueManagerReviews > 0 && (
-                <div className="rounded-md border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm text-destructive font-medium">
+                <div className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive font-medium">
                   ⚠ {overdueManagerReviews} manager review{overdueManagerReviews !== 1 ? 's' : ''} overdue
                 </div>
               )}
-              {totalEmployees > 0 && (
-                <div className="flex gap-8 justify-center py-2">
-                  <ProgressRing pct={(selfReviewsDone / totalEmployees) * 100} label="Self Reviews" sub={`${selfReviewsDone} / ${totalEmployees}`} />
-                  <ProgressRing pct={(managerReviewsDone / totalEmployees) * 100} label="Manager Reviews" sub={`${managerReviewsDone} / ${totalEmployees}`} />
-                  <ProgressRing
-                    pct={activeCycle.status === 'published' ? 100 : ['locked','calibrating'].includes(activeCycle.status) ? (managerReviewsDone / totalEmployees) * 80 : (selfReviewsDone / totalEmployees) * 40}
-                    label="Overall" sub={CYCLE_STATUS_LABELS[activeCycle.status]}
-                  />
-                </div>
-              )}
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Status: {CYCLE_STATUS_LABELS[activeCycle.status]}</span>
+                {lastImport && <span>Last import {new Date(lastImport).toLocaleDateString()}</span>}
+              </div>
               <Link href={`/admin/cycles/${activeCycle.id}`}>
-                <Button variant="outline" size="sm" className="w-full">View Cycle Detail →</Button>
+                <Button variant="outline" size="sm" className="w-full glass-interactive">View Cycle Detail &rarr;</Button>
               </Link>
             </>
           ) : (
             <div className="py-6 text-center space-y-3">
               <p className="text-sm text-muted-foreground">No active cycle</p>
-              <Link href="/admin/cycles/new"><Button size="sm">Create Cycle →</Button></Link>
+              <Link href="/admin/cycles/new">
+                <Button size="sm" className="glow-button">Create Cycle &rarr;</Button>
+              </Link>
             </div>
           )}
         </div>
 
-        {/* People Panel */}
-        <div className="rounded-lg border p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold">People</h2>
-            <Link href="/admin/users" className="text-xs text-muted-foreground hover:underline">Manage users →</Link>
-          </div>
+        {/* Active Users counter */}
+        <AdminMetricCard value={totalUsers} label="Active Users" />
 
-          <div className="text-center">
-            <p className="text-4xl font-bold">{activeUsers.length}</p>
-            <p className="text-xs text-muted-foreground mt-1">Active users</p>
-          </div>
+        {/* Departments counter */}
+        <AdminMetricCard value={deptCount} label="Departments" />
 
-          <div className="grid grid-cols-4 gap-2 text-center">
-            {(['employee','manager','hrbp','admin'] as const).map(r => (
-              <div key={r} className="rounded-md bg-muted/40 p-2">
-                <p className="text-lg font-semibold">{roleCounts[r]}</p>
-                <p className="text-[10px] text-muted-foreground capitalize">{r}</p>
+        {/* Self Reviews donut */}
+        <div className="glass p-5 flex items-center justify-center">
+          <AnimatedDonut
+            percent={selfPct}
+            color="oklch(0.65 0.22 265)"
+            label="Self Reviews"
+            sub={`${selfReviewsDone}/${totalEmployees}`}
+          />
+        </div>
+
+        {/* Manager Reviews donut */}
+        <div className="glass p-5 flex items-center justify-center">
+          <AnimatedDonut
+            percent={mgrPct}
+            color="oklch(0.7 0.2 170)"
+            label="Manager Reviews"
+            sub={`${managerReviewsDone}/${totalEmployees}`}
+          />
+        </div>
+
+        {/* Role Breakdown — spans 2 cols */}
+        <div className="lg:col-span-2 glass p-5 space-y-3">
+          <h2 className="font-semibold text-sm">Role Breakdown</h2>
+          {(['employee', 'manager', 'hrbp', 'admin'] as const).map(r => (
+            <div key={r} className="flex items-center gap-3 text-xs">
+              <span className="w-16 text-right text-muted-foreground capitalize">{r}</span>
+              <div className="flex-1 h-3 rounded-full bg-[rgba(255,255,255,0.06)] overflow-hidden">
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${totalUsers > 0 ? (roleCounts[r] / totalUsers * 100) : 0}%`,
+                    background: ROLE_COLORS[r],
+                    animation: 'barGrow 1s cubic-bezier(0.16, 1, 0.3, 1) both',
+                  }}
+                />
               </div>
-            ))}
-          </div>
-
-          <div className="flex justify-between text-sm border-t pt-3">
-            <span className="text-muted-foreground">{deptCount} department{deptCount !== 1 ? 's' : ''}</span>
-            <span className="text-muted-foreground">
-              {lastImport ? `Last import ${new Date(lastImport).toLocaleDateString()}` : 'No imports yet'}
-            </span>
-          </div>
+              <span className="w-6 font-medium">{roleCounts[r]}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
