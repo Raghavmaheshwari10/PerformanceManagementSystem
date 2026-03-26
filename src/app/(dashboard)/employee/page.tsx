@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
+import { getVisibleCycleForUser } from '@/lib/cycle-helpers'
 import { CycleStatusBadge } from '@/components/cycle-status-badge'
 import { DeadlineBanner } from '@/components/deadline-banner'
 import { SelfReviewForm } from './self-review-form'
@@ -143,10 +144,7 @@ const RATING_LABELS: Record<string, { label: string; color: string }> = {
 export default async function EmployeeReviewPage() {
   const user = await requireRole(['employee'])
 
-  const cycle = await prisma.cycle.findFirst({
-    where: { status: { not: 'draft' } },
-    orderBy: { created_at: 'desc' },
-  })
+  const cycle = await getVisibleCycleForUser(user.id)
 
   if (!cycle) return (
     <div className="glass flex flex-col items-center justify-center py-16 text-center">
