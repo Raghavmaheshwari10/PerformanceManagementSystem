@@ -222,7 +222,7 @@ export default function LoginPage() {
 
         /* ── RIGHT PANEL ── */
         .login-right {
-          width:52%; background:#f5f3ef; cursor:default;
+          width:52%; background:#0d0d1a; cursor:default;
           display:flex; align-items:center; justify-content:center;
           padding:2.5rem;
         }
@@ -230,84 +230,85 @@ export default function LoginPage() {
 
         .form-heading {
           font-family:'Instrument Serif',Georgia,serif;
-          font-size:2rem; color:#0f0e0c; margin:0 0 0.35rem; font-weight:400;
+          font-size:2rem; color:#f0f0f5; margin:0 0 0.35rem; font-weight:400;
         }
-        .form-sub { color:#7a7268; font-size:0.82rem; margin:0 0 2rem; font-weight:300; }
+        .form-sub { color:rgba(255,255,255,0.45); font-size:0.82rem; margin:0 0 2rem; font-weight:300; }
 
         /* quick fill */
         .quick-fill-label {
           font-size:0.68rem; font-weight:500; letter-spacing:0.1em;
-          text-transform:uppercase; color:#a09890; margin-bottom:0.5rem;
+          text-transform:uppercase; color:rgba(255,255,255,0.3); margin-bottom:0.5rem;
         }
         .quick-fill-pills { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:1.6rem; }
         .pill {
-          padding:4px 12px; border-radius:999px; border:1px solid #ddd9d3;
-          background:#fff; font-size:0.72rem; font-weight:500; color:#3a3530;
+          padding:4px 12px; border-radius:999px; border:1px solid rgba(255,255,255,0.1);
+          background:rgba(255,255,255,0.04); font-size:0.72rem; font-weight:500; color:rgba(255,255,255,0.7);
           cursor:pointer; transition:all 0.15s ease;
           font-family:'DM Sans',sans-serif;
         }
-        .pill:hover { background:#0f0e0c; color:#fff; border-color:#0f0e0c; }
+        .pill:hover { background:oklch(0.65 0.22 265); color:#fff; border-color:oklch(0.65 0.22 265); box-shadow:0 0 12px oklch(0.55 0.22 265 / 0.3); }
 
         /* divider */
         .divider { display:flex; align-items:center; gap:12px; margin:1.2rem 0; }
-        .divider-line { flex:1; height:1px; background:#e2ddd8; }
-        .divider-text { font-size:0.72rem; color:#a09890; white-space:nowrap; }
+        .divider-line { flex:1; height:1px; background:rgba(255,255,255,0.08); }
+        .divider-text { font-size:0.72rem; color:rgba(255,255,255,0.3); white-space:nowrap; }
 
         /* field */
         .field { margin-bottom:1rem; }
         .field label {
           display:block; font-size:0.75rem; font-weight:500;
-          color:#5a5248; margin-bottom:0.4rem; letter-spacing:0.02em;
+          color:rgba(255,255,255,0.5); margin-bottom:0.4rem; letter-spacing:0.02em;
         }
         .field-wrap { position:relative; }
         .field input {
-          width:100%; padding:10px 14px; border:1px solid #ddd9d3;
-          border-radius:8px; background:#fff; font-size:0.875rem;
-          color:#0f0e0c; outline:none; transition:border-color 0.15s, box-shadow 0.15s;
+          width:100%; padding:10px 14px; border:1px solid rgba(255,255,255,0.1);
+          border-radius:8px; background:rgba(255,255,255,0.04); font-size:0.875rem;
+          color:#f0f0f5; outline:none; transition:border-color 0.15s, box-shadow 0.15s;
           font-family:'DM Sans',sans-serif; box-sizing:border-box;
         }
-        .field input:focus { border-color:#0f0e0c; box-shadow:0 0 0 3px rgba(15,14,12,0.06); }
-        .field input::placeholder { color:#c2bbb3; }
+        .field input:focus { border-color:oklch(0.65 0.22 265); box-shadow:0 0 0 3px oklch(0.65 0.22 265 / 0.15); }
+        .field input::placeholder { color:rgba(255,255,255,0.2); }
         .eye-btn {
           position:absolute; right:12px; top:50%; transform:translateY(-50%);
-          background:none; border:none; cursor:pointer; color:#a09890;
+          background:none; border:none; cursor:pointer; color:rgba(255,255,255,0.3);
           display:flex; align-items:center; padding:2px;
         }
-        .eye-btn:hover { color:#0f0e0c; }
+        .eye-btn:hover { color:rgba(255,255,255,0.7); }
 
         /* buttons */
         .btn-primary {
           width:100%; padding:11px; border-radius:8px; border:none;
-          background:#0f0e0c; color:#fff; font-size:0.875rem; font-weight:500;
-          cursor:pointer; transition:opacity 0.15s; font-family:'DM Sans',sans-serif;
+          background:oklch(0.65 0.22 265); color:#fff; font-size:0.875rem; font-weight:500;
+          cursor:pointer; transition:box-shadow 0.15s, opacity 0.15s; font-family:'DM Sans',sans-serif;
           margin-bottom:0.75rem; letter-spacing:0.01em;
+          box-shadow:0 0 15px oklch(0.55 0.22 265 / 0.3);
         }
-        .btn-primary:hover:not(:disabled) { opacity:0.82; }
+        .btn-primary:hover:not(:disabled) { box-shadow:0 0 25px oklch(0.6 0.25 265 / 0.45); opacity:1; }
         .btn-primary:disabled { opacity:0.45; cursor:not-allowed; }
 
         .btn-ghost {
           width:100%; padding:10px; border-radius:8px;
-          border:1px solid #ddd9d3; background:#fff; color:#3a3530;
+          border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04); color:rgba(255,255,255,0.8);
           font-size:0.82rem; font-weight:400; cursor:pointer;
           transition:border-color 0.15s, background 0.15s; font-family:'DM Sans',sans-serif;
           display:flex; align-items:center; justify-content:center; gap:8px;
         }
-        .btn-ghost:hover:not(:disabled) { border-color:#0f0e0c; background:#fafaf9; }
+        .btn-ghost:hover:not(:disabled) { border-color:rgba(255,255,255,0.2); background:rgba(255,255,255,0.07); }
         .btn-ghost:disabled { opacity:0.45; cursor:not-allowed; }
 
         .btn-link {
-          background:none; border:none; padding:0; color:#7a7268;
+          background:none; border:none; padding:0; color:rgba(255,255,255,0.4);
           font-size:0.78rem; cursor:pointer; text-decoration:underline;
           text-underline-offset:2px; font-family:'DM Sans',sans-serif;
           transition:color 0.15s; display:block; text-align:center;
           margin-top:0.75rem; width:100%;
         }
-        .btn-link:hover:not(:disabled) { color:#0f0e0c; }
+        .btn-link:hover:not(:disabled) { color:rgba(255,255,255,0.7); }
         .btn-link:disabled { opacity:0.45; cursor:not-allowed; }
 
         .msg { font-size:0.78rem; margin-top:0.75rem; text-align:center; padding:8px 12px; border-radius:6px; }
-        .msg.error { color:#c0392b; background:rgba(192,57,43,0.07); border:1px solid rgba(192,57,43,0.15); }
-        .msg.ok    { color:#217a4b; background:rgba(33,122,75,0.07);  border:1px solid rgba(33,122,75,0.15); }
+        .msg.error { color:#ef4444; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); }
+        .msg.ok    { color:#22c55e; background:rgba(34,197,94,0.1);  border:1px solid rgba(34,197,94,0.2); }
       `}</style>
 
       <div className="login-root">
@@ -404,7 +405,7 @@ export default function LoginPage() {
               </div>
 
               <div className="text-right">
-                <Link href="/login/forgot-password" className="text-xs text-muted-foreground hover:underline" style={{ color: '#7a7268', fontSize: '0.75rem' }}>
+                <Link href="/login/forgot-password" className="text-xs text-muted-foreground hover:underline" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem' }}>
                   Forgot password?
                 </Link>
               </div>
