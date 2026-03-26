@@ -139,6 +139,7 @@ model Department {
   // Relations
   users           User[]
   hrbp_departments HrbpDepartment[]
+  cycle_departments CycleDepartment[]
 
   @@map("departments")
 }
@@ -236,8 +237,21 @@ model Cycle {
   audit_logs  AuditLog[]
   goals       Goal[]
   peer_review_requests PeerReviewRequest[]
+  departments CycleDepartment[]
 
   @@map("cycles")
+}
+
+model CycleDepartment {
+  cycle_id      String @db.Uuid
+  department_id String @db.Uuid
+
+  cycle      Cycle      @relation(fields: [cycle_id], references: [id], onDelete: Cascade)
+  department Department @relation(fields: [department_id], references: [id], onDelete: Cascade)
+
+  @@id([cycle_id, department_id])
+  @@index([department_id], name: "idx_cycle_departments_department_id")
+  @@map("cycle_departments")
 }
 
 model Kpi {
