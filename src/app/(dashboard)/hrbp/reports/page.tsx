@@ -17,6 +17,14 @@ const TIER_COLORS: Record<string, string> = {
   BE: 'bg-red-400',
 }
 
+const TIER_DELAYS: Record<string, string> = {
+  FEE: '0s',
+  EE: '0.1s',
+  ME: '0.2s',
+  SME: '0.3s',
+  BE: '0.4s',
+}
+
 export default async function HrReportsPage() {
   await requireRole(['hrbp', 'admin'])
 
@@ -58,6 +66,8 @@ export default async function HrReportsPage() {
     })
   )
 
+  const maxDeptSize = Math.max(...departments.map(d => d.users.length), 1)
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -68,7 +78,7 @@ export default async function HrReportsPage() {
       {cycles.length === 0 && <p className="text-muted-foreground">No cycles yet.</p>}
 
       {cycleStats.map(({ cycle, selfReviewRate, managerReviewRate, ratingGroups, totalRated }) => (
-        <section key={cycle.id} className="rounded border p-5 space-y-5">
+        <section key={cycle.id} className="glass p-6 space-y-5">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-semibold">{cycle.name}</h2>
@@ -76,15 +86,45 @@ export default async function HrReportsPage() {
             </div>
           </div>
 
+          <div className="gradient-divider" />
+
           {/* Completion stats */}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <div className="rounded border p-3 text-center">
-              <p className="text-2xl font-bold tabular-nums">{selfReviewRate}%</p>
+            <div className="glass p-4 text-center">
+              <p
+                className="text-3xl font-extrabold tabular-nums"
+                style={{ animation: 'countUp 0.5s ease-out both' }}
+              >
+                {selfReviewRate}%
+              </p>
               <p className="text-xs text-muted-foreground mt-1">Self Reviews</p>
             </div>
-            <div className="rounded border p-3 text-center">
-              <p className="text-2xl font-bold tabular-nums">{managerReviewRate}%</p>
+            <div className="glass p-4 text-center">
+              <p
+                className="text-3xl font-extrabold tabular-nums"
+                style={{ animation: 'countUp 0.5s ease-out both', animationDelay: '0.1s' }}
+              >
+                {managerReviewRate}%
+              </p>
               <p className="text-xs text-muted-foreground mt-1">Manager Reviews</p>
+            </div>
+            <div className="glass p-4 text-center">
+              <p
+                className="text-3xl font-extrabold tabular-nums"
+                style={{ animation: 'countUp 0.5s ease-out both', animationDelay: '0.2s' }}
+              >
+                {totalRated}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">Ratings Complete</p>
+            </div>
+            <div className="glass p-4 text-center">
+              <p
+                className="text-3xl font-extrabold tabular-nums"
+                style={{ animation: 'countUp 0.5s ease-out both', animationDelay: '0.3s' }}
+              >
+                {totalActive}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">Active Employees</p>
             </div>
           </div>
 
@@ -99,10 +139,14 @@ export default async function HrReportsPage() {
                   return (
                     <div key={tier} className="flex items-center gap-3 text-xs">
                       <span className="w-36 text-right shrink-0 text-muted-foreground">{TIER_LABELS[tier]}</span>
-                      <div className="flex-1 h-5 rounded bg-muted overflow-hidden">
+                      <div className="flex-1 h-5 rounded bg-white/5 overflow-hidden">
                         <div
-                          className={`h-full rounded ${TIER_COLORS[tier]} transition-all`}
-                          style={{ width: `${pct}%` }}
+                          className={`h-full rounded ${TIER_COLORS[tier]}`}
+                          style={{
+                            width: `${pct}%`,
+                            animation: 'barGrow 1s cubic-bezier(0.16, 1, 0.3, 1) both',
+                            animationDelay: TIER_DELAYS[tier],
+                          }}
                         />
                       </div>
                       <span className="w-12 shrink-0 font-medium">{count} ({pct}%)</span>
@@ -118,18 +162,34 @@ export default async function HrReportsPage() {
       ))}
 
       {/* Department breakdown */}
-      <section className="rounded border p-5 space-y-3">
+      <section className="glass p-6 space-y-3">
         <h2 className="text-lg font-semibold">Department Overview</h2>
+        <div className="gradient-divider" />
         {departments.length === 0 ? (
           <p className="text-sm text-muted-foreground">No departments.</p>
         ) : (
-          <div className="space-y-1">
-            {departments.map(dept => (
-              <div key={dept.id} className="flex items-center justify-between py-1.5 border-b last:border-0 text-sm">
-                <span className="font-medium">{dept.name}</span>
-                <span className="text-muted-foreground">{dept.users.length} employee{dept.users.length !== 1 ? 's' : ''}</span>
-              </div>
-            ))}
+          <div className="space-y-2">
+            {departments.map((dept, i) => {
+              const barWidth = Math.round((dept.users.length / maxDeptSize) * 100)
+              return (
+                <div key={dept.id} className="space-y-1">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium">{dept.name}</span>
+                    <span className="text-muted-foreground">{dept.users.length} employee{dept.users.length !== 1 ? 's' : ''}</span>
+                  </div>
+                  <div className="h-2 rounded bg-white/5 overflow-hidden">
+                    <div
+                      className="h-full rounded bg-primary/40"
+                      style={{
+                        width: `${barWidth}%`,
+                        animation: 'barGrow 1s cubic-bezier(0.16, 1, 0.3, 1) both',
+                        animationDelay: `${i * 0.08}s`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
       </section>
