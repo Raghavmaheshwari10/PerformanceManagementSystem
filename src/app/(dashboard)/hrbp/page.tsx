@@ -24,8 +24,8 @@ function CycleCard({ cycle, overdueCount }: { cycle: Cycle; overdueCount?: numbe
 
   return (
     <div className={cn(
-      'flex items-center justify-between rounded border p-4',
-      isOverdue && 'border-destructive/40 bg-destructive/5'
+      'flex items-center justify-between glass p-4',
+      isOverdue && 'glass-glow border-destructive/40 bg-destructive/5'
     )}>
       <div className="space-y-1">
         <p className="font-medium">{cycle.name}</p>
@@ -49,7 +49,7 @@ function CycleCard({ cycle, overdueCount }: { cycle: Cycle; overdueCount?: numbe
           </span>
         )}
         {['calibrating', 'locked'].includes(cycle.status) && (
-          <Link href={`/hrbp/calibration?cycle=${cycle.id}`} className="text-blue-600 hover:underline text-sm">
+          <Link href={`/hrbp/calibration?cycle=${cycle.id}`} className="text-primary hover:text-primary/80 text-sm">
             Calibrate
           </Link>
         )}
@@ -92,7 +92,7 @@ export default async function HrbpPage() {
 
       {/* Overdue alert bar */}
       {totalOverdue > 0 && (
-        <div className="rounded-lg border border-destructive/50 bg-destructive/5 px-4 py-3">
+        <div className="glass border-destructive/40 px-4 py-3">
           <p className="text-sm font-semibold text-destructive">
             {totalOverdue} manager review{totalOverdue !== 1 ? 's' : ''} overdue across active cycles
           </p>

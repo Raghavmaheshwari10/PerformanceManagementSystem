@@ -5,12 +5,12 @@ import { cn } from '@/lib/utils'
 import { GoalForm } from './goal-form'
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: 'bg-muted text-muted-foreground',
-  submitted: 'bg-blue-100 text-blue-700',
-  approved: 'bg-green-100 text-green-700',
-  rejected: 'bg-red-100 text-red-700',
-  completed: 'bg-emerald-100 text-emerald-700',
-  closed: 'bg-muted text-muted-foreground',
+  draft: 'bg-white/10 text-white/50',
+  submitted: 'bg-blue-500/15 text-blue-400',
+  approved: 'bg-green-500/15 text-green-400',
+  rejected: 'bg-red-500/15 text-red-400',
+  completed: 'bg-emerald-500/15 text-emerald-400',
+  closed: 'bg-white/10 text-white/50',
 }
 
 export default async function EmployeeGoalsPage() {
@@ -44,9 +44,15 @@ export default async function EmployeeGoalsPage() {
       {cycle && (
         <>
           {goals.length === 0 ? (
-            <p className="text-sm text-muted-foreground rounded border border-dashed p-6 text-center">
-              No goals yet. Add your first goal below.
-            </p>
+            <div className="glass border border-dashed border-white/10 p-10 text-center">
+              <div className="mx-auto rounded-full bg-primary/10 p-3 w-fit mb-3">
+                <svg className="h-6 w-6 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" />
+                </svg>
+              </div>
+              <p className="text-sm font-semibold mb-1">No goals yet</p>
+              <p className="text-xs text-muted-foreground max-w-xs mx-auto">Set your first goal for this cycle using the form below. Goals help track your progress and align with team objectives.</p>
+            </div>
           ) : (
             <div className="space-y-2">
               {goals.map(goal => {
@@ -57,7 +63,7 @@ export default async function EmployeeGoalsPage() {
                   <Link
                     key={goal.id}
                     href={`/employee/goals/${goal.id}`}
-                    className="block rounded border p-4 hover:bg-accent transition-colors"
+                    className="glass-interactive p-4 block transition-colors"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="space-y-1 flex-1">
@@ -67,8 +73,11 @@ export default async function EmployeeGoalsPage() {
                         )}
                         {progress !== null && (
                           <div className="mt-2 space-y-1">
-                            <div className="h-1.5 w-full max-w-xs rounded-full bg-muted overflow-hidden">
-                              <div className="h-full rounded-full bg-primary" style={{ width: `${progress}%` }} />
+                            <div className="h-1.5 w-full max-w-xs rounded-full bg-white/5 overflow-hidden">
+                              <div
+                                className="h-full rounded-full bg-gradient-to-r from-primary to-emerald-400 animate-[barGrow_0.6s_ease-out]"
+                                style={{ width: `${progress}%` }}
+                              />
                             </div>
                             <p className="text-xs text-muted-foreground">
                               {String(goal.current_value)}/{String(goal.target_value)} {goal.unit} ({progress}%)
@@ -78,9 +87,9 @@ export default async function EmployeeGoalsPage() {
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {goal.weight && (
-                          <span className="text-xs bg-muted rounded-full px-2 py-0.5">{String(goal.weight)}%</span>
+                          <span className="text-xs bg-white/10 rounded-full px-2 py-0.5">{String(goal.weight)}%</span>
                         )}
-                        <span className={cn('text-xs rounded-full px-2 py-0.5', STATUS_COLORS[goal.status] ?? 'bg-muted')}>
+                        <span className={cn('text-xs rounded-full px-2 py-0.5', STATUS_COLORS[goal.status] ?? 'bg-white/10')}>
                           {goal.status}
                         </span>
                       </div>
@@ -91,7 +100,7 @@ export default async function EmployeeGoalsPage() {
             </div>
           )}
 
-          <section className="rounded border p-4 space-y-3">
+          <section className="glass p-5 space-y-3">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Add Goal</h2>
             <GoalForm cycleId={cycle.id} />
           </section>

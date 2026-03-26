@@ -29,10 +29,10 @@ export default async function PeerReviewsPage() {
   ])
 
   const STATUS_COLORS: Record<string, string> = {
-    requested: 'bg-blue-100 text-blue-700',
-    accepted: 'bg-green-100 text-green-700',
-    declined: 'bg-red-100 text-red-700',
-    submitted: 'bg-emerald-100 text-emerald-700',
+    requested: 'bg-blue-500/15 text-blue-400',
+    accepted: 'bg-green-500/15 text-green-400',
+    declined: 'bg-red-500/15 text-red-400',
+    submitted: 'bg-emerald-500/15 text-emerald-400',
   }
 
   return (
@@ -52,7 +52,7 @@ export default async function PeerReviewsPage() {
       )}
 
       {cycle && (
-        <section className="rounded border p-4 space-y-4">
+        <section className="glass p-4 space-y-4">
           <h2 className="text-lg font-semibold">Request a Peer Reviewer</h2>
           <PeerRequestForm cycleId={cycle.id} colleagues={colleagues} />
         </section>
@@ -63,9 +63,9 @@ export default async function PeerReviewsPage() {
           <h2 className="text-lg font-semibold">My Peer Requests</h2>
           <div className="space-y-2">
             {myRequests.map(req => (
-              <div key={req.id} className="rounded border p-3 flex justify-between items-center text-sm">
+              <div key={req.id} className="glass p-3 flex justify-between items-center text-sm">
                 <span>{req.peer_user?.full_name ?? 'Unknown'}</span>
-                <span className={`text-xs rounded-full px-2 py-0.5 capitalize ${STATUS_COLORS[req.status] ?? 'bg-muted'}`}>
+                <span className={`text-xs rounded-full px-2 py-0.5 capitalize ${STATUS_COLORS[req.status] ?? 'bg-white/10'}`}>
                   {req.status}
                 </span>
               </div>

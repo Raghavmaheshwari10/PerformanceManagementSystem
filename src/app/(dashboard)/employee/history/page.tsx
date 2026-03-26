@@ -59,7 +59,7 @@ export default async function EmployeeHistoryPage() {
       </div>
 
       {published.length === 0 ? (
-        <p className="rounded border border-dashed p-8 text-center text-sm text-muted-foreground">
+        <p className="glass border border-dashed border-white/10 p-8 text-center text-sm text-muted-foreground">
           Your results will appear here once a review cycle is published.
         </p>
       ) : (

@@ -31,7 +31,7 @@ export default async function FeedbackPage() {
     <div className="space-y-8">
       <h1 className="text-2xl font-bold">Feedback</h1>
 
-      <section className="rounded border p-4 space-y-4">
+      <section className="glass p-6 space-y-4">
         <h2 className="text-lg font-semibold">Give Feedback</h2>
         <FeedbackForm colleagues={colleagues} />
       </section>
@@ -43,9 +43,9 @@ export default async function FeedbackPage() {
         ) : (
           <div className="space-y-3">
             {received.map(fb => (
-              <div key={fb.id} className="rounded border p-4 space-y-2">
+              <div key={fb.id} className="glass p-4 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium bg-muted rounded-full px-2 py-0.5">
+                  <span className="text-xs font-medium bg-white/10 rounded-full px-2 py-0.5">
                     {CATEGORY_LABELS[fb.category] ?? fb.category}
                   </span>
                   <span className="text-xs text-muted-foreground">
