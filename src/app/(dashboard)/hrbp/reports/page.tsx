@@ -28,8 +28,12 @@ const TIER_DELAYS: Record<string, string> = {
 export default async function HrReportsPage() {
   await requireRole(['hrbp', 'admin'])
 
-  const [cycles, departments, totalActive] = await Promise.all([
-    prisma.cycle.findMany({ orderBy: { created_at: 'desc' }, take: 5 }),
+  const [cyclesRaw, departments, totalActive] = await Promise.all([
+    prisma.cycle.findMany({
+      orderBy: { created_at: 'desc' },
+      take: 5,
+      include: { departments: { include: { department: true } } },
+    }),
     prisma.department.findMany({
       include: { users: { where: { is_active: true, role: 'employee' }, select: { id: true } } },
       orderBy: { name: 'asc' },
@@ -39,7 +43,7 @@ export default async function HrReportsPage() {
 
   // Build stats per cycle
   const cycleStats = await Promise.all(
-    cycles.map(async cycle => {
+    cyclesRaw.map(async cycle => {
       const [submittedReviews, completedAppraisals, ratingGroups] = await Promise.all([
         prisma.review.count({ where: { cycle_id: cycle.id, status: 'submitted' } }),
         prisma.appraisal.count({ where: { cycle_id: cycle.id, manager_submitted_at: { not: null } } }),
@@ -50,8 +54,15 @@ export default async function HrReportsPage() {
         }),
       ])
 
-      const selfReviewRate = totalActive > 0 ? Math.round((submittedReviews / totalActive) * 100) : 0
-      const managerReviewRate = totalActive > 0 ? Math.round((completedAppraisals / totalActive) * 100) : 0
+      // Scope employee count to cycle departments
+      const cycleDeptIds = cycle.departments.map(d => d.department_id)
+      const scopedEmployeeCount = cycleDeptIds.length > 0
+        ? departments.reduce((sum, dept) =>
+            cycleDeptIds.includes(dept.id) ? sum + dept.users.length : sum, 0)
+        : totalActive
+
+      const selfReviewRate = scopedEmployeeCount > 0 ? Math.round((submittedReviews / scopedEmployeeCount) * 100) : 0
+      const managerReviewRate = scopedEmployeeCount > 0 ? Math.round((completedAppraisals / scopedEmployeeCount) * 100) : 0
       const totalRated = ratingGroups.reduce((s, r) => s + r._count.final_rating, 0)
 
       return {
@@ -62,6 +73,7 @@ export default async function HrReportsPage() {
         managerReviewRate,
         ratingGroups,
         totalRated,
+        scopedEmployeeCount,
       }
     })
   )
@@ -75,13 +87,24 @@ export default async function HrReportsPage() {
         <p className="text-sm text-muted-foreground">{totalActive} active employees</p>
       </div>
 
-      {cycles.length === 0 && <p className="text-muted-foreground">No cycles yet.</p>}
+      {cyclesRaw.length === 0 && <p className="text-muted-foreground">No cycles yet.</p>}
 
-      {cycleStats.map(({ cycle, selfReviewRate, managerReviewRate, ratingGroups, totalRated }) => (
+      {cycleStats.map(({ cycle, selfReviewRate, managerReviewRate, ratingGroups, totalRated, scopedEmployeeCount }) => (
         <section key={cycle.id} className="glass p-6 space-y-5">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold">{cycle.name}</h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg font-semibold">{cycle.name}</h2>
+                {cycle.departments.length === 0 ? (
+                  <span className="bg-white/10 text-white/60 text-xs px-2 py-0.5 rounded-full">Org-wide</span>
+                ) : (
+                  cycle.departments.map(d => (
+                    <span key={d.department_id} className="bg-primary/15 text-primary text-xs px-2 py-0.5 rounded-full">
+                      {d.department.name}
+                    </span>
+                  ))
+                )}
+              </div>
               <p className="text-xs text-muted-foreground capitalize">{cycle.quarter} {cycle.year} · {cycle.status}</p>
             </div>
           </div>
@@ -122,9 +145,9 @@ export default async function HrReportsPage() {
                 className="text-3xl font-extrabold tabular-nums"
                 style={{ animation: 'countUp 0.5s ease-out both', animationDelay: '0.3s' }}
               >
-                {totalActive}
+                {scopedEmployeeCount}
               </p>
-              <p className="text-xs text-muted-foreground mt-1">Active Employees</p>
+              <p className="text-xs text-muted-foreground mt-1">Scoped Employees</p>
             </div>
           </div>
 

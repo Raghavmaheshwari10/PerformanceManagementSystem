@@ -10,7 +10,26 @@ function daysUntil(dateStr: string | Date | null): number | null {
   return Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86400000)
 }
 
-function CycleCard({ cycle, overdueCount }: { cycle: Cycle; overdueCount?: number }) {
+interface CycleWithDepts extends Cycle {
+  departments: { department_id: string; department: { id: string; name: string } }[]
+}
+
+function DepartmentScopeBadges({ departments }: { departments: CycleWithDepts['departments'] }) {
+  if (departments.length === 0) {
+    return <span className="bg-white/10 text-white/60 text-xs px-2 py-0.5 rounded-full">Org-wide</span>
+  }
+  return (
+    <div className="flex flex-wrap gap-1">
+      {departments.map(d => (
+        <span key={d.department_id} className="bg-primary/15 text-primary text-xs px-2 py-0.5 rounded-full">
+          {d.department.name}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+function CycleCard({ cycle, overdueCount }: { cycle: CycleWithDepts; overdueCount?: number }) {
   const deadline = cycle.status === 'manager_review'
     ? cycle.manager_review_deadline
     : cycle.status === 'self_review'
@@ -30,7 +49,10 @@ function CycleCard({ cycle, overdueCount }: { cycle: Cycle; overdueCount?: numbe
       <div className="space-y-1">
         <p className="font-medium">{cycle.name}</p>
         <p className="text-sm text-muted-foreground">{cycle.quarter} {cycle.year}</p>
-        <CycleStatusBadge status={cycle.status} />
+        <div className="flex flex-wrap items-center gap-2">
+          <CycleStatusBadge status={cycle.status} />
+          <DepartmentScopeBadges departments={cycle.departments} />
+        </div>
         {isOverdue && deadline && (
           <p className="text-xs text-destructive font-medium">
             Deadline was {Math.abs(days!)} day{Math.abs(days!) !== 1 ? 's' : ''} ago
@@ -63,8 +85,9 @@ export default async function HrbpPage() {
 
   const allCyclesRaw = await prisma.cycle.findMany({
     orderBy: { created_at: 'desc' },
+    include: { departments: { include: { department: true } } },
   })
-  const allCycles = allCyclesRaw as unknown as Cycle[]
+  const allCycles = allCyclesRaw as unknown as CycleWithDepts[]
 
   const active = allCycles.filter(c => c.status !== 'published')
   const published = allCycles.filter(c => c.status === 'published')

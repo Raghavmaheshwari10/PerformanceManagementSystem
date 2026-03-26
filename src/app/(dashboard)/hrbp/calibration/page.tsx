@@ -5,6 +5,7 @@ import { OverrideForm } from './override-form'
 import { CalibrationActionsClient } from './calibration-actions-client'
 import { CalculateScoresButton } from './calculate-scores-button'
 import type { RatingTier, Cycle } from '@/lib/types'
+import Link from 'next/link'
 
 interface AppraisalRow {
   id: string
@@ -13,16 +14,18 @@ interface AppraisalRow {
   payout_multiplier: number | null
   payout_amount: number | null
   snapshotted_variable_pay: number | null
-  employee: { full_name: string; department: { name: string } | null } | null
+  employee: { full_name: string; department_id: string | null; department: { name: string } | null } | null
 }
 
-export default async function CalibrationPage({ searchParams }: { searchParams: Promise<{ cycle?: string }> }) {
+export default async function CalibrationPage(props: { searchParams: Promise<{ cycle?: string; dept?: string }> }) {
   await requireRole(['hrbp'])
-  const { cycle: cycleId } = await searchParams
+  const searchParams = await props.searchParams
+  const cycleId = searchParams?.cycle
+  const selectedDept = searchParams?.dept as string | undefined
 
   if (!cycleId) return <p>Select a cycle from the overview page.</p>
 
-  const [cycle, appraisals] = await Promise.all([
+  const [cycle, allAppraisals, departments] = await Promise.all([
     prisma.cycle.findUnique({ where: { id: cycleId } }),
     prisma.appraisal.findMany({
       where: { cycle_id: cycleId },
@@ -36,14 +39,22 @@ export default async function CalibrationPage({ searchParams }: { searchParams: 
         employee: {
           select: {
             full_name: true,
+            department_id: true,
             department: { select: { name: true } },
           },
         },
       },
     }),
+    prisma.department.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true } }),
   ])
 
-  const rows = appraisals as unknown as AppraisalRow[]
+  const allRows = allAppraisals as unknown as AppraisalRow[]
+
+  // Apply department filter
+  const rows = selectedDept
+    ? allRows.filter(a => a.employee?.department_id === selectedDept)
+    : allRows
+
   const distribution: Record<RatingTier, number> = { FEE: 0, EE: 0, ME: 0, SME: 0, BE: 0 }
   for (const a of rows) {
     const rating = a.final_rating ?? a.manager_rating
@@ -60,6 +71,52 @@ export default async function CalibrationPage({ searchParams }: { searchParams: 
         <h1 className="text-2xl font-bold">Calibration — {typedCycle?.name}</h1>
         {isCalibrating && <CalculateScoresButton cycleId={cycleId} />}
       </div>
+
+      {/* Department filter */}
+      <div className="flex items-center gap-3">
+        <label htmlFor="dept-filter" className="text-sm text-muted-foreground">Filter by department:</label>
+        <div className="relative">
+          <select
+            id="dept-filter"
+            className="glass appearance-none rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 pr-8 text-sm text-white/90 backdrop-blur focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
+            defaultValue={selectedDept ?? ''}
+            // Client-side navigation via inline script below
+            data-cycle-id={cycleId}
+          >
+            <option value="" className="bg-neutral-900">All Departments</option>
+            {departments.map(d => (
+              <option key={d.id} value={d.id} className="bg-neutral-900">{d.name}</option>
+            ))}
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-white/40">
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+          </div>
+        </div>
+        {selectedDept && (
+          <Link
+            href={`/hrbp/calibration?cycle=${cycleId}`}
+            className="text-xs text-primary hover:text-primary/80"
+          >
+            Clear filter
+          </Link>
+        )}
+        <span className="text-xs text-muted-foreground ml-auto">
+          Showing {rows.length} of {allRows.length} appraisals
+        </span>
+      </div>
+
+      {/* Inline script for select navigation */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `document.getElementById('dept-filter')?.addEventListener('change', function(e) {
+            var val = e.target.value;
+            var cycleId = e.target.getAttribute('data-cycle-id');
+            var url = '/hrbp/calibration?cycle=' + encodeURIComponent(cycleId);
+            if (val) url += '&dept=' + encodeURIComponent(val);
+            window.location.href = url;
+          });`,
+        }}
+      />
 
       <div data-tour="bell-curve">
         <BellCurveChart distribution={distribution} total={rows.length} />
