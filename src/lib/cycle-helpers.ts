@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { Cycle, CycleStatus } from "@prisma/client";
+import type { Cycle, CycleStatus, CycleDepartment, Department } from "@prisma/client";
 
 // Statuses considered "active" for employee-facing flows (excludes draft + published)
 const ACTIVE_STATUSES: CycleStatus[] = [
@@ -95,8 +95,13 @@ export async function getVisibleCycleForUser(
  * Returns all active dept-scoped cycles matching those departments,
  * plus the org-wide active cycle (if any).
  */
+/** A cycle with its department assignments and department details included. */
+export type CycleWithDepartments = Cycle & {
+  departments: (CycleDepartment & { department: Department })[];
+};
+
 export async function getActiveCyclesForManager(managerId: string): Promise<{
-  deptCycles: Cycle[];
+  deptCycles: CycleWithDepartments[];
   orgCycle: Cycle | null;
 }> {
   // Get unique department IDs from active direct reports
