@@ -65,34 +65,34 @@ export default async function CalibrationPage({ searchParams }: { searchParams: 
         <BellCurveChart distribution={distribution} total={rows.length} />
       </div>
 
-      <div className="rounded-md border" data-tour="override-form">
-        <table className="w-full text-sm">
+      <div className="glass overflow-hidden" data-tour="override-form">
+        <table className="w-full text-sm table-row-hover">
           <thead>
-            <tr className="border-b bg-muted/50">
-              <th className="p-3 text-left">Employee</th>
-              <th className="p-3 text-left">Department</th>
-              <th className="p-3 text-left">Manager Rating</th>
-              <th className="p-3 text-left">Final Rating</th>
+            <tr className="border-b border-white/8 bg-white/[0.03]">
+              <th className="p-3 text-left text-white/50">Employee</th>
+              <th className="p-3 text-left text-white/50">Department</th>
+              <th className="p-3 text-left text-white/50">Manager Rating</th>
+              <th className="p-3 text-left text-white/50">Final Rating</th>
               {['locked', 'published'].includes(typedCycle?.status ?? '') && (
                 <>
-                  <th className="p-3 text-right">Multiplier</th>
-                  <th className="p-3 text-right">Payout</th>
+                  <th className="p-3 text-right text-white/50">Multiplier</th>
+                  <th className="p-3 text-right text-white/50">Payout</th>
                 </>
               )}
-              {isCalibrating && <th className="p-3 text-left">Override</th>}
+              {isCalibrating && <th className="p-3 text-left text-white/50">Override</th>}
             </tr>
           </thead>
           <tbody>
             {rows.map(a => (
-              <tr key={a.id} className="border-b">
+              <tr key={a.id} className="border-b border-white/5">
                 <td className="p-3">{a.employee?.full_name}</td>
-                <td className="p-3">{a.employee?.department?.name ?? '—'}</td>
-                <td className="p-3">{a.manager_rating}</td>
+                <td className="p-3 text-white/70">{a.employee?.department?.name ?? '—'}</td>
+                <td className="p-3 text-white/70">{a.manager_rating}</td>
                 <td className="p-3 font-medium">{a.final_rating ?? a.manager_rating}</td>
                 {['locked', 'published'].includes(typedCycle?.status ?? '') && (
                   <>
-                    <td className="p-3 text-right">x{Number(a.payout_multiplier)?.toFixed(3) ?? '—'}</td>
-                    <td className="p-3 text-right">Rs.{(Number(a.payout_amount) ?? 0).toLocaleString('en-IN')}</td>
+                    <td className="p-3 text-right text-white/70">x{Number(a.payout_multiplier)?.toFixed(3) ?? '—'}</td>
+                    <td className="p-3 text-right text-white/70">Rs.{(Number(a.payout_amount) ?? 0).toLocaleString('en-IN')}</td>
                   </>
                 )}
                 {isCalibrating && (
@@ -109,7 +109,7 @@ export default async function CalibrationPage({ searchParams }: { searchParams: 
           </tbody>
           {['locked', 'published'].includes(typedCycle?.status ?? '') && (
             <tfoot>
-              <tr className="border-t font-semibold">
+              <tr className="border-t border-white/8 font-semibold bg-white/[0.02]">
                 <td colSpan={5} className="py-2 pr-3 text-right text-sm">Total payout</td>
                 <td className="py-2 pr-3 text-right text-sm">
                   Rs.{rows.reduce((s, a) => s + (Number(a.payout_amount) ?? 0), 0).toLocaleString('en-IN')}

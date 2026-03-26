@@ -146,28 +146,28 @@ export default async function AdminCyclesPage() {
       )}
 
       {/* Cycle table */}
-      <div className="rounded-md border">
-        <table className="w-full text-sm">
+      <div className="glass overflow-hidden">
+        <table className="w-full text-sm table-row-hover">
           <thead>
-            <tr className="border-b bg-muted/50">
-              <th className="p-3 text-left">Name</th>
-              <th className="p-3 text-left">Status</th>
-              <th className="p-3 text-left">Year</th>
-              <th className="p-3 text-left">Actions</th>
+            <tr className="border-b border-white/8 bg-white/[0.03]">
+              <th className="p-3 text-left text-white/50">Name</th>
+              <th className="p-3 text-left text-white/50">Status</th>
+              <th className="p-3 text-left text-white/50">Year</th>
+              <th className="p-3 text-left text-white/50">Actions</th>
             </tr>
           </thead>
           <tbody>
             {allCycles.map(cycle => {
               const next = getNextStatus(cycle.status)
               return (
-                <tr key={cycle.id} className="border-b">
+                <tr key={cycle.id} className="border-b border-white/5">
                   <td className="p-3">
-                    <Link href={`/admin/cycles/${cycle.id}`} className="hover:underline font-medium">
+                    <Link href={`/admin/cycles/${cycle.id}`} className="text-primary hover:text-primary/80 font-medium">
                       {cycle.name}
                     </Link>
                   </td>
                   <td className="p-3"><span data-tour="cycle-status"><CycleStatusBadge status={cycle.status} /></span></td>
-                  <td className="p-3">{cycle.year}</td>
+                  <td className="p-3 text-white/70">{cycle.year}</td>
                   <td className="p-3">
                     {next && (
                       <div data-tour="advance-btn">
