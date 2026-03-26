@@ -39,6 +39,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
     }
   })
 
+  const firstName = user.full_name.split(' ')[0]
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+
   return (
     <ClientProviders>
       <CommandPaletteProvider role={user.role}>
@@ -48,12 +52,22 @@ export default async function DashboardLayout({ children }: { children: React.Re
             userName={user.full_name}
             isAlsoEmployee={user.is_also_employee ?? false}
           />
-          <div className="flex flex-1 flex-col overflow-hidden">
-            <header className="flex items-center justify-end border-b px-6 py-2">
+          <div className="flex flex-1 flex-col overflow-hidden gradient-mesh noise-overlay">
+            <header className="flex items-center justify-between glass-strong border-b border-[rgba(255,255,255,0.06)] px-6 py-2.5 lg:px-8">
+              <div className="hidden lg:block">
+                <p className="text-sm font-medium text-foreground">
+                  {greeting}, {firstName}
+                </p>
+                <p className="text-xs text-muted-foreground capitalize">{user.role} Dashboard</p>
+              </div>
+              {/* Spacer for mobile (hamburger takes left side) */}
+              <div className="lg:hidden" />
               <NotificationBell notifications={notifications} />
             </header>
-            <main className="flex-1 overflow-y-auto p-6">
-              {children}
+            <main className="flex-1 overflow-y-auto p-6 lg:p-8">
+              <div className="animate-in-page">
+                {children}
+              </div>
             </main>
           </div>
         </div>
