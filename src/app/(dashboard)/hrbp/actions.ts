@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { getPayoutMultiplier } from '@/lib/constants'
 import { bulkLockAppraisals } from '@/lib/db/appraisals'
+import { getCycleDepartmentIds } from '@/lib/cycle-helpers'
 import type { ActionResult, RatingTier } from '@/lib/types'
 import { revalidatePath } from 'next/cache'
 
@@ -119,8 +120,12 @@ export async function publishCycle(cycleId: string): Promise<ActionResult> {
     },
   })
 
+  const deptIds = await getCycleDepartmentIds(cycleId)
+  const employeeWhere = deptIds.length > 0
+    ? { is_active: true, department_id: { in: deptIds } }
+    : { is_active: true }
   const employees = await prisma.user.findMany({
-    where: { is_active: true },
+    where: employeeWhere,
     select: { id: true },
   })
   const notifications = employees.map(e => ({
