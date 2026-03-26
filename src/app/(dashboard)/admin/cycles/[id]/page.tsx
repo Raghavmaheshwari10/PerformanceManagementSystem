@@ -5,7 +5,9 @@ import { CycleStatusBadge } from '@/components/cycle-status-badge'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { getNextStatus } from '@/lib/cycle-machine'
+import { getScopedEmployeeWhere } from '@/lib/cycle-helpers'
 import { CycleActionsClient } from './cycle-actions-client'
+import { EditDepartmentsForm } from './edit-departments-form'
 
 function daysUntil(d: Date | string | null) {
   if (!d) return null
@@ -16,14 +18,18 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
   await requireRole(['admin'])
   const { id } = await params
 
-  const cycle = await prisma.cycle.findUnique({ where: { id } })
+  const cycle = await prisma.cycle.findUnique({
+    where: { id },
+    include: { departments: { include: { department: true } } },
+  })
   if (!cycle) notFound()
 
   const isLockedOrPublished = cycle.status === 'locked' || cycle.status === 'published'
 
-  const [users, reviews, appraisals] = await Promise.all([
+  const empWhere = await getScopedEmployeeWhere(cycle.id)
+  const [users, reviews, appraisals, allDepartments] = await Promise.all([
     prisma.user.findMany({
-      where: { is_active: true, role: { notIn: ['admin', 'hrbp'] } },
+      where: empWhere,
       select: { id: true, full_name: true, department: { select: { name: true } }, manager_id: true, role: true },
     }),
     prisma.review.findMany({
@@ -34,6 +40,7 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
       where: { cycle_id: id },
       select: { employee_id: true, manager_id: true, manager_submitted_at: true, final_rating: true },
     }),
+    prisma.department.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true } }),
   ])
 
   const payouts = isLockedOrPublished ? await prisma.appraisal.findMany({
@@ -69,9 +76,18 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <Link href="/admin/cycles" className="text-muted-foreground hover:underline text-sm">← Cycles</Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl font-bold">{cycle.name}</h1>
             <CycleStatusBadge status={cycle.status} />
+            {cycle.departments.length === 0 ? (
+              <span className="bg-white/10 text-white/60 text-xs px-2 py-0.5 rounded-full">Org-wide</span>
+            ) : (
+              cycle.departments.map(cd => (
+                <span key={cd.department_id} className="bg-primary/15 text-primary text-xs px-2 py-0.5 rounded-full">
+                  {cd.department.name}
+                </span>
+              ))
+            )}
           </div>
           <p className="text-sm text-muted-foreground">
             {cycle.quarter} {cycle.year}
@@ -154,6 +170,13 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
       </div>
 
       {/* Payout summary table */}
+      {/* Edit Departments */}
+      <EditDepartmentsForm
+        cycleId={id}
+        allDepartments={allDepartments}
+        selectedDepartmentIds={cycle.departments.map(cd => cd.department_id)}
+      />
+
       {isLockedOrPublished && payouts && payouts.length > 0 && (
         <div className="rounded-lg border p-5 space-y-3">
           <div className="flex items-center justify-between">

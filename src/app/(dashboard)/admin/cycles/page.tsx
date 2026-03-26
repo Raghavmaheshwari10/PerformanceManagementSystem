@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { advanceCycleStatus } from '../actions'
 import { getNextStatus } from '@/lib/cycle-machine'
 import { CYCLE_STATUS_LABELS } from '@/lib/constants'
+import { getScopedEmployeeWhere } from '@/lib/cycle-helpers'
 import type { Cycle } from '@/lib/types'
 
 interface CycleProgress {
@@ -52,16 +53,20 @@ function ProgressRing({ pct, label, sub }: { pct: number; label: string; sub: st
 export default async function AdminCyclesPage() {
   await requireRole(['admin'])
 
-  const allCycles = await prisma.cycle.findMany({ orderBy: { created_at: 'desc' } })
+  const allCycles = await prisma.cycle.findMany({
+    orderBy: { created_at: 'desc' },
+    include: { departments: { include: { department: true } } },
+  })
 
   // For the most recent active cycle, fetch progress stats
   const activeCycle = allCycles.find(c => !['draft', 'published'].includes(c.status))
   let progress: CycleProgress | null = null
 
   if (activeCycle) {
+    const empWhere = await getScopedEmployeeWhere(activeCycle.id)
     const [users, reviews, appraisals] = await Promise.all([
       prisma.user.findMany({
-        where: { is_active: true, role: { notIn: ['admin', 'hrbp'] } },
+        where: empWhere,
         select: { id: true },
       }),
       prisma.review.findMany({
@@ -152,6 +157,7 @@ export default async function AdminCyclesPage() {
             <tr className="border-b border-white/8 bg-white/[0.03]">
               <th className="p-3 text-left text-white/50">Name</th>
               <th className="p-3 text-left text-white/50">Status</th>
+              <th className="p-3 text-left text-white/50">Scope</th>
               <th className="p-3 text-left text-white/50">Year</th>
               <th className="p-3 text-left text-white/50">Actions</th>
             </tr>
@@ -167,6 +173,19 @@ export default async function AdminCyclesPage() {
                     </Link>
                   </td>
                   <td className="p-3"><span data-tour="cycle-status"><CycleStatusBadge status={cycle.status} /></span></td>
+                  <td className="p-3">
+                    {cycle.departments.length === 0 ? (
+                      <span className="bg-white/10 text-white/60 text-xs px-2 py-0.5 rounded-full">Org-wide</span>
+                    ) : (
+                      <div className="flex flex-wrap gap-1">
+                        {cycle.departments.map(cd => (
+                          <span key={cd.department_id} className="bg-primary/15 text-primary text-xs px-2 py-0.5 rounded-full">
+                            {cd.department.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </td>
                   <td className="p-3 text-white/70">{cycle.year}</td>
                   <td className="p-3">
                     {next && (

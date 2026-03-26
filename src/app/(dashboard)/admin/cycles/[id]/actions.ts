@@ -49,6 +49,31 @@ export async function sendSelfReviewReminders(cycleId: string): Promise<ActionRe
   return { data: { sent: pending.length }, error: null }
 }
 
+export async function updateCycleDepartments(
+  cycleId: string,
+  _prev: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireRole(['admin'])
+  const departmentIds = formData.getAll('department_ids') as string[]
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.cycleDepartment.deleteMany({ where: { cycle_id: cycleId } })
+      if (departmentIds.length > 0) {
+        await tx.cycleDepartment.createMany({
+          data: departmentIds.map(id => ({ cycle_id: cycleId, department_id: id })),
+        })
+      }
+    })
+  } catch (e) {
+    return { data: null, error: e instanceof Error ? e.message : 'Failed to update departments' }
+  }
+
+  revalidatePath(`/admin/cycles/${cycleId}`)
+  return { data: null, error: null }
+}
+
 export async function sendManagerReviewReminders(cycleId: string): Promise<ActionResult<{ sent: number }>> {
   const user = await requireRole(['admin'])
 
