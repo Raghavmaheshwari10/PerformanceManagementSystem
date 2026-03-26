@@ -72,11 +72,13 @@ export interface Kpi {
   cycle_id: string
   employee_id: string
   manager_id: string
+  kra_id: string | null
   title: string
   description: string | null
   weight: number | null
   created_at: string
   updated_at: string
+  kra?: Kra
 }
 
 export interface Review {
@@ -135,6 +137,32 @@ export interface KpiTemplate {
   sort_order: number
   is_active: boolean
   created_at: string
+}
+
+export interface KraTemplate {
+  id: string
+  title: string
+  description: string | null
+  category: string
+  role_slug: string | null
+  department_id: string | null
+  weight: number | null
+  sort_order: number
+  is_active: boolean
+  created_at: string
+}
+
+export interface Kra {
+  id: string
+  cycle_id: string
+  employee_id: string
+  title: string
+  description: string | null
+  category: string
+  weight: number | null
+  sort_order: number
+  created_at: string
+  kpis?: Kpi[]
 }
 
 export type GoalType = "business" | "development" | "behavior"
