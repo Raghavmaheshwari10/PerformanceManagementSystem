@@ -121,30 +121,34 @@ function computeActions(cycle: Cycle, kpis: Kpi[], review: Review | null): Actio
   return actions
 }
 
-const URGENCY_STYLES: Record<UrgencyLevel, { border: string; bg: string; badge: string; badgeText: string }> = {
+const URGENCY_GLOW: Record<UrgencyLevel, { boxShadow: string; borderColor: string; badgeBg: string; badgeText: string; label: string }> = {
   critical: {
-    border: 'border-destructive/50',
-    bg: 'bg-destructive/5',
-    badge: 'bg-destructive',
-    badgeText: 'Urgent',
+    boxShadow: '0 0 20px oklch(0.65 0.25 25 / 0.3)',
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    badgeBg: 'bg-red-500/20',
+    badgeText: 'text-red-400',
+    label: 'Urgent',
   },
   warning: {
-    border: 'border-amber-400/50',
-    bg: 'bg-amber-50',
-    badge: 'bg-amber-500',
-    badgeText: 'Action needed',
+    boxShadow: '0 0 15px oklch(0.75 0.18 85 / 0.25)',
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+    badgeBg: 'bg-amber-500/20',
+    badgeText: 'text-amber-400',
+    label: 'Action needed',
   },
   info: {
-    border: 'border-blue-300/50',
-    bg: 'bg-blue-50/60',
-    badge: 'bg-blue-500',
-    badgeText: 'In progress',
+    boxShadow: '0 0 12px oklch(0.55 0.2 250 / 0.2)',
+    borderColor: 'rgba(59, 130, 246, 0.2)',
+    badgeBg: 'bg-blue-500/20',
+    badgeText: 'text-blue-400',
+    label: 'In progress',
   },
   success: {
-    border: 'border-green-400/50',
-    bg: 'bg-green-50',
-    badge: 'bg-green-600',
-    badgeText: 'Complete',
+    boxShadow: '0 0 12px oklch(0.6 0.2 155 / 0.2)',
+    borderColor: 'rgba(34, 197, 94, 0.2)',
+    badgeBg: 'bg-green-500/20',
+    badgeText: 'text-green-400',
+    label: 'Complete',
   },
 }
 
@@ -152,12 +156,16 @@ export function ActionInbox({ cycle, kpis, review }: ActionInboxProps) {
   const actions = computeActions(cycle, kpis, review)
 
   if (actions.length === 0) {
+    const successGlow = URGENCY_GLOW.success
     return (
-      <div className="rounded-lg border border-green-300/50 bg-green-50 p-4 flex items-center gap-3">
+      <div
+        className="glass rounded-lg border p-4 flex items-center gap-3"
+        style={{ boxShadow: successGlow.boxShadow, borderColor: successGlow.borderColor }}
+      >
         <span className="text-2xl">✅</span>
         <div>
-          <p className="font-semibold text-green-800">All caught up!</p>
-          <p className="text-sm text-green-700">No actions required right now.</p>
+          <p className="font-semibold text-green-400">All caught up!</p>
+          <p className="text-sm text-green-400/70">No actions required right now.</p>
         </div>
       </div>
     )
@@ -180,7 +188,7 @@ export function ActionInbox({ cycle, kpis, review }: ActionInboxProps) {
 }
 
 function PrimaryActionCard({ action }: { action: Action }) {
-  const styles = URGENCY_STYLES[action.urgency]
+  const glow = URGENCY_GLOW[action.urgency]
   const Wrapper = action.href ? Link : 'div'
 
   return (
@@ -188,11 +196,10 @@ function PrimaryActionCard({ action }: { action: Action }) {
       // @ts-expect-error href only on Link
       href={action.href}
       className={cn(
-        'block rounded-lg border-2 p-4 transition-colors',
-        styles.border,
-        styles.bg,
-        action.href && 'hover:brightness-95 cursor-pointer'
+        'block rounded-lg glass border p-4 transition-colors',
+        action.href && 'hover:brightness-110 cursor-pointer'
       )}
+      style={{ boxShadow: glow.boxShadow, borderColor: glow.borderColor }}
     >
       <div className="flex items-start justify-between gap-2">
         <div>
@@ -200,10 +207,11 @@ function PrimaryActionCard({ action }: { action: Action }) {
           <p className="text-sm text-muted-foreground mt-0.5">{action.description}</p>
         </div>
         <span className={cn(
-          'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold text-white',
-          styles.badge
+          'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold',
+          glow.badgeBg,
+          glow.badgeText
         )}>
-          {styles.badgeText}
+          {glow.label}
         </span>
       </div>
     </Wrapper>
@@ -217,8 +225,8 @@ function SecondaryActionCard({ action }: { action: Action }) {
       // @ts-expect-error href only on Link
       href={action.href}
       className={cn(
-        'block rounded-md border p-3 text-sm transition-colors',
-        action.href && 'hover:bg-muted cursor-pointer'
+        'block rounded-md glass-interactive p-3 text-sm transition-colors',
+        action.href && 'hover:brightness-110 cursor-pointer'
       )}
     >
       <span className="font-medium">{action.label}</span>

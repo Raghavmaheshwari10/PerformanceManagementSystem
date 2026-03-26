@@ -53,13 +53,16 @@ export function NotificationBell({ notifications: initial }: { notifications: No
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-10 z-50 w-80 rounded-lg border bg-popover shadow-lg">
-            <div className="flex items-center justify-between border-b px-4 py-2">
+          <div
+            className="absolute right-0 top-10 z-50 w-80 rounded-lg glass-strong"
+            style={{ animation: 'fadeInUp 0.2s ease-out', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}
+          >
+            <div className="flex items-center justify-between border-b border-white/8 px-4 py-2">
               <span className="text-sm font-semibold">Notifications</span>
               {unread > 0 && (
                 <button
                   onClick={() => startTransition(() => markAllNotificationsRead())}
-                  className="text-xs text-muted-foreground hover:text-foreground"
+                  className="text-xs text-muted-foreground hover:text-primary"
                 >
                   Mark all read
                 </button>
@@ -73,8 +76,8 @@ export function NotificationBell({ notifications: initial }: { notifications: No
                   <div
                     key={n.id}
                     className={cn(
-                      'border-b px-4 py-3 last:border-0',
-                      !n.is_read && 'bg-muted/40'
+                      'border-b border-white/5 px-4 py-3 last:border-0',
+                      !n.is_read && 'border-l-2 border-l-primary bg-white/[0.03]'
                     )}
                   >
                     <p className="text-sm">{n.message}</p>
@@ -84,13 +87,13 @@ export function NotificationBell({ notifications: initial }: { notifications: No
                       </span>
                       <button
                         onClick={() => handleSnooze(n.id)}
-                        className="text-xs text-muted-foreground hover:text-foreground"
+                        className="text-xs text-muted-foreground hover:text-primary"
                       >
                         Snooze 1d
                       </button>
                       <button
                         onClick={() => handleDismiss(n.id)}
-                        className="text-xs text-muted-foreground hover:text-foreground"
+                        className="text-xs text-muted-foreground hover:text-primary"
                       >
                         Dismiss
                       </button>
