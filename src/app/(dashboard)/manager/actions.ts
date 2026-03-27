@@ -22,6 +22,8 @@ export async function addKpi(formData: FormData): Promise<ActionResult> {
   const title = formData.get('title') as string
   const cycleId = formData.get('cycle_id') as string
 
+  const kraId = (formData.get('kra_id') as string) || null
+
   const insertedKpi = await prisma.kpi.create({
     data: {
       cycle_id: cycleId,
@@ -30,6 +32,7 @@ export async function addKpi(formData: FormData): Promise<ActionResult> {
       title,
       description: (formData.get('description') as string) || null,
       weight,
+      kra_id: kraId,
     },
     select: { id: true },
   })
@@ -61,6 +64,77 @@ export async function deleteKpi(kpiId: string, employeeId: string): Promise<Acti
       entity_type: 'kpi',
       entity_id: kpiId,
       old_value: { kpi_id: kpiId },
+    },
+  })
+
+  revalidatePath(`/manager/${employeeId}/kpis`)
+  return { data: null, error: null }
+}
+
+export async function addKra(formData: FormData): Promise<ActionResult> {
+  const user = await requireRole(['manager'])
+  const employeeId = formData.get('employee_id') as string
+
+  await requireManagerOwnership(employeeId, user.id)
+
+  const title = formData.get('title') as string
+  if (!title?.trim()) {
+    return { data: null, error: 'Title is required' }
+  }
+
+  const cycleId = formData.get('cycle_id') as string
+  const category = (formData.get('category') as string) || 'performance'
+  const rawWeight = formData.get('weight')
+  const weight = rawWeight ? Number(rawWeight) : null
+  if (weight !== null && !validateWeight(weight)) {
+    return { data: null, error: 'Weight must be between 1 and 100' }
+  }
+
+  const insertedKra = await prisma.kra.create({
+    data: {
+      cycle_id: cycleId,
+      employee_id: employeeId,
+      title,
+      description: (formData.get('description') as string) || null,
+      category,
+      weight,
+    },
+    select: { id: true },
+  })
+
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'kra_added',
+      entity_type: 'kra',
+      entity_id: insertedKra.id,
+      new_value: { title, employee_id: employeeId, cycle_id: cycleId },
+    },
+  })
+
+  revalidatePath(`/manager/${employeeId}/kpis`)
+  return { data: null, error: null }
+}
+
+export async function deleteKra(kraId: string, employeeId: string): Promise<ActionResult> {
+  const user = await requireRole(['manager'])
+  await requireManagerOwnership(employeeId, user.id)
+
+  // Detach child KPIs (set kra_id to null) before deleting the KRA
+  await prisma.kpi.updateMany({
+    where: { kra_id: kraId },
+    data: { kra_id: null },
+  })
+
+  await prisma.kra.delete({ where: { id: kraId } })
+
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'kra_deleted',
+      entity_type: 'kra',
+      entity_id: kraId,
+      old_value: { kra_id: kraId },
     },
   })
 

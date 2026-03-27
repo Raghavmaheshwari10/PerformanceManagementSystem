@@ -2,6 +2,7 @@
 
 import { requireRole } from '@/lib/auth'
 import { applyKpiTemplate as applyKpiTemplateDb } from '@/lib/db/kpi-templates'
+import { applyKraTemplate as applyKraTemplateDb } from '@/lib/db/kra-templates'
 import { revalidatePath } from 'next/cache'
 import type { ActionResult } from '@/lib/types'
 
@@ -18,5 +19,21 @@ export async function applyKpiTemplate(
     return { data: null, error: null }
   } catch (e) {
     return { data: null, error: e instanceof Error ? e.message : 'Failed to apply template' }
+  }
+}
+
+export async function applyKraTemplate(
+  roleSlug: string,
+  cycleId: string,
+  employeeId: string,
+): Promise<ActionResult> {
+  await requireRole(['manager', 'admin'])
+
+  try {
+    await applyKraTemplateDb(roleSlug, cycleId, employeeId)
+    revalidatePath(`/manager/${employeeId}/kpis`)
+    return { data: null, error: null }
+  } catch (e) {
+    return { data: null, error: e instanceof Error ? e.message : 'Failed to apply KRA template' }
   }
 }
