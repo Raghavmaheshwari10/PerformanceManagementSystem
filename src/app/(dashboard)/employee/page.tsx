@@ -158,7 +158,7 @@ export default async function EmployeeReviewPage() {
     </div>
   )
 
-  const [kpis, kras, review, appraisal] = await Promise.all([
+  const [kpis, kras, review, appraisal, misTargets] = await Promise.all([
     prisma.kpi.findMany({
       where: { cycle_id: cycle.id, employee_id: user.id },
       include: { kra: true },
@@ -172,6 +172,11 @@ export default async function EmployeeReviewPage() {
     }),
     prisma.appraisal.findFirst({
       where: { cycle_id: cycle.id, employee_id: user.id },
+    }),
+    prisma.aopTarget.findMany({
+      where: { employee_id: user.id, fiscal_year: new Date().getFullYear(), level: 'individual' },
+      take: 3,
+      orderBy: { metric_name: 'asc' },
     }),
   ])
 
@@ -423,6 +428,77 @@ export default async function EmployeeReviewPage() {
           <CycleTimeline currentStatus={cycle.status} />
         </section>
       </div>
+
+      {/* ── MIS Performance Summary ── */}
+      {misTargets.length > 0 && (() => {
+        const now = new Date()
+        const startOfYear = new Date(now.getFullYear(), 0, 1)
+        const endOfYear = new Date(now.getFullYear(), 11, 31)
+        const totalDays = (endOfYear.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24)
+        const elapsedDays = (now.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24)
+        const proRataFactor = elapsedDays / totalDays
+
+        return (
+          <section className="glass p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                MIS Performance
+              </h2>
+              <Link
+                href="/employee/mis"
+                className="text-xs font-medium text-sidebar-primary hover:underline"
+              >
+                View all &rarr;
+              </Link>
+            </div>
+            <div className="space-y-3">
+              {misTargets.map(target => {
+                const annualTarget = Number(target.annual_target)
+                const proratedTarget = annualTarget * proRataFactor
+                const actual = Number(target.ytd_actual ?? 0)
+                const pct = proratedTarget > 0 ? Math.round((actual / proratedTarget) * 100) : 0
+                const clampedPct = Math.min(pct, 100)
+
+                const redThreshold = Number(target.red_threshold)
+                const amberThreshold = Number(target.amber_threshold)
+                const rag: 'red' | 'amber' | 'green' =
+                  pct < redThreshold ? 'red' :
+                  pct < amberThreshold ? 'amber' : 'green'
+                const ragStyles = {
+                  red:   { bg: 'bg-red-500/20', text: 'text-red-400', bar: 'oklch(0.65 0.25 25)' },
+                  amber: { bg: 'bg-amber-500/20', text: 'text-amber-400', bar: 'oklch(0.75 0.18 85)' },
+                  green: { bg: 'bg-emerald-500/20', text: 'text-emerald-400', bar: 'oklch(0.65 0.2 155)' },
+                }
+                const style = ragStyles[rag]
+
+                return (
+                  <div key={target.id} className="flex items-center gap-3">
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium truncate">{target.metric_name}</p>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-xs font-semibold tabular-nums">{pct}%</span>
+                          <span className={`inline-flex h-2 w-2 rounded-full ${style.bg} ring-1 ring-current ${style.text}`} />
+                        </div>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${clampedPct}%`,
+                            background: style.bar,
+                            animation: 'barGrow 0.8s ease-out forwards',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )
+      })()}
 
       {/* ── Self-review form ── */}
       {isSelfReview && review?.status !== 'submitted' && (
