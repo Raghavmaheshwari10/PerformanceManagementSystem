@@ -7,7 +7,7 @@ import { DeadlineBanner } from '@/components/deadline-banner'
 import { SelfReviewForm } from './self-review-form'
 import { PayoutBreakdown } from '@/components/payout-breakdown'
 import { CycleTimeline } from '@/components/cycle-timeline'
-import type { Cycle, Kpi, Review, Appraisal } from '@/lib/types'
+import type { Cycle, Kpi, Kra, Review, Appraisal } from '@/lib/types'
 
 /* ── Action computation (inlined from action-inbox) ── */
 
@@ -158,9 +158,14 @@ export default async function EmployeeReviewPage() {
     </div>
   )
 
-  const [kpis, review, appraisal] = await Promise.all([
+  const [kpis, kras, review, appraisal] = await Promise.all([
     prisma.kpi.findMany({
       where: { cycle_id: cycle.id, employee_id: user.id },
+      include: { kra: true },
+    }),
+    prisma.kra.findMany({
+      where: { cycle_id: cycle.id, employee_id: user.id },
+      orderBy: { sort_order: 'asc' },
     }),
     prisma.review.findFirst({
       where: { cycle_id: cycle.id, employee_id: user.id },
@@ -169,6 +174,22 @@ export default async function EmployeeReviewPage() {
       where: { cycle_id: cycle.id, employee_id: user.id },
     }),
   ])
+
+  /* ── Group KPIs by KRA ── */
+  const hasKras = kras.length > 0
+  const kpisByKra = new Map<string | null, typeof kpis>()
+  for (const kpi of kpis) {
+    const key = kpi.kra_id ?? null
+    if (!kpisByKra.has(key)) kpisByKra.set(key, [])
+    kpisByKra.get(key)!.push(kpi)
+  }
+  const ungroupedKpis = kpisByKra.get(null) ?? []
+
+  const KRA_CATEGORY_STYLES: Record<string, { bg: string; text: string }> = {
+    performance: { bg: 'bg-blue-500/20', text: 'text-blue-400' },
+    behaviour:   { bg: 'bg-amber-500/20', text: 'text-amber-400' },
+    learning:    { bg: 'bg-emerald-500/20', text: 'text-emerald-400' },
+  }
 
   const isSelfReview = cycle.status === 'self_review'
   const isPublished = cycle.status === 'published'
@@ -254,26 +275,22 @@ export default async function EmployeeReviewPage() {
               <p className="text-sm font-medium mb-1">No KPIs assigned yet</p>
               <p className="text-xs text-muted-foreground">Your manager will set up KPIs for this cycle. Check back soon.</p>
             </div>
-          ) : (
+          ) : !hasKras ? (
+            /* Flat list when no KRAs exist (backwards compatible) */
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {(kpis as unknown as Kpi[]).map(kpi => {
                 const weight = Number(kpi.weight ?? 0)
                 return (
                   <div key={kpi.id} className="glass-interactive p-4 space-y-3">
-                    {/* Title + weight badge */}
                     <div className="flex items-start justify-between gap-2">
                       <p className="font-medium text-sm leading-snug">{kpi.title}</p>
                       <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-xs font-semibold tabular-nums">
                         {String(kpi.weight)}%
                       </span>
                     </div>
-
-                    {/* Description */}
                     {kpi.description && (
                       <p className="text-xs text-muted-foreground line-clamp-2">{kpi.description}</p>
                     )}
-
-                    {/* Weight bar */}
                     <div className="space-y-1">
                       <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
                         <div
@@ -290,6 +307,113 @@ export default async function EmployeeReviewPage() {
                   </div>
                 )
               })}
+            </div>
+          ) : (
+            /* Grouped by KRA */
+            <div className="space-y-4">
+              {(kras as unknown as Kra[]).map(kra => {
+                const kraKpis = (kpisByKra.get(kra.id) ?? []) as unknown as Kpi[]
+                const catStyle = KRA_CATEGORY_STYLES[kra.category] ?? KRA_CATEGORY_STYLES.performance
+                const kraWeight = Number(kra.weight ?? 0)
+                return (
+                  <div key={kra.id} className="glass p-4 space-y-3">
+                    {/* KRA header */}
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-sm">{kra.title}</h3>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${catStyle.bg} ${catStyle.text}`}>
+                          {kra.category}
+                        </span>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-xs font-semibold tabular-nums">
+                        {kraWeight}%
+                      </span>
+                    </div>
+                    {kra.description && (
+                      <p className="text-xs text-muted-foreground">{kra.description}</p>
+                    )}
+                    {/* KPIs within this KRA */}
+                    {kraKpis.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic">No KPIs assigned to this KRA yet.</p>
+                    ) : (
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {kraKpis.map(kpi => {
+                          const weight = Number(kpi.weight ?? 0)
+                          return (
+                            <div key={kpi.id} className="glass-interactive p-3 space-y-2">
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="font-medium text-sm leading-snug">{kpi.title}</p>
+                                <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-xs font-semibold tabular-nums">
+                                  {String(kpi.weight)}%
+                                </span>
+                              </div>
+                              {kpi.description && (
+                                <p className="text-xs text-muted-foreground line-clamp-2">{kpi.description}</p>
+                              )}
+                              <div className="space-y-1">
+                                <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full"
+                                    style={{
+                                      width: `${Math.min(weight, 100)}%`,
+                                      background: 'linear-gradient(90deg, oklch(0.65 0.22 265), oklch(0.7 0.18 280))',
+                                      animation: 'barGrow 0.8s ease-out forwards',
+                                    }}
+                                  />
+                                </div>
+                                <p className="text-[10px] text-muted-foreground tabular-nums">Weight: {String(kpi.weight)}%</p>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+
+              {/* Ungrouped KPIs */}
+              {ungroupedKpis.length > 0 && (
+                <div className="glass p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-sm">General KPIs</h3>
+                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                      Unassigned
+                    </span>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {(ungroupedKpis as unknown as Kpi[]).map(kpi => {
+                      const weight = Number(kpi.weight ?? 0)
+                      return (
+                        <div key={kpi.id} className="glass-interactive p-3 space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="font-medium text-sm leading-snug">{kpi.title}</p>
+                            <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-xs font-semibold tabular-nums">
+                              {String(kpi.weight)}%
+                            </span>
+                          </div>
+                          {kpi.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-2">{kpi.description}</p>
+                          )}
+                          <div className="space-y-1">
+                            <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
+                              <div
+                                className="h-full rounded-full"
+                                style={{
+                                  width: `${Math.min(weight, 100)}%`,
+                                  background: 'linear-gradient(90deg, oklch(0.65 0.22 265), oklch(0.7 0.18 280))',
+                                  animation: 'barGrow 0.8s ease-out forwards',
+                                }}
+                              />
+                            </div>
+                            <p className="text-[10px] text-muted-foreground tabular-nums">Weight: {String(kpi.weight)}%</p>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </section>
