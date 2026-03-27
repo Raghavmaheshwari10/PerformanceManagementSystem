@@ -105,6 +105,9 @@ export interface Appraisal {
   final_rating_set_by: string | null
   payout_multiplier: number | null
   payout_amount: number | null
+  mis_score: number | null
+  suggested_rating: RatingTier | null
+  override_reason: string | null
   snapshotted_variable_pay: number | null
   locked_at: string | null
   is_final: boolean
@@ -256,4 +259,77 @@ export interface ReviewQuestion {
   answer_type: AnswerType
   is_required: boolean
   order_index: number
+}
+
+// ─────────────────────────────────────────
+// MIS Integration Types
+// ─────────────────────────────────────────
+
+export interface AopTarget {
+  id: string
+  external_id: string
+  fiscal_year: number
+  level: string
+  department_id: string | null
+  employee_id: string | null
+  metric_name: string
+  category: string
+  annual_target: number
+  unit: string
+  currency: string | null
+  monthly_targets: Record<string, number> | null
+  ytd_actual: number | null
+  red_threshold: number
+  amber_threshold: number
+  synced_at: string
+  created_at: string
+}
+
+export interface MisActual {
+  id: string
+  aop_target_id: string
+  year: number
+  month: number
+  actual_value: number
+  ytd_actual: number | null
+  notes: string | null
+  synced_at: string
+}
+
+export interface KpiMisMapping {
+  id: string
+  kpi_id: string
+  aop_target_id: string
+  weight_factor: number
+  score_formula: string
+}
+
+export interface MisSyncLog {
+  id: string
+  sync_type: string
+  status: string
+  records_synced: number
+  records_failed: number
+  error_message: string | null
+  triggered_by: string | null
+  started_at: string
+  completed_at: string | null
+}
+
+export interface MisConfig {
+  id: string
+  api_base_url: string
+  api_key_encrypted: string
+  fiscal_year: number
+  auto_sync_enabled: boolean
+  sync_cron: string
+  department_mapping: Record<string, string>
+  updated_at: string
+}
+
+export interface ScoringConfig {
+  id: string
+  rating_tier: string
+  min_score: number
+  is_active: boolean
 }
