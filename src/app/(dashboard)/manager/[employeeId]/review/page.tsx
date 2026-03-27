@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole, requireManagerOwnership } from '@/lib/auth'
 import { ReviewForm } from './review-form'
-import type { User, Kpi, Review, Appraisal } from '@/lib/types'
+import type { User, Kpi, Kra, Review, Appraisal } from '@/lib/types'
 
 export default async function ManagerReviewPage({
   params, searchParams,
@@ -20,10 +20,19 @@ export default async function ManagerReviewPage({
     if (!cycle) return <p className="text-muted-foreground">Cycle not found.</p>
   }
 
-  const [employee, kpis, review, appraisal] = await Promise.all([
+  const [employee, kpisRaw, krasRaw, review, appraisal] = await Promise.all([
     prisma.user.findUnique({ where: { id: employeeId } }),
     cycleId
-      ? prisma.kpi.findMany({ where: { cycle_id: cycleId, employee_id: employeeId } })
+      ? prisma.kpi.findMany({
+          where: { cycle_id: cycleId, employee_id: employeeId },
+          include: { kra: true },
+        })
+      : Promise.resolve([]),
+    cycleId
+      ? prisma.kra.findMany({
+          where: { cycle_id: cycleId, employee_id: employeeId },
+          orderBy: { sort_order: 'asc' },
+        })
       : Promise.resolve([]),
     cycleId
       ? prisma.review.findFirst({ where: { cycle_id: cycleId, employee_id: employeeId } })
@@ -32,6 +41,28 @@ export default async function ManagerReviewPage({
       ? prisma.appraisal.findFirst({ where: { cycle_id: cycleId, employee_id: employeeId } })
       : Promise.resolve(null),
   ])
+
+  // Serialize Prisma Decimals to plain numbers
+  const kpis = kpisRaw.map((k) => ({
+    ...k,
+    weight: k.weight !== null ? Number(k.weight) : null,
+    kra: k.kra ? { ...k.kra, weight: k.kra.weight !== null ? Number(k.kra.weight) : null } : null,
+  })) as unknown as (Kpi & { kra: Kra | null })[]
+
+  const kras = krasRaw.map((k) => ({
+    ...k,
+    weight: k.weight !== null ? Number(k.weight) : null,
+  })) as unknown as Kra[]
+
+  // Group KPIs by KRA
+  const hasKras = kras.length > 0
+  const kpisByKra = new Map<string | null, typeof kpis>()
+  for (const kpi of kpis) {
+    const key = kpi.kra_id ?? null
+    if (!kpisByKra.has(key)) kpisByKra.set(key, [])
+    kpisByKra.get(key)!.push(kpi)
+  }
+  const ungroupedKpis = kpisByKra.get(null) ?? []
 
   const submitted = !!(appraisal as Appraisal | null)?.manager_submitted_at
 
@@ -59,8 +90,9 @@ export default async function ManagerReviewPage({
             <p className="text-xs font-medium text-muted-foreground">KPIs ({kpis.length})</p>
             {kpis.length === 0 ? (
               <p className="text-sm text-muted-foreground italic">No KPIs set for this cycle.</p>
-            ) : (
-              (kpis as unknown as Kpi[]).map(kpi => (
+            ) : !hasKras ? (
+              /* Flat list when no KRAs exist (backwards compatible) */
+              kpis.map(kpi => (
                 <div key={kpi.id} className="rounded border bg-background p-3">
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-sm font-medium">{kpi.title}</p>
@@ -71,6 +103,58 @@ export default async function ManagerReviewPage({
                   )}
                 </div>
               ))
+            ) : (
+              /* Grouped by KRA */
+              <div className="space-y-3">
+                {kras.map(kra => {
+                  const kraKpis = kpisByKra.get(kra.id) ?? []
+                  if (kraKpis.length === 0) return null
+                  const catColor =
+                    kra.category === 'behaviour' ? 'bg-amber-500/15 text-amber-400'
+                    : kra.category === 'learning' ? 'bg-emerald-500/15 text-emerald-400'
+                    : 'bg-primary/15 text-primary'
+                  return (
+                    <div key={kra.id} className="rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm p-3 space-y-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-semibold">{kra.title}</p>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${catColor}`}>
+                          {kra.category}
+                        </span>
+                        {kra.weight != null && (
+                          <span className="ml-auto shrink-0 text-xs text-muted-foreground">{kra.weight}%</span>
+                        )}
+                      </div>
+                      {kraKpis.map(kpi => (
+                        <div key={kpi.id} className="rounded border bg-background p-2.5 ml-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-sm font-medium">{kpi.title}</p>
+                            <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs">{kpi.weight}%</span>
+                          </div>
+                          {kpi.description && (
+                            <p className="mt-1 text-xs text-muted-foreground">{kpi.description}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })}
+                {ungroupedKpis.length > 0 && (
+                  <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm p-3 space-y-2">
+                    <p className="text-sm font-semibold text-muted-foreground">General</p>
+                    {ungroupedKpis.map(kpi => (
+                      <div key={kpi.id} className="rounded border bg-background p-2.5 ml-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-sm font-medium">{kpi.title}</p>
+                          <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs">{kpi.weight}%</span>
+                        </div>
+                        {kpi.description && (
+                          <p className="mt-1 text-xs text-muted-foreground">{kpi.description}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
