@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { KpiTemplatePicker } from '@/components/kpi-template-picker'
 import { KraTemplatePicker } from '@/components/kra-template-picker'
+import { KpiMisLink } from '@/components/kpi-mis-link'
 // Types inferred from Prisma queries + Decimal serialization
 
 const CATEGORY_STYLES: Record<string, string> = {
@@ -30,7 +31,7 @@ export default async function KpiSettingPage({
   const [employee, rawKpis, rawKras] = await Promise.all([
     prisma.user.findUnique({ where: { id: employeeId } }),
     cycleId
-      ? prisma.kpi.findMany({ where: { cycle_id: cycleId, employee_id: employeeId }, include: { kra: true } })
+      ? prisma.kpi.findMany({ where: { cycle_id: cycleId, employee_id: employeeId }, include: { kra: true, mis_mappings: { include: { aop_target: true } } } })
       : [],
     cycleId
       ? prisma.kra.findMany({ where: { cycle_id: cycleId, employee_id: employeeId }, orderBy: { sort_order: 'asc' } })
@@ -42,11 +43,24 @@ export default async function KpiSettingPage({
     ...k,
     weight: k.weight ? Number(k.weight) : null,
     kra: k.kra ? { ...k.kra, weight: k.kra.weight ? Number(k.kra.weight) : null } : null,
+    mis_mappings: ('mis_mappings' in k && Array.isArray(k.mis_mappings)) ? k.mis_mappings : [],
   }))
   const kras = rawKras.map(k => ({
     ...k,
     weight: k.weight ? Number(k.weight) : null,
   }))
+
+  // Helper: extract first MIS mapping for a KPI (if any)
+  function getMisMapping(kpi: typeof kpis[number]) {
+    const m = kpi.mis_mappings?.[0]
+    if (!m) return null
+    return {
+      id: m.id,
+      aopTargetId: m.aop_target_id,
+      metricName: m.aop_target.metric_name,
+      formula: m.score_formula,
+    }
+  }
 
   // Group KPIs by kra_id
   const kpisByKra = new Map<string | null, typeof kpis>()
@@ -111,10 +125,18 @@ export default async function KpiSettingPage({
               )}
               {kraKpis.map(kpi => (
                 <div key={kpi.id} className="glass-interactive flex items-center justify-between rounded-lg p-3">
-                  <div>
+                  <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-medium">{kpi.title}</p>
+                    <KpiMisLink
+                      kpiId={kpi.id}
+                      kpiTitle={kpi.title}
+                      employeeId={employeeId}
+                      currentMapping={getMisMapping(kpi)}
+                    />
                     {kpi.weight != null && (
-                      <p className="text-sm text-muted-foreground">Weight: {String(kpi.weight)}%</p>
+                      <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-muted-foreground">
+                        Weight: {String(kpi.weight)}%
+                      </span>
                     )}
                   </div>
                   <form action={deleteKpi.bind(null, kpi.id, employeeId) as unknown as (fd: FormData) => Promise<void>}>
@@ -166,10 +188,18 @@ export default async function KpiSettingPage({
               )}
               {ungrouped.map(kpi => (
                 <div key={kpi.id} className="glass-interactive flex items-center justify-between rounded-lg p-3">
-                  <div>
+                  <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-medium">{kpi.title}</p>
+                    <KpiMisLink
+                      kpiId={kpi.id}
+                      kpiTitle={kpi.title}
+                      employeeId={employeeId}
+                      currentMapping={getMisMapping(kpi)}
+                    />
                     {kpi.weight != null && (
-                      <p className="text-sm text-muted-foreground">Weight: {String(kpi.weight)}%</p>
+                      <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-muted-foreground">
+                        Weight: {String(kpi.weight)}%
+                      </span>
                     )}
                   </div>
                   <form action={deleteKpi.bind(null, kpi.id, employeeId) as unknown as (fd: FormData) => Promise<void>}>
