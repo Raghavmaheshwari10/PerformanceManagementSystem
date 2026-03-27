@@ -6,6 +6,7 @@ import { canTransition, getTransitionRequirements } from '@/lib/cycle-machine'
 import { validateMultiplier } from '@/lib/validate'
 import type { ActionResult, CycleStatus } from '@/lib/types'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 
 export async function createCycle(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const user = await requireRole(['admin', 'hrbp'])
@@ -66,8 +67,8 @@ export async function createCycle(_prev: ActionResult, formData: FormData): Prom
     return { data: null, error: e instanceof Error ? e.message : 'Failed to create cycle' }
   }
 
-  revalidatePath('/admin')
-  return { data: null, error: null }
+  revalidatePath('/admin/cycles')
+  redirect('/admin/cycles')
 }
 
 export async function advanceCycleStatus(cycleId: string, currentStatus: CycleStatus): Promise<ActionResult> {
