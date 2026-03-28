@@ -65,6 +65,11 @@ export function NewUserForm({ departments, managers }: Props) {
       </div>
 
       <div className="space-y-1">
+        <label className="text-xs font-medium">Password *</label>
+        <input name="password" type="password" required placeholder="Set initial password" className="w-full rounded border px-3 py-2 text-sm" />
+      </div>
+
+      <div className="space-y-1">
         <label className="text-xs font-medium">Manager</label>
         <select name="manager_id" className="w-full rounded border px-3 py-2 text-sm">
           <option value="">None</option>
