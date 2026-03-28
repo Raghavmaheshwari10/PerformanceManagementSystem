@@ -11,6 +11,8 @@ interface AppraisalRow {
   id: string
   manager_rating: RatingTier | null
   final_rating: RatingTier | null
+  mis_score: number | null
+  suggested_rating: RatingTier | null
   payout_multiplier: number | null
   payout_amount: number | null
   snapshotted_variable_pay: number | null
@@ -33,6 +35,8 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
         id: true,
         manager_rating: true,
         final_rating: true,
+        mis_score: true,
+        suggested_rating: true,
         payout_multiplier: true,
         payout_amount: true,
         snapshotted_variable_pay: true,
@@ -129,6 +133,8 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
               <th className="p-3 text-left text-white/50">Employee</th>
               <th className="p-3 text-left text-white/50">Department</th>
               <th className="p-3 text-left text-white/50">Manager Rating</th>
+              <th className="p-3 text-right text-white/50">MIS Score</th>
+              <th className="p-3 text-left text-white/50">Suggested</th>
               <th className="p-3 text-left text-white/50">Final Rating</th>
               {['locked', 'published'].includes(typedCycle?.status ?? '') && (
                 <>
@@ -140,11 +146,23 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
             </tr>
           </thead>
           <tbody>
-            {rows.map(a => (
-              <tr key={a.id} className="border-b border-white/5">
+            {rows.map(a => {
+              const mismatch = a.suggested_rating && a.manager_rating && a.suggested_rating !== a.manager_rating
+              return (
+              <tr key={a.id} className={`border-b border-white/5 ${mismatch ? 'bg-amber-500/[0.04]' : ''}`}>
                 <td className="p-3">{a.employee?.full_name}</td>
                 <td className="p-3 text-white/70">{a.employee?.department?.name ?? '—'}</td>
                 <td className="p-3 text-white/70">{a.manager_rating}</td>
+                <td className="p-3 text-right text-white/70">{a.mis_score != null ? Number(a.mis_score).toFixed(1) + '%' : '—'}</td>
+                <td className="p-3">
+                  {a.suggested_rating ? (
+                    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                      a.suggested_rating !== a.manager_rating ? 'bg-amber-500/20 text-amber-400' : 'bg-white/10 text-white/70'
+                    }`}>
+                      {a.suggested_rating}
+                    </span>
+                  ) : '—'}
+                </td>
                 <td className="p-3 font-medium">{a.final_rating ?? a.manager_rating}</td>
                 {['locked', 'published'].includes(typedCycle?.status ?? '') && (
                   <>
@@ -162,12 +180,13 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
                   </td>
                 )}
               </tr>
-            ))}
+              )
+            })}
           </tbody>
           {['locked', 'published'].includes(typedCycle?.status ?? '') && (
             <tfoot>
               <tr className="border-t border-white/8 font-semibold bg-white/[0.02]">
-                <td colSpan={5} className="py-2 pr-3 text-right text-sm">Total payout</td>
+                <td colSpan={7} className="py-2 pr-3 text-right text-sm">Total payout</td>
                 <td className="py-2 pr-3 text-right text-sm">
                   Rs.{rows.reduce((s, a) => s + (Number(a.payout_amount) ?? 0), 0).toLocaleString('en-IN')}
                 </td>

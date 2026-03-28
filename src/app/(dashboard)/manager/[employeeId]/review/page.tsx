@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole, requireManagerOwnership } from '@/lib/auth'
+import { calculateEmployeeScore } from '@/lib/mis-scoring'
 import { ReviewForm } from './review-form'
 import type { User, Kpi, Kra, Review, Appraisal } from '@/lib/types'
 
@@ -20,7 +21,7 @@ export default async function ManagerReviewPage({
     if (!cycle) return <p className="text-muted-foreground">Cycle not found.</p>
   }
 
-  const [employee, kpisRaw, krasRaw, review, appraisal] = await Promise.all([
+  const [employee, kpisRaw, krasRaw, review, appraisal, misScore] = await Promise.all([
     prisma.user.findUnique({ where: { id: employeeId } }),
     cycleId
       ? prisma.kpi.findMany({
@@ -39,6 +40,9 @@ export default async function ManagerReviewPage({
       : Promise.resolve(null),
     cycleId
       ? prisma.appraisal.findFirst({ where: { cycle_id: cycleId, employee_id: employeeId } })
+      : Promise.resolve(null),
+    cycleId
+      ? calculateEmployeeScore(employeeId, cycleId)
       : Promise.resolve(null),
   ])
 
@@ -76,6 +80,40 @@ export default async function ManagerReviewPage({
           </p>
         )}
       </div>
+
+      {/* MIS Auto-Score Sidebar */}
+      {misScore && (
+        <div className="glass rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              MIS Auto-Score
+            </h2>
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-bold">{misScore.mis_score}%</span>
+              <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                misScore.suggested_rating === 'FEE' ? 'bg-emerald-500/20 text-emerald-400'
+                : misScore.suggested_rating === 'EE' ? 'bg-blue-500/20 text-blue-400'
+                : misScore.suggested_rating === 'ME' ? 'bg-amber-500/20 text-amber-400'
+                : 'bg-red-500/20 text-red-400'
+              }`}>
+                Suggests: {misScore.suggested_rating}
+              </span>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            {misScore.kpi_scores.map(k => (
+              <div key={k.kpi_id} className="flex items-center justify-between text-sm rounded border border-white/5 bg-white/[0.02] px-3 py-1.5">
+                <span className="text-white/70 truncate mr-2">{k.kpi_title}</span>
+                <span className={`shrink-0 font-medium ${
+                  k.achievement_pct >= 95 ? 'text-emerald-400' : k.achievement_pct >= 80 ? 'text-amber-400' : 'text-red-400'
+                }`}>
+                  {k.achievement_pct}%
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Side-by-side layout */}
       <div className="grid gap-6 xl:grid-cols-2">
@@ -202,7 +240,7 @@ export default async function ManagerReviewPage({
             <ReviewForm
               cycleId={cycleId}
               employeeId={employeeId}
-              defaultRating={(appraisal as Appraisal | null)?.manager_rating ?? undefined}
+              defaultRating={(appraisal as Appraisal | null)?.manager_rating ?? misScore?.suggested_rating ?? undefined}
               defaultComments={(appraisal as Appraisal | null)?.manager_comments ?? undefined}
             />
           ) : (
