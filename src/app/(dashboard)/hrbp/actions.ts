@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { getPayoutMultiplier } from '@/lib/constants'
 import { bulkLockAppraisals } from '@/lib/db/appraisals'
-import { getCycleDepartmentIds } from '@/lib/cycle-helpers'
+import { getCycleDepartmentIds, getCycleDepartmentStatuses } from '@/lib/cycle-helpers'
 import type { ActionResult, RatingTier } from '@/lib/types'
 import { revalidatePath } from 'next/cache'
 
@@ -102,12 +102,23 @@ export async function publishCycle(cycleId: string): Promise<ActionResult> {
   const user = await requireRole(['hrbp'])
 
   // Guard: cycle must be locked before publishing
+  // For dept-scoped cycles, all departments must be in 'locked' status
   const cycle = await prisma.cycle.findUnique({
     where: { id: cycleId },
     select: { status: true },
   })
 
-  if (!cycle || cycle.status !== 'locked') {
+  if (!cycle) {
+    return { data: null, error: 'Cycle not found' }
+  }
+
+  const deptStatuses = await getCycleDepartmentStatuses(cycleId)
+  if (deptStatuses.length > 0) {
+    const allLocked = deptStatuses.every(ds => ds.status === 'locked')
+    if (!allLocked) {
+      return { data: null, error: 'All departments must be locked before the cycle can be published' }
+    }
+  } else if (cycle.status !== 'locked') {
     return { data: null, error: 'Cycle must be locked before it can be published' }
   }
 

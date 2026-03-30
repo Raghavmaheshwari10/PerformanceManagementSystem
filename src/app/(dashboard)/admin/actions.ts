@@ -43,8 +43,13 @@ export async function createCycle(_prev: ActionResult, formData: FormData): Prom
     return { data: null, error: 'ME multiplier override must be between 0 and 5' }
   }
 
+  // Parse scope: department_ids and employee exclusions/inclusions
+  const departmentIds = formData.getAll('department_ids') as string[]
+  const excludedEmployeeIds = formData.getAll('excluded_employee_ids') as string[]
+  const includedEmployeeIds = formData.getAll('included_employee_ids') as string[]
+
   try {
-    await prisma.cycle.create({
+    const cycle = await prisma.cycle.create({
       data: {
         name: formData.get('name') as string,
         quarter: formData.get('quarter') as string,
@@ -63,6 +68,39 @@ export async function createCycle(_prev: ActionResult, formData: FormData): Prom
         me_multiplier,
       },
     })
+
+    // Save department assignments
+    if (departmentIds.length > 0) {
+      await prisma.cycleDepartment.createMany({
+        data: departmentIds.map(deptId => ({
+          cycle_id: cycle.id,
+          department_id: deptId,
+          status: 'draft' as const,
+        })),
+      })
+    }
+
+    // Save employee exclusions
+    if (excludedEmployeeIds.length > 0) {
+      await prisma.cycleEmployee.createMany({
+        data: excludedEmployeeIds.map(empId => ({
+          cycle_id: cycle.id,
+          employee_id: empId,
+          excluded: true,
+        })),
+      })
+    }
+
+    // Save employee inclusions (from non-selected departments)
+    if (includedEmployeeIds.length > 0) {
+      await prisma.cycleEmployee.createMany({
+        data: includedEmployeeIds.map(empId => ({
+          cycle_id: cycle.id,
+          employee_id: empId,
+          excluded: false,
+        })),
+      })
+    }
   } catch (e) {
     return { data: null, error: e instanceof Error ? e.message : 'Failed to create cycle' }
   }
@@ -123,5 +161,95 @@ export async function advanceCycleStatus(cycleId: string, currentStatus: CycleSt
 
   revalidatePath('/admin')
   revalidatePath('/hrbp')
+  return { data: null, error: null }
+}
+
+/**
+ * Advance a specific department within a cycle to the next status.
+ */
+export async function advanceDepartmentStatus(
+  cycleId: string,
+  departmentId: string,
+  currentStatus: CycleStatus
+): Promise<ActionResult> {
+  const user = await requireRole(['admin', 'hrbp'])
+
+  const nextMap: Record<string, CycleStatus> = {
+    draft: 'kpi_setting',
+    kpi_setting: 'self_review',
+    self_review: 'manager_review',
+    manager_review: 'calibrating',
+    calibrating: 'locked',
+    locked: 'published',
+  }
+  const nextStatus = nextMap[currentStatus]
+  if (!nextStatus || !canTransition(currentStatus, nextStatus)) {
+    return { data: null, error: `Cannot advance from ${currentStatus}` }
+  }
+
+  const req = getTransitionRequirements(currentStatus, nextStatus)
+  if (!req?.allowedRoles.includes(user.role)) {
+    return { data: null, error: 'Not authorized for this transition' }
+  }
+
+  const updated = await prisma.cycleDepartment.updateMany({
+    where: { cycle_id: cycleId, department_id: departmentId, status: currentStatus },
+    data: { status: nextStatus },
+  })
+
+  if (updated.count === 0) {
+    return { data: null, error: 'Department status has already been changed — please refresh' }
+  }
+
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'department_status_changed',
+      entity_type: 'cycle_department',
+      entity_id: `${cycleId}:${departmentId}`,
+      old_value: { status: currentStatus },
+      new_value: { status: nextStatus },
+    },
+  })
+
+  revalidatePath('/admin')
+  revalidatePath('/hrbp')
+  revalidatePath(`/admin/cycles/${cycleId}`)
+  return { data: null, error: null }
+}
+
+/**
+ * Set an employee-level status override (hold back or advance ahead of department).
+ * Pass null to clear the override and return to department-based status.
+ */
+export async function setEmployeeStatusOverride(
+  cycleId: string,
+  employeeId: string,
+  statusOverride: CycleStatus | null
+): Promise<ActionResult> {
+  const user = await requireRole(['admin', 'hrbp'])
+
+  await prisma.cycleEmployee.upsert({
+    where: { cycle_id_employee_id: { cycle_id: cycleId, employee_id: employeeId } },
+    create: {
+      cycle_id: cycleId,
+      employee_id: employeeId,
+      status_override: statusOverride,
+      excluded: false,
+    },
+    update: { status_override: statusOverride },
+  })
+
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: statusOverride ? 'employee_status_override_set' : 'employee_status_override_cleared',
+      entity_type: 'cycle_employee',
+      entity_id: `${cycleId}:${employeeId}`,
+      new_value: { status_override: statusOverride },
+    },
+  })
+
+  revalidatePath(`/admin/cycles/${cycleId}`)
   return { data: null, error: null }
 }

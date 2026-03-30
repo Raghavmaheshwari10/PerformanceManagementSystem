@@ -10,37 +10,147 @@ const ACTIVE_STATUSES: CycleStatus[] = [
   "locked",
 ];
 
+// ─── Status Resolution ───────────────────────────────────────────────
+
+/**
+ * Resolve the effective cycle status for a specific employee.
+ * Priority: CycleEmployee.status_override → CycleDepartment.status → Cycle.status
+ */
+export async function getStatusForEmployee(
+  cycleId: string,
+  employeeId: string
+): Promise<CycleStatus> {
+  // 1. Check employee-level override
+  const empOverride = await prisma.cycleEmployee.findUnique({
+    where: { cycle_id_employee_id: { cycle_id: cycleId, employee_id: employeeId } },
+    select: { status_override: true, excluded: true },
+  });
+  if (empOverride?.excluded) return "draft"; // excluded employees see draft
+  if (empOverride?.status_override) return empOverride.status_override;
+
+  // 2. Check department-level status
+  const user = await prisma.user.findUnique({
+    where: { id: employeeId },
+    select: { department_id: true },
+  });
+  if (user?.department_id) {
+    const deptStatus = await prisma.cycleDepartment.findUnique({
+      where: {
+        cycle_id_department_id: {
+          cycle_id: cycleId,
+          department_id: user.department_id,
+        },
+      },
+      select: { status: true },
+    });
+    if (deptStatus) return deptStatus.status;
+  }
+
+  // 3. Fallback to cycle-level status (org-wide)
+  const cycle = await prisma.cycle.findUnique({
+    where: { id: cycleId },
+    select: { status: true },
+  });
+  return cycle?.status ?? "draft";
+}
+
+/**
+ * Get the cycle status for a specific department within a cycle.
+ * Falls back to Cycle.status for org-wide cycles.
+ */
+export async function getStatusForDepartment(
+  cycleId: string,
+  departmentId: string
+): Promise<CycleStatus> {
+  const cd = await prisma.cycleDepartment.findUnique({
+    where: {
+      cycle_id_department_id: {
+        cycle_id: cycleId,
+        department_id: departmentId,
+      },
+    },
+    select: { status: true },
+  });
+  if (cd) return cd.status;
+
+  const cycle = await prisma.cycle.findUnique({
+    where: { id: cycleId },
+    select: { status: true },
+  });
+  return cycle?.status ?? "draft";
+}
+
+/**
+ * Get per-department status breakdown for a cycle.
+ * For org-wide cycles (no departments), returns the cycle's own status.
+ */
+export async function getCycleDepartmentStatuses(cycleId: string): Promise<
+  { departmentId: string; departmentName: string; status: CycleStatus }[]
+> {
+  const depts = await prisma.cycleDepartment.findMany({
+    where: { cycle_id: cycleId },
+    include: { department: { select: { name: true } } },
+  });
+  return depts.map((d) => ({
+    departmentId: d.department_id,
+    departmentName: d.department.name,
+    status: d.status,
+  }));
+}
+
+// ─── Cycle Discovery ─────────────────────────────────────────────────
+
 /**
  * Find the active cycle for a user based on their department.
- * - First looks for a dept-scoped active cycle matching the user's department.
- * - Falls back to an org-wide cycle (one with no CycleDepartment records).
+ * Checks department-level status (not just cycle-level) for dept-scoped cycles.
  */
 export async function getActiveCycleForUser(
   userId: string
 ): Promise<Cycle | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { department_id: true },
+    select: { id: true, department_id: true },
   });
   if (!user) return null;
 
-  // Try dept-scoped cycle first
+  // Check if user is explicitly excluded from any cycle
+  const exclusions = await prisma.cycleEmployee.findMany({
+    where: { employee_id: user.id, excluded: true },
+    select: { cycle_id: true },
+  });
+  const excludedCycleIds = exclusions.map((e) => e.cycle_id);
+
+  // Check for employee-level override (explicitly included in a cycle)
+  const empOverride = await prisma.cycleEmployee.findFirst({
+    where: {
+      employee_id: user.id,
+      excluded: false,
+      status_override: { in: ACTIVE_STATUSES },
+      cycle_id: { notIn: excludedCycleIds },
+    },
+    include: { cycle: true },
+    orderBy: { created_at: "desc" },
+  });
+  if (empOverride) return empOverride.cycle;
+
+  // Try dept-scoped cycle with active department status
   if (user.department_id) {
-    const deptCycle = await prisma.cycle.findFirst({
+    const deptCycle = await prisma.cycleDepartment.findFirst({
       where: {
+        department_id: user.department_id,
         status: { in: ACTIVE_STATUSES },
-        departments: {
-          some: { department_id: user.department_id },
-        },
+        cycle_id: { notIn: excludedCycleIds },
       },
-      orderBy: { created_at: "desc" },
+      include: { cycle: true },
+      orderBy: { cycle: { created_at: "desc" } },
     });
-    if (deptCycle) return deptCycle;
+    if (deptCycle) return deptCycle.cycle;
   }
 
-  // Fall back to org-wide cycle (no department assignments)
+  // Fall back to org-wide cycle (no department assignments) with active status
   const orgCycle = await prisma.cycle.findFirst({
     where: {
+      id: { notIn: excludedCycleIds },
       status: { in: ACTIVE_STATUSES },
       departments: { none: {} },
     },
@@ -60,27 +170,49 @@ export async function getVisibleCycleForUser(
 ): Promise<Cycle | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { department_id: true },
+    select: { id: true, department_id: true },
   });
   if (!user) return null;
 
-  // Try dept-scoped cycle first
+  const exclusions = await prisma.cycleEmployee.findMany({
+    where: { employee_id: user.id, excluded: true },
+    select: { cycle_id: true },
+  });
+  const excludedCycleIds = exclusions.map((e) => e.cycle_id);
+
+  const VISIBLE_STATUSES: CycleStatus[] = [...ACTIVE_STATUSES, "published"];
+
+  // Employee override
+  const empOverride = await prisma.cycleEmployee.findFirst({
+    where: {
+      employee_id: user.id,
+      excluded: false,
+      status_override: { in: VISIBLE_STATUSES },
+      cycle_id: { notIn: excludedCycleIds },
+    },
+    include: { cycle: true },
+    orderBy: { created_at: "desc" },
+  });
+  if (empOverride) return empOverride.cycle;
+
+  // Dept-scoped cycle with visible department status
   if (user.department_id) {
-    const deptCycle = await prisma.cycle.findFirst({
+    const deptCycle = await prisma.cycleDepartment.findFirst({
       where: {
-        status: { not: "draft" },
-        departments: {
-          some: { department_id: user.department_id },
-        },
+        department_id: user.department_id,
+        status: { in: VISIBLE_STATUSES },
+        cycle_id: { notIn: excludedCycleIds },
       },
-      orderBy: { created_at: "desc" },
+      include: { cycle: true },
+      orderBy: { cycle: { created_at: "desc" } },
     });
-    if (deptCycle) return deptCycle;
+    if (deptCycle) return deptCycle.cycle;
   }
 
-  // Fall back to org-wide cycle
+  // Org-wide cycle
   const orgCycle = await prisma.cycle.findFirst({
     where: {
+      id: { notIn: excludedCycleIds },
       status: { not: "draft" },
       departments: { none: {} },
     },
@@ -95,7 +227,6 @@ export async function getVisibleCycleForUser(
  * Returns all active dept-scoped cycles matching those departments,
  * plus the org-wide active cycle (if any).
  */
-/** A cycle with its department assignments and department details included. */
 export type CycleWithDepartments = Cycle & {
   departments: (CycleDepartment & { department: Department })[];
 };
@@ -115,14 +246,16 @@ export async function getActiveCyclesForManager(managerId: string): Promise<{
     .map((r) => r.department_id)
     .filter((id): id is string => id !== null);
 
-  // Dept-scoped active cycles for those departments
+  // Dept-scoped cycles where at least one department has active status
   const deptCycles =
     deptIds.length > 0
       ? await prisma.cycle.findMany({
           where: {
-            status: { in: ACTIVE_STATUSES },
             departments: {
-              some: { department_id: { in: deptIds } },
+              some: {
+                department_id: { in: deptIds },
+                status: { in: ACTIVE_STATUSES },
+              },
             },
           },
           include: { departments: { include: { department: true } } },
@@ -142,6 +275,8 @@ export async function getActiveCyclesForManager(managerId: string): Promise<{
   return { deptCycles, orgCycle };
 }
 
+// ─── Scoping Helpers ─────────────────────────────────────────────────
+
 /**
  * Returns the department IDs scoped to a cycle.
  * An empty array means the cycle is org-wide.
@@ -158,16 +293,46 @@ export async function getCycleDepartmentIds(
 
 /**
  * Returns a Prisma `where` clause for filtering employees to a cycle's scope.
- * Useful when building queries for reviews, appraisals, KPIs, etc.
+ * Respects CycleEmployee exclusions and inclusions.
  */
 export async function getScopedEmployeeWhere(cycleId: string) {
   const deptIds = await getCycleDepartmentIds(cycleId);
+
+  // Get explicitly excluded employees
+  const excluded = await prisma.cycleEmployee.findMany({
+    where: { cycle_id: cycleId, excluded: true },
+    select: { employee_id: true },
+  });
+  const excludedIds = excluded.map((e) => e.employee_id);
+
+  // Get explicitly included employees (from non-scoped departments)
+  const included = await prisma.cycleEmployee.findMany({
+    where: { cycle_id: cycleId, excluded: false },
+    select: { employee_id: true },
+  });
+  const includedIds = included.map((e) => e.employee_id);
+
   const base = {
     is_active: true,
     role: { notIn: ["admin" as const, "hrbp" as const] },
+    id: excludedIds.length > 0 ? { notIn: excludedIds } : undefined,
   };
+
   if (deptIds.length > 0) {
-    return { ...base, department_id: { in: deptIds } };
+    // Dept-scoped: employees in selected departments + explicitly included
+    return {
+      AND: [
+        base,
+        {
+          OR: [
+            { department_id: { in: deptIds } },
+            ...(includedIds.length > 0 ? [{ id: { in: includedIds } }] : []),
+          ],
+        },
+      ],
+    };
   }
+
+  // Org-wide
   return base;
 }

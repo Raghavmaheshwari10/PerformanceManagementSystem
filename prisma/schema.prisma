@@ -194,6 +194,7 @@ model User {
   kras_as_employee Kra[] @relation("KraEmployee")
   aop_targets      AopTarget[]   @relation("AopTargetEmployee")
   mis_sync_logs    MisSyncLog[]  @relation("MisSyncTrigger")
+  cycle_employees  CycleEmployee[] @relation("CycleEmployees")
 
   @@index([manager_id], name: "idx_users_manager")
   @@index([role], name: "idx_users_role")
@@ -243,14 +244,16 @@ model Cycle {
   goals       Goal[]
   kras        Kra[]
   peer_review_requests PeerReviewRequest[]
-  departments CycleDepartment[]
+  departments     CycleDepartment[]
+  cycle_employees CycleEmployee[]
 
   @@map("cycles")
 }
 
 model CycleDepartment {
-  cycle_id      String @db.Uuid
-  department_id String @db.Uuid
+  cycle_id      String      @db.Uuid
+  department_id String      @db.Uuid
+  status        CycleStatus @default(draft)
 
   cycle      Cycle      @relation(fields: [cycle_id], references: [id], onDelete: Cascade)
   department Department @relation(fields: [department_id], references: [id], onDelete: Cascade)
@@ -258,6 +261,21 @@ model CycleDepartment {
   @@id([cycle_id, department_id])
   @@index([department_id], name: "idx_cycle_departments_department_id")
   @@map("cycle_departments")
+}
+
+model CycleEmployee {
+  cycle_id        String       @db.Uuid
+  employee_id     String       @db.Uuid
+  status_override CycleStatus?
+  excluded        Boolean      @default(false)
+  created_at      DateTime     @default(now()) @db.Timestamptz(6)
+
+  cycle    Cycle @relation(fields: [cycle_id], references: [id], onDelete: Cascade)
+  employee User  @relation("CycleEmployees", fields: [employee_id], references: [id], onDelete: Cascade)
+
+  @@id([cycle_id, employee_id])
+  @@index([employee_id], name: "idx_cycle_employees_employee_id")
+  @@map("cycle_employees")
 }
 
 model Kpi {

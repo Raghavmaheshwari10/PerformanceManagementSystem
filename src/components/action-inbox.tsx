@@ -1,9 +1,10 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import type { Cycle, Kpi, Review } from '@/lib/types'
+import type { Cycle, CycleStatus, Kpi, Review } from '@/lib/types'
 
 interface ActionInboxProps {
   cycle: Cycle
+  resolvedStatus: CycleStatus
   kpis: Kpi[]
   review: Review | null
 }
@@ -24,10 +25,10 @@ function daysUntil(dateStr: string | null): number | null {
   return Math.ceil(diff / (1000 * 60 * 60 * 24))
 }
 
-function computeActions(cycle: Cycle, kpis: Kpi[], review: Review | null): Action[] {
+function computeActions(cycle: Cycle, resolvedStatus: CycleStatus, kpis: Kpi[], review: Review | null): Action[] {
   const actions: Action[] = []
 
-  if (cycle.status === 'kpi_setting') {
+  if (resolvedStatus === 'kpi_setting') {
     const days = daysUntil(cycle.kpi_setting_deadline)
     const urgency: UrgencyLevel =
       days === null ? 'info' :
@@ -56,7 +57,7 @@ function computeActions(cycle: Cycle, kpis: Kpi[], review: Review | null): Actio
     }
   }
 
-  if (cycle.status === 'self_review') {
+  if (resolvedStatus === 'self_review') {
     const days = daysUntil(cycle.self_review_deadline)
     const urgency: UrgencyLevel =
       days === null ? 'info' :
@@ -86,7 +87,7 @@ function computeActions(cycle: Cycle, kpis: Kpi[], review: Review | null): Actio
     }
   }
 
-  if (cycle.status === 'manager_review') {
+  if (resolvedStatus === 'manager_review') {
     if (review?.status === 'submitted') {
       actions.push({
         label: 'Awaiting manager review',
@@ -97,10 +98,10 @@ function computeActions(cycle: Cycle, kpis: Kpi[], review: Review | null): Actio
     }
   }
 
-  if (cycle.status === 'calibrating' || cycle.status === 'locked') {
+  if (resolvedStatus === 'calibrating' || resolvedStatus === 'locked') {
     actions.push({
       label: 'Review in progress',
-      description: cycle.status === 'calibrating'
+      description: resolvedStatus === 'calibrating'
         ? 'Your review is in the calibration stage. Results will be published soon.'
         : 'Reviews are locked. Results will be published shortly.',
       urgency: 'info',
@@ -108,7 +109,7 @@ function computeActions(cycle: Cycle, kpis: Kpi[], review: Review | null): Actio
     })
   }
 
-  if (cycle.status === 'published') {
+  if (resolvedStatus === 'published') {
     actions.push({
       label: 'Results published',
       description: 'Your review results are available. See your final rating below.',
@@ -152,8 +153,8 @@ const URGENCY_GLOW: Record<UrgencyLevel, { boxShadow: string; borderColor: strin
   },
 }
 
-export function ActionInbox({ cycle, kpis, review }: ActionInboxProps) {
-  const actions = computeActions(cycle, kpis, review)
+export function ActionInbox({ cycle, resolvedStatus, kpis, review }: ActionInboxProps) {
+  const actions = computeActions(cycle, resolvedStatus, kpis, review)
 
   if (actions.length === 0) {
     const successGlow = URGENCY_GLOW.success

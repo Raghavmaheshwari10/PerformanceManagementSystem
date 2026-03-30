@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
+import { getStatusForEmployee } from '@/lib/cycle-helpers'
 import { revalidatePath } from 'next/cache'
 import type { ActionResult } from '@/lib/types'
 import type { RatingTier } from '@prisma/client'
@@ -11,13 +12,17 @@ export async function submitSelfReview(_prev: ActionResult, formData: FormData):
 
   const cycleId = formData.get('cycle_id') as string
 
-  // Deadline enforcement: cycle must be in self_review status and deadline not passed
+  // Deadline enforcement: employee's resolved status must be self_review and deadline not passed
   const cycle = await prisma.cycle.findUnique({
     where: { id: cycleId },
     select: { status: true, self_review_deadline: true },
   })
 
-  if (!cycle || cycle.status !== 'self_review') {
+  if (!cycle) {
+    return { data: null, error: 'Cycle not found' }
+  }
+  const resolvedStatus = await getStatusForEmployee(cycleId, user.id)
+  if (resolvedStatus !== 'self_review') {
     return { data: null, error: 'Cycle is not in self-review phase' }
   }
   if (cycle.self_review_deadline && new Date() > new Date(cycle.self_review_deadline)) {
@@ -70,12 +75,8 @@ export async function saveDraftReview(_prev: ActionResult, formData: FormData): 
 
   const cycleId = formData.get('cycle_id') as string
 
-  const cycle = await prisma.cycle.findUnique({
-    where: { id: cycleId },
-    select: { status: true },
-  })
-
-  if (!cycle || cycle.status !== 'self_review') {
+  const resolvedStatus = await getStatusForEmployee(cycleId, user.id)
+  if (resolvedStatus !== 'self_review') {
     return { data: null, error: 'Cycle is not in self-review phase' }
   }
 

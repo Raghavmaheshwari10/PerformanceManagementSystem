@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
+import { getCycleDepartmentStatuses } from '@/lib/cycle-helpers'
 import { generatePayrollCsv } from '@/lib/payroll-csv'
 import { NextResponse } from 'next/server'
 
@@ -13,7 +14,18 @@ export async function GET(request: Request) {
     where: { id: cycleId },
     select: { status: true, name: true },
   })
-  if (!cycle || !['locked', 'published'].includes(cycle.status)) {
+  if (!cycle) {
+    return NextResponse.json({ error: 'Cycle not found' }, { status: 400 })
+  }
+
+  // For dept-scoped cycles, ALL departments must be locked or published
+  const deptStatuses = await getCycleDepartmentStatuses(cycleId)
+  if (deptStatuses.length > 0) {
+    const allReady = deptStatuses.every(ds => ['locked', 'published'].includes(ds.status))
+    if (!allReady) {
+      return NextResponse.json({ error: 'All departments must be locked or published for payroll export' }, { status: 400 })
+    }
+  } else if (!['locked', 'published'].includes(cycle.status)) {
     return NextResponse.json({ error: 'Cycle must be locked or published' }, { status: 400 })
   }
 

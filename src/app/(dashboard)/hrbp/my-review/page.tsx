@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
+import { getStatusForEmployee } from '@/lib/cycle-helpers'
 import { CycleStatusBadge } from '@/components/cycle-status-badge'
 import { DeadlineBanner } from '@/components/deadline-banner'
 import { PayoutBreakdown } from '@/components/payout-breakdown'
@@ -51,18 +52,19 @@ export default async function HrbpMyReviewPage() {
     prisma.appraisal.findFirst({ where: { cycle_id: cycle.id, employee_id: user.id } }),
   ])
 
+  const resolvedStatus = await getStatusForEmployee(cycle.id, user.id)
   const typedCycle = cycle as unknown as Cycle
   const typedReview = review as unknown as Review | null
   const typedAppraisal = appraisal as unknown as Appraisal | null
-  const isSelfReview = cycle.status === 'self_review'
-  const isPublished = cycle.status === 'published'
+  const isSelfReview = resolvedStatus === 'self_review'
+  const isPublished = resolvedStatus === 'published'
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
         <h1 className="text-2xl font-bold">My Review — {cycle.name}</h1>
-        <CycleStatusBadge status={cycle.status} />
+        <CycleStatusBadge status={resolvedStatus} />
       </div>
 
       {isSelfReview && (
@@ -103,7 +105,7 @@ export default async function HrbpMyReviewPage() {
 
         {/* Right: Cycle timeline */}
         <section className="rounded border p-4">
-          <CycleTimeline currentStatus={cycle.status} />
+          <CycleTimeline currentStatus={resolvedStatus} />
         </section>
       </div>
 

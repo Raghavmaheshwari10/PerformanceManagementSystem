@@ -1,17 +1,18 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
-import { getActiveCyclesForManager, type CycleWithDepartments } from '@/lib/cycle-helpers'
+import { getActiveCyclesForManager, getStatusForEmployee, type CycleWithDepartments } from '@/lib/cycle-helpers'
 import { DeadlineBanner } from '@/components/deadline-banner'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import type { User } from '@/lib/types'
-import type { Cycle } from '@prisma/client'
+import type { Cycle, CycleStatus } from '@prisma/client'
 
 interface EmployeeStatus {
   employee: User
   kpiCount: number
   selfReviewStatus: 'submitted' | 'draft' | 'not_started'
   managerReviewStatus: 'submitted' | 'pending'
+  resolvedStatus: CycleStatus
 }
 
 function daysUntil(d: Date | string | null): number | null {
@@ -136,13 +137,19 @@ export default async function ManagerTeamPage() {
       }
     }
 
-    const statuses: EmployeeStatus[] = cycleEmployees.map(emp => ({
+    // Resolve per-employee status (respects CycleEmployee override → CycleDepartment → Cycle fallback)
+    const resolvedStatuses = await Promise.all(
+      cycleEmployees.map(emp => getStatusForEmployee(cycle.id, emp.id))
+    )
+
+    const statuses: EmployeeStatus[] = cycleEmployees.map((emp, i) => ({
       employee: emp as unknown as User,
       kpiCount: kpiCounts.get(emp.id) ?? 0,
       selfReviewStatus: reviewMap.has(emp.id)
         ? (reviewMap.get(emp.id) === 'submitted' ? 'submitted' : 'draft')
         : 'not_started',
       managerReviewStatus: appraisalMap.get(emp.id) ? 'submitted' : 'pending',
+      resolvedStatus: resolvedStatuses[i],
     }))
 
     const totalReviews = statuses.length
@@ -236,11 +243,11 @@ export default async function ManagerTeamPage() {
               </div>
             )}
 
-            {/* Deadline banners */}
-            {activeCycle.status === 'kpi_setting' && (
+            {/* Deadline banners — show if any employee in this section has the relevant resolved status */}
+            {statuses.some(s => s.resolvedStatus === 'kpi_setting') && (
               <DeadlineBanner deadline={activeCycle.kpi_setting_deadline ? String(activeCycle.kpi_setting_deadline) : null} label="KPI setting" />
             )}
-            {activeCycle.status === 'manager_review' && !isOverdue && (
+            {statuses.some(s => s.resolvedStatus === 'manager_review') && !isOverdue && (
               <DeadlineBanner deadline={activeCycle.manager_review_deadline ? String(activeCycle.manager_review_deadline) : null} label="Manager review" />
             )}
 
@@ -297,10 +304,10 @@ export default async function ManagerTeamPage() {
             {/* Team member bento grid */}
             {statuses.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-tour={sectionIdx === 0 ? 'team-table' : undefined}>
-                {statuses.map(({ employee: emp, kpiCount, selfReviewStatus, managerReviewStatus }, index) => {
+                {statuses.map(({ employee: emp, kpiCount, selfReviewStatus, managerReviewStatus, resolvedStatus }, index) => {
                   const reviewDone = managerReviewStatus === 'submitted'
                   const selfDone   = selfReviewStatus === 'submitted'
-                  const needsReview = activeCycle.status === 'manager_review' && selfDone && !reviewDone
+                  const needsReview = resolvedStatus === 'manager_review' && selfDone && !reviewDone
                   const isFirstRow = sectionIdx === 0 && index === 0
 
                   // Progress: self = 50%, manager = 50%

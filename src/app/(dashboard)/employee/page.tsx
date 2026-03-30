@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
-import { getVisibleCycleForUser } from '@/lib/cycle-helpers'
+import { getVisibleCycleForUser, getStatusForEmployee } from '@/lib/cycle-helpers'
 import { CycleStatusBadge } from '@/components/cycle-status-badge'
 import { DeadlineBanner } from '@/components/deadline-banner'
 import { SelfReviewForm } from './self-review-form'
@@ -26,8 +26,8 @@ function daysUntil(dateStr: string | null): number | null {
   return Math.ceil(diff / (1000 * 60 * 60 * 24))
 }
 
-function computePrimaryAction(cycle: Cycle, kpis: Kpi[], review: Review | null): HeroAction {
-  if (cycle.status === 'kpi_setting') {
+function computePrimaryAction(status: string, cycle: Cycle, kpis: Kpi[], review: Review | null): HeroAction {
+  if (status === 'kpi_setting') {
     const days = daysUntil(cycle.kpi_setting_deadline)
     const urgency: UrgencyLevel =
       days === null ? 'info' :
@@ -53,7 +53,7 @@ function computePrimaryAction(cycle: Cycle, kpis: Kpi[], review: Review | null):
     }
   }
 
-  if (cycle.status === 'self_review') {
+  if (status === 'self_review') {
     const days = daysUntil(cycle.self_review_deadline)
     const urgency: UrgencyLevel =
       days === null ? 'info' :
@@ -80,7 +80,7 @@ function computePrimaryAction(cycle: Cycle, kpis: Kpi[], review: Review | null):
     }
   }
 
-  if (cycle.status === 'manager_review') {
+  if (status === 'manager_review') {
     return {
       label: 'Awaiting manager review',
       description: 'Your self-review has been submitted. Your manager is completing their assessment.',
@@ -88,17 +88,17 @@ function computePrimaryAction(cycle: Cycle, kpis: Kpi[], review: Review | null):
     }
   }
 
-  if (cycle.status === 'calibrating' || cycle.status === 'locked') {
+  if (status === 'calibrating' || status === 'locked') {
     return {
       label: 'Review in progress',
-      description: cycle.status === 'calibrating'
+      description: status === 'calibrating'
         ? 'Your review is in the calibration stage. Results will be published soon.'
         : 'Reviews are locked. Results will be published shortly.',
       urgency: 'info',
     }
   }
 
-  if (cycle.status === 'published') {
+  if (status === 'published') {
     return {
       label: 'Results published',
       description: 'Your review results are available. See your final rating below.',
@@ -145,8 +145,9 @@ export default async function EmployeeReviewPage() {
   const user = await requireRole(['employee'])
 
   const cycle = await getVisibleCycleForUser(user.id)
+  const resolvedStatus = cycle ? await getStatusForEmployee(cycle.id, user.id) : null
 
-  if (!cycle) return (
+  if (!cycle || !resolvedStatus) return (
     <div className="glass flex flex-col items-center justify-center py-16 text-center">
       <div className="rounded-full bg-white/5 p-4 mb-4">
         <svg className="h-8 w-8 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -196,10 +197,11 @@ export default async function EmployeeReviewPage() {
     learning:    { bg: 'bg-emerald-500/20', text: 'text-emerald-400' },
   }
 
-  const isSelfReview = cycle.status === 'self_review'
-  const isPublished = cycle.status === 'published'
+  const isSelfReview = resolvedStatus === 'self_review'
+  const isPublished = resolvedStatus === 'published'
 
   const heroAction = computePrimaryAction(
+    resolvedStatus,
     cycle as unknown as Cycle,
     kpis as unknown as Kpi[],
     review as unknown as Review | null,
@@ -212,7 +214,7 @@ export default async function EmployeeReviewPage() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <h1 className="text-2xl font-bold">My Review — {cycle.name}</h1>
-        <CycleStatusBadge status={cycle.status} />
+        <CycleStatusBadge status={resolvedStatus} />
       </div>
 
       {isSelfReview && (
@@ -425,7 +427,7 @@ export default async function EmployeeReviewPage() {
 
         {/* Right: Cycle Timeline (2 cols) */}
         <section className="lg:col-span-2 glass p-5">
-          <CycleTimeline currentStatus={cycle.status} />
+          <CycleTimeline currentStatus={resolvedStatus} />
         </section>
       </div>
 

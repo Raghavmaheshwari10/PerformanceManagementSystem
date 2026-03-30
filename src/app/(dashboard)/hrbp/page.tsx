@@ -1,9 +1,10 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { CycleStatusBadge } from '@/components/cycle-status-badge'
+import { getCycleDepartmentStatuses } from '@/lib/cycle-helpers'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import type { Cycle } from '@/lib/types'
+import type { Cycle, CycleStatus } from '@/lib/types'
 
 function daysUntil(dateStr: string | Date | null): number | null {
   if (!dateStr) return null
@@ -29,12 +30,12 @@ function DepartmentScopeBadges({ departments }: { departments: CycleWithDepts['d
   )
 }
 
-function CycleCard({ cycle, overdueCount }: { cycle: CycleWithDepts; overdueCount?: number }) {
-  const deadline = cycle.status === 'manager_review'
+function CycleCard({ cycle, resolvedStatus, overdueCount }: { cycle: CycleWithDepts; resolvedStatus: CycleStatus; overdueCount?: number }) {
+  const deadline = resolvedStatus === 'manager_review'
     ? cycle.manager_review_deadline
-    : cycle.status === 'self_review'
+    : resolvedStatus === 'self_review'
     ? cycle.self_review_deadline
-    : cycle.status === 'kpi_setting'
+    : resolvedStatus === 'kpi_setting'
     ? cycle.kpi_setting_deadline
     : null
 
@@ -50,7 +51,7 @@ function CycleCard({ cycle, overdueCount }: { cycle: CycleWithDepts; overdueCoun
         <p className="font-medium">{cycle.name}</p>
         <p className="text-sm text-muted-foreground">{cycle.quarter} {cycle.year}</p>
         <div className="flex flex-wrap items-center gap-2">
-          <CycleStatusBadge status={cycle.status} />
+          <CycleStatusBadge status={resolvedStatus} />
           <DepartmentScopeBadges departments={cycle.departments} />
         </div>
         {isOverdue && deadline && (
@@ -70,7 +71,7 @@ function CycleCard({ cycle, overdueCount }: { cycle: CycleWithDepts; overdueCoun
             {overdueCount} overdue
           </span>
         )}
-        {['calibrating', 'locked'].includes(cycle.status) && (
+        {['calibrating', 'locked'].includes(resolvedStatus) && (
           <Link href={`/hrbp/calibration?cycle=${cycle.id}`} className="text-primary hover:text-primary/80 text-sm">
             Calibrate
           </Link>
@@ -89,11 +90,28 @@ export default async function HrbpPage() {
   })
   const allCycles = allCyclesRaw as unknown as CycleWithDepts[]
 
-  const active = allCycles.filter(c => c.status !== 'published')
-  const published = allCycles.filter(c => c.status === 'published')
+  // Resolve effective status per cycle: for dept-scoped cycles use the
+  // earliest (least-progressed) department status; for org-wide use cycle.status
+  const STATUS_ORDER: CycleStatus[] = ['draft', 'kpi_setting', 'self_review', 'manager_review', 'calibrating', 'locked', 'published']
+  const resolvedStatusMap = new Map<string, CycleStatus>()
+  for (const cycle of allCycles) {
+    if (cycle.departments.length > 0) {
+      const deptStatuses = await getCycleDepartmentStatuses(cycle.id)
+      // Use the least-progressed department status so the card reflects the earliest phase
+      const minStatus = deptStatuses.reduce<CycleStatus>((min, ds) => {
+        return STATUS_ORDER.indexOf(ds.status) < STATUS_ORDER.indexOf(min) ? ds.status : min
+      }, deptStatuses[0]?.status ?? cycle.status)
+      resolvedStatusMap.set(cycle.id, minStatus)
+    } else {
+      resolvedStatusMap.set(cycle.id, cycle.status)
+    }
+  }
+
+  const active = allCycles.filter(c => resolvedStatusMap.get(c.id) !== 'published')
+  const published = allCycles.filter(c => resolvedStatusMap.get(c.id) === 'published')
 
   // Count overdue reviews for active manager_review cycles
-  const managerReviewCycles = active.filter(c => c.status === 'manager_review')
+  const managerReviewCycles = active.filter(c => resolvedStatusMap.get(c.id) === 'manager_review')
   const overdueMap = new Map<string, number>()
   if (managerReviewCycles.length > 0) {
     for (const cycle of managerReviewCycles) {
@@ -131,7 +149,7 @@ export default async function HrbpPage() {
           <h2 className="text-lg font-semibold">Active</h2>
           <div className="grid gap-3">
             {active.map(cycle => (
-              <CycleCard key={cycle.id} cycle={cycle} overdueCount={overdueMap.get(cycle.id)} />
+              <CycleCard key={cycle.id} cycle={cycle} resolvedStatus={resolvedStatusMap.get(cycle.id) ?? cycle.status} overdueCount={overdueMap.get(cycle.id)} />
             ))}
           </div>
         </section>
@@ -141,7 +159,7 @@ export default async function HrbpPage() {
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Published</h2>
           <div className="grid gap-3">
-            {published.map(cycle => <CycleCard key={cycle.id} cycle={cycle} />)}
+            {published.map(cycle => <CycleCard key={cycle.id} cycle={cycle} resolvedStatus={resolvedStatusMap.get(cycle.id) ?? cycle.status} />)}
           </div>
         </section>
       )}

@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
+import { getStatusForEmployee } from '@/lib/cycle-helpers'
 import { CycleStatusBadge } from '@/components/cycle-status-badge'
 
 export default async function ManagerMyReviewPage() {
@@ -25,13 +26,14 @@ export default async function ManagerMyReviewPage() {
     }),
   ])
 
-  const isPublished = cycle.status === 'published'
+  const resolvedStatus = await getStatusForEmployee(cycle.id, user.id)
+  const isPublished = resolvedStatus === 'published'
 
   return (
     <div className="max-w-2xl space-y-6">
       <div className="flex items-center gap-3">
         <h1 className="text-2xl font-bold">My Review — {cycle.name}</h1>
-        <CycleStatusBadge status={cycle.status} />
+        <CycleStatusBadge status={resolvedStatus} />
       </div>
 
       <section className="space-y-2">

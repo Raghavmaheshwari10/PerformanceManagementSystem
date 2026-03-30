@@ -15,6 +15,10 @@ const TRANSITIONS: TransitionRule[] = [
   { from: 'locked', to: 'published', allowedRoles: ['hrbp'] },
 ]
 
+export const STATUS_ORDER: CycleStatus[] = [
+  'draft', 'kpi_setting', 'self_review', 'manager_review', 'calibrating', 'locked', 'published',
+]
+
 export function canTransition(from: CycleStatus, to: CycleStatus): boolean {
   return TRANSITIONS.some(t => t.from === from && t.to === to)
 }
@@ -26,4 +30,17 @@ export function getNextStatus(current: CycleStatus): CycleStatus | null {
 
 export function getTransitionRequirements(from: CycleStatus, to: CycleStatus): TransitionRule | null {
   return TRANSITIONS.find(t => t.from === from && t.to === to) ?? null
+}
+
+/** Human-readable label for a transition */
+export function getTransitionLabel(from: CycleStatus, to: CycleStatus): string {
+  const labels: Record<string, string> = {
+    'draft→kpi_setting': 'Start KPI Setting',
+    'kpi_setting→self_review': 'Open Self Reviews',
+    'self_review→manager_review': 'Open Manager Reviews',
+    'manager_review→calibrating': 'Begin Calibration',
+    'calibrating→locked': 'Lock Ratings',
+    'locked→published': 'Publish Results',
+  }
+  return labels[`${from}→${to}`] ?? `Move to ${to.replace(/_/g, ' ')}`
 }
