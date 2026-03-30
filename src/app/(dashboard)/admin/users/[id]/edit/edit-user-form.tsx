@@ -45,7 +45,7 @@ export function EditUserForm({ user, departments, managers, assignedDeptIds }: P
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className="text-xs font-medium">Full Name *</label>
-            <input name="full_name" defaultValue={user.full_name} required className="w-full rounded border px-3 py-2 text-sm" />
+            <input name="full_name" defaultValue={user.full_name} required className="w-full rounded border bg-background px-3 py-2 text-sm" />
           </div>
           <div className="space-y-1">
             <label className="text-xs font-medium">Email</label>
@@ -56,7 +56,7 @@ export function EditUserForm({ user, departments, managers, assignedDeptIds }: P
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className="text-xs font-medium">Role *</label>
-            <select name="role" defaultValue={user.role} required className="w-full rounded border px-3 py-2 text-sm">
+            <select name="role" defaultValue={user.role} required className="w-full rounded border bg-background px-3 py-2 text-sm">
               <option value="employee">Employee</option>
               <option value="manager">Manager</option>
               <option value="hrbp">HRBP</option>
@@ -65,7 +65,7 @@ export function EditUserForm({ user, departments, managers, assignedDeptIds }: P
           </div>
           <div className="space-y-1">
             <label className="text-xs font-medium">Department</label>
-            <select name="department_id" defaultValue={user.department_id ?? ''} className="w-full rounded border px-3 py-2 text-sm">
+            <select name="department_id" defaultValue={user.department_id ?? ''} className="w-full rounded border bg-background px-3 py-2 text-sm">
               <option value="">None</option>
               {departments.map(d => (
                 <option key={d.id} value={d.id}>{d.name}</option>
@@ -77,17 +77,17 @@ export function EditUserForm({ user, departments, managers, assignedDeptIds }: P
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className="text-xs font-medium">Designation</label>
-            <input name="designation" defaultValue={user.designation ?? ''} className="w-full rounded border px-3 py-2 text-sm" />
+            <input name="designation" defaultValue={user.designation ?? ''} className="w-full rounded border bg-background px-3 py-2 text-sm" />
           </div>
           <div className="space-y-1">
             <label className="text-xs font-medium">Variable Pay (₹)</label>
-            <input name="variable_pay" type="number" min="0" defaultValue={user.variable_pay ?? 0} className="w-full rounded border px-3 py-2 text-sm" />
+            <input name="variable_pay" type="number" min="0" defaultValue={user.variable_pay ?? 0} className="w-full rounded border bg-background px-3 py-2 text-sm" />
           </div>
         </div>
 
         <div className="space-y-1">
           <label className="text-xs font-medium">Manager</label>
-          <select name="manager_id" defaultValue={user.manager_id ?? ''} className="w-full rounded border px-3 py-2 text-sm">
+          <select name="manager_id" defaultValue={user.manager_id ?? ''} className="w-full rounded border bg-background px-3 py-2 text-sm">
             <option value="">None</option>
             {managers.map(m => (
               <option key={m.id} value={m.id}>{m.full_name}</option>

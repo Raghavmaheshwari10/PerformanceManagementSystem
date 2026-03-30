@@ -66,7 +66,7 @@ export function TourEngine() {
         aria-label="Close tour"
       />
       <div
-        className="fixed z-[201] w-80 rounded-xl border bg-white shadow-xl p-5"
+        className="fixed z-[201] w-80 rounded-xl border bg-background shadow-xl p-5"
         style={{ top: popoverTop, left: Math.min(spotLeft, window.innerWidth - 340) }}
         onClick={e => e.stopPropagation()}
       >

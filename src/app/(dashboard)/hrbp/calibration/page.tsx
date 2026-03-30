@@ -87,9 +87,9 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
             // Client-side navigation via inline script below
             data-cycle-id={cycleId}
           >
-            <option value="" className="bg-neutral-900">All Departments</option>
+            <option value="">All Departments</option>
             {departments.map(d => (
-              <option key={d.id} value={d.id} className="bg-neutral-900">{d.name}</option>
+              <option key={d.id} value={d.id}>{d.name}</option>
             ))}
           </select>
           <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-white/40">

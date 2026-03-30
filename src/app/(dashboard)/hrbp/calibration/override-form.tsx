@@ -39,7 +39,7 @@ export function OverrideForm({ appraisalId, cycleId, currentRating }: OverrideFo
         <input type="hidden" name="cycle_id" value={cycleId} />
         <select
           name="final_rating"
-          className="rounded border px-2 py-1 text-sm"
+          className="rounded border bg-background px-2 py-1 text-sm"
           defaultValue={currentRating ?? ''}
         >
           {RATING_TIERS.map(t => <option key={t.code} value={t.code}>{t.code}</option>)}
