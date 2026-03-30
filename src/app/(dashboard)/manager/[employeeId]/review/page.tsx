@@ -21,7 +21,7 @@ export default async function ManagerReviewPage({
     if (!cycle) return <p className="text-muted-foreground">Cycle not found.</p>
   }
 
-  const [employee, kpisRaw, krasRaw, review, appraisal, misScore] = await Promise.all([
+  const [employee, kpisRaw, krasRaw, review, appraisal, misScore, peerReviews] = await Promise.all([
     prisma.user.findUnique({ where: { id: employeeId } }),
     cycleId
       ? prisma.kpi.findMany({
@@ -44,6 +44,13 @@ export default async function ManagerReviewPage({
     cycleId
       ? calculateEmployeeScore(employeeId, cycleId)
       : Promise.resolve(null),
+    cycleId
+      ? prisma.peerReviewRequest.findMany({
+          where: { cycle_id: cycleId, reviewee_id: employeeId, status: 'submitted' },
+          include: { peer_user: { select: { full_name: true } } },
+          orderBy: { updated_at: 'desc' },
+        })
+      : Promise.resolve([]),
   ])
 
   // Serialize Prisma Decimals to plain numbers
@@ -109,6 +116,37 @@ export default async function ManagerReviewPage({
                 }`}>
                   {k.achievement_pct}%
                 </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Peer Reviews */}
+      {peerReviews.length > 0 && (
+        <div className="glass rounded-xl p-4 space-y-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Peer Reviews ({peerReviews.length})
+          </h2>
+          <div className="space-y-2">
+            {peerReviews.map(pr => (
+              <div key={pr.id} className="rounded border bg-background p-3 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">{pr.peer_user?.full_name ?? 'Anonymous'}</span>
+                  {pr.peer_rating && (
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                      pr.peer_rating === 'FEE' ? 'bg-emerald-500/20 text-emerald-400'
+                      : pr.peer_rating === 'EE' ? 'bg-blue-500/20 text-blue-400'
+                      : pr.peer_rating === 'ME' ? 'bg-amber-500/20 text-amber-400'
+                      : 'bg-red-500/20 text-red-400'
+                    }`}>
+                      {pr.peer_rating}
+                    </span>
+                  )}
+                </div>
+                {pr.peer_comments && (
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{pr.peer_comments}</p>
+                )}
               </div>
             ))}
           </div>

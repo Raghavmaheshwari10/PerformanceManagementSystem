@@ -80,6 +80,8 @@ enum NotificationType {
   manager_review_submitted
   admin_message
   review_reminder
+  peer_review_requested
+  peer_review_submitted
 
   @@map("notification_type")
 }

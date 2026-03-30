@@ -59,6 +59,8 @@ const NOTIFICATION_SUBJECTS: Partial<Record<NotificationType, string>> = {
   manager_review_submitted: 'Your Manager Review Has Been Submitted',
   review_reminder: 'Reminder: Complete Your Pending Review',
   admin_message: 'Message from Admin',
+  peer_review_requested: 'Peer Review Requested',
+  peer_review_submitted: 'A Peer Has Submitted Their Review',
 }
 
 const NOTIFICATION_HTML: Partial<Record<NotificationType, (payload: Record<string, string>) => string>> = {
@@ -70,6 +72,8 @@ const NOTIFICATION_HTML: Partial<Record<NotificationType, (payload: Record<strin
   manager_review_submitted: () => '<p>Your manager has submitted their performance review for you.</p>',
   review_reminder: (p) => `<p>You have a pending ${p.kind === 'manager_review' ? 'manager' : 'self'} review. Please complete it before the deadline.</p>`,
   admin_message: (p) => `<p>${p.message ?? 'You have a message from the admin.'}</p>${p.link ? `<p><a href="${p.link}">View details</a></p>` : ''}`,
+  peer_review_requested: (p) => `<p>${p.requester_name ?? 'A colleague'} has requested you to provide a peer review${p.reviewee_name ? ` for <strong>${p.reviewee_name}</strong>` : ''}. Please log in to accept or decline.</p>`,
+  peer_review_submitted: (p) => `<p>${p.peer_name ?? 'A peer'} has submitted their peer review for you${p.cycle_name ? ` in <strong>${p.cycle_name}</strong>` : ''}.</p>`,
 }
 
 const NOTIFICATION_SLACK: Partial<Record<NotificationType, (payload: Record<string, string>) => { title: string; body: string; link?: string }>> = {
@@ -81,6 +85,8 @@ const NOTIFICATION_SLACK: Partial<Record<NotificationType, (payload: Record<stri
   manager_review_submitted: () => ({ title: 'Manager Review Done', body: 'Your manager has submitted their review for you.', link: `${appUrl}/employee` }),
   review_reminder: (p) => ({ title: 'Review Reminder', body: `You have a pending ${p.kind === 'manager_review' ? 'manager' : 'self'} review. Please complete it soon.`, link: `${appUrl}` }),
   admin_message: (p) => ({ title: 'Admin Message', body: p.message ?? 'You have a new message.', link: p.link }),
+  peer_review_requested: (p) => ({ title: 'Peer Review Requested', body: `${p.requester_name ?? 'A colleague'} has requested you to provide a peer review${p.reviewee_name ? ` for *${p.reviewee_name}*` : ''}. Accept or decline in hRMS.`, link: `${appUrl}/employee/peer-reviews` }),
+  peer_review_submitted: (p) => ({ title: 'Peer Review Submitted', body: `${p.peer_name ?? 'A peer'} has submitted their peer review for you.`, link: `${appUrl}/employee/peer-reviews` }),
 }
 
 // ─── Unified Notification Dispatcher ─────────────────────────────────

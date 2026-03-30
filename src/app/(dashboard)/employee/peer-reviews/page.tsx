@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { PeerRequestForm } from './peer-request-form'
 import { PeerReviewSubmitForm } from './peer-review-submit-form'
+import { PeerReviewActions } from './peer-review-actions'
 
 export default async function PeerReviewsPage() {
   const user = await requireRole(['employee', 'manager', 'hrbp'])
@@ -18,11 +19,15 @@ export default async function PeerReviewsPage() {
       orderBy: { created_at: 'desc' },
     }) : Promise.resolve([]),
     cycle ? prisma.peerReviewRequest.findMany({
-      where: { cycle_id: cycle.id, peer_user_id: user.id, status: { not: 'submitted' } },
+      where: { cycle_id: cycle.id, peer_user_id: user.id, status: { in: ['requested', 'accepted'] } },
       include: { reviewee: { select: { full_name: true } } },
     }) : Promise.resolve([]),
     prisma.user.findMany({
-      where: { is_active: true, id: { not: user.id } },
+      where: {
+        is_active: true,
+        id: { not: user.id },
+        ...(user.department_id ? { department_id: user.department_id } : {}),
+      },
       select: { id: true, full_name: true },
       orderBy: { full_name: 'asc' },
     }),
@@ -39,13 +44,28 @@ export default async function PeerReviewsPage() {
     <div className="space-y-8">
       <h1 className="text-2xl font-bold">Peer Reviews</h1>
 
-      {pendingForMe.length > 0 && (
+      {pendingForMe.filter(r => r.status === 'requested').length > 0 && (
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">
-            Pending Reviews to Submit
-            <span className="ml-2 text-sm font-normal text-muted-foreground">({pendingForMe.length})</span>
+            Incoming Peer Review Requests
+            <span className="ml-2 text-sm font-normal text-muted-foreground">({pendingForMe.filter(r => r.status === 'requested').length})</span>
           </h2>
-          {pendingForMe.map(req => (
+          {pendingForMe.filter(r => r.status === 'requested').map(req => (
+            <div key={req.id} className="glass p-4 flex items-center justify-between">
+              <span className="text-sm font-medium">Review for: {req.reviewee?.full_name ?? 'Unknown'}</span>
+              <PeerReviewActions requestId={req.id} />
+            </div>
+          ))}
+        </section>
+      )}
+
+      {pendingForMe.filter(r => r.status === 'accepted').length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold">
+            Reviews to Submit
+            <span className="ml-2 text-sm font-normal text-muted-foreground">({pendingForMe.filter(r => r.status === 'accepted').length})</span>
+          </h2>
+          {pendingForMe.filter(r => r.status === 'accepted').map(req => (
             <PeerReviewSubmitForm key={req.id} request={req as unknown as import('@/lib/types').PeerReviewRequest & { reviewee: { full_name: string } }} />
           ))}
         </section>
