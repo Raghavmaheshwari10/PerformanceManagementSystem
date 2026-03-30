@@ -750,6 +750,17 @@ model MisSyncLog {
   @@map("mis_sync_logs")
 }
 
+model EmailTemplate {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  notification_type String   @unique
+  subject           String
+  html_body         String
+  updated_by        String?  @db.Uuid
+  updated_at        DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("email_templates")
+}
+
 model MisConfig {
   id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   api_base_url       String   @default("")

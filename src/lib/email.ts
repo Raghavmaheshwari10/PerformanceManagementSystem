@@ -122,9 +122,29 @@ export async function dispatchPendingNotifications(recipientId: string): Promise
 
       // Send email
       if (emailEnabled) {
-        const subject = NOTIFICATION_SUBJECTS[notif.type] ?? 'hRMS Notification'
-        const html = NOTIFICATION_HTML[notif.type]?.(payload)
-          ?? '<p>You have a new notification in hRMS.</p>'
+        // Check for admin-customised template in DB first
+        const customTemplate = await prisma.emailTemplate.findUnique({
+          where: { notification_type: notif.type },
+        })
+
+        let subject: string
+        let html: string
+
+        if (customTemplate) {
+          subject = customTemplate.subject.replace(
+            /\{\{(\w+)\}\}/g,
+            (_, key) => payload[key] ?? ''
+          )
+          html = customTemplate.html_body.replace(
+            /\{\{(\w+)\}\}/g,
+            (_, key) => payload[key] ?? ''
+          )
+        } else {
+          subject = NOTIFICATION_SUBJECTS[notif.type] ?? 'hRMS Notification'
+          html = NOTIFICATION_HTML[notif.type]?.(payload)
+            ?? '<p>You have a new notification in hRMS.</p>'
+        }
+
         await sendNotificationEmail(notif.recipient.email, subject, html)
       }
 

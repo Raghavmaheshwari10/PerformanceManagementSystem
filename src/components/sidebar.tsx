@@ -15,6 +15,7 @@ import {
   Building2, FileBarChart, Settings2, BarChart3, Scale,
   ScrollText, BookOpen, HelpCircle, LogOut, Flag,
   Wallet, Bell, FileSpreadsheet, Menu, X, ChevronRight,
+  Mail,
 } from 'lucide-react'
 
 interface NavItem {
@@ -64,6 +65,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'MIS Integration',  href: '/admin/mis',             icon: FileSpreadsheet },
     { label: 'Competencies',     href: '/admin/competencies',    icon: Target },
     { label: 'Review Templates', href: '/admin/review-templates', icon: FileSpreadsheet },
+    { label: 'Email Templates',   href: '/admin/email-templates',  icon: Mail },
     { label: 'Notifications',    href: '/admin/notifications',   icon: Bell },
     { label: 'Feature Flags',    href: '/admin/feature-flags',   icon: Flag },
     { label: 'Payout Config',    href: '/admin/payout-config',   icon: Wallet },
