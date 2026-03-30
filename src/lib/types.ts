@@ -39,6 +39,11 @@ export interface User {
   manager_id: string | null
   variable_pay: number
   is_active: boolean
+  password_hash?: string | null
+  invite_token?: string | null
+  invite_token_expires_at?: string | null
+  invited_at?: string | null
+  slack_user_id?: string | null
   synced_at: string
   created_at: string
   data_source?: "manual" | "zimyo" | "google"

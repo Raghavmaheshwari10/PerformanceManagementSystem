@@ -5,7 +5,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { updateUserRole, toggleUserActive, deleteUser, bulkUpdateDepartment, bulkUpdateRole, bulkToggleActive, bulkDeleteUsers } from './actions'
+import { updateUserRole, toggleUserActive, deleteUser, bulkUpdateDepartment, bulkUpdateRole, bulkToggleActive, bulkDeleteUsers, resendInvite } from './actions'
 import type { User } from '@/lib/types'
 
 const ROLES = ['employee', 'manager', 'hrbp', 'admin'] as const
@@ -228,6 +228,7 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
               <th className="p-3 text-left text-white/50">Designation</th>
               <th className="p-3 text-left text-white/50">Role</th>
               <th className="p-3 text-left text-white/50">Status</th>
+              <th className="p-3 text-left text-white/50">Invite</th>
               <th className="p-3 text-left text-white/50">Actions</th>
             </tr>
           </thead>
@@ -268,6 +269,35 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
                   </button>
                 </td>
                 <td className="p-3">
+                  {u.password_hash ? (
+                    <span className="text-xs text-emerald-400">Accepted</span>
+                  ) : u.invite_token ? (
+                    u.invite_token_expires_at && new Date(u.invite_token_expires_at) < new Date() ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-red-400">Expired</span>
+                        <button
+                          onClick={() => startTransition(async () => { await resendInvite(u.id) })}
+                          className="text-[10px] text-primary hover:text-primary/80 underline"
+                        >
+                          Resend
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-amber-400">Pending</span>
+                        <button
+                          onClick={() => startTransition(async () => { await resendInvite(u.id) })}
+                          className="text-[10px] text-primary hover:text-primary/80 underline"
+                        >
+                          Resend
+                        </button>
+                      </div>
+                    )
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
+                </td>
+                <td className="p-3">
                   <div className="flex items-center gap-2">
                     <Link href={`/admin/users/${u.id}/edit`} className="text-xs text-primary hover:text-primary/80">
                       Edit
@@ -283,7 +313,7 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan={8} className="p-6 text-center text-white/40">No users match your filters</td></tr>
+              <tr><td colSpan={9} className="p-6 text-center text-white/40">No users match your filters</td></tr>
             )}
           </tbody>
         </table>
