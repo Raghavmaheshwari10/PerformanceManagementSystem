@@ -1,11 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { acceptInvite } from './actions'
 import Link from 'next/link'
 
 export default function AcceptInvitePage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center"><p className="text-muted-foreground">Loading...</p></div>}>
+      <AcceptInviteForm />
+    </Suspense>
+  )
+}
+
+function AcceptInviteForm() {
   const searchParams = useSearchParams()
   const token = searchParams.get('token') ?? ''
 
