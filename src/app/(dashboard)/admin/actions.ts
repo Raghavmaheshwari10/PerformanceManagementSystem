@@ -3,7 +3,10 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { canTransition, getTransitionRequirements } from '@/lib/cycle-machine'
+import { notifyUsers } from '@/lib/email'
+import { getScopedEmployeeWhere } from '@/lib/cycle-helpers'
 import type { ActionResult, CycleStatus } from '@/lib/types'
+import type { NotificationType } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
@@ -127,6 +130,9 @@ export async function advanceCycleStatus(cycleId: string, currentStatus: CycleSt
     },
   })
 
+  // Send notifications for the transition
+  await sendTransitionNotifications(cycleId, nextStatus, null)
+
   revalidatePath('/admin')
   revalidatePath('/hrbp')
   return { data: null, error: null }
@@ -180,6 +186,9 @@ export async function advanceDepartmentStatus(
     },
   })
 
+  // Send notifications for the department transition
+  await sendTransitionNotifications(cycleId, nextStatus, departmentId)
+
   revalidatePath('/admin')
   revalidatePath('/hrbp')
   revalidatePath(`/admin/cycles/${cycleId}`)
@@ -220,4 +229,52 @@ export async function setEmployeeStatusOverride(
 
   revalidatePath(`/admin/cycles/${cycleId}`)
   return { data: null, error: null }
+}
+
+// ─── Transition Notification Helper ──────────────────────────────────
+
+const STATUS_TO_NOTIFICATION: Partial<Record<CycleStatus, { type: NotificationType; roles: ('employee' | 'manager')[] }>> = {
+  kpi_setting: { type: 'cycle_kpi_setting_open', roles: ['manager'] },
+  self_review: { type: 'cycle_self_review_open', roles: ['employee'] },
+  manager_review: { type: 'cycle_manager_review_open', roles: ['manager'] },
+  published: { type: 'cycle_published', roles: ['employee'] },
+}
+
+async function sendTransitionNotifications(
+  cycleId: string,
+  newStatus: CycleStatus,
+  departmentId: string | null
+): Promise<void> {
+  const config = STATUS_TO_NOTIFICATION[newStatus]
+  if (!config) return
+
+  const cycle = await prisma.cycle.findUnique({
+    where: { id: cycleId },
+    select: { name: true, self_review_deadline: true, manager_review_deadline: true },
+  })
+
+  const baseWhere = await getScopedEmployeeWhere(cycleId)
+  const deptFilter = departmentId ? { department_id: departmentId } : {}
+
+  const users = await prisma.user.findMany({
+    where: { ...baseWhere, ...deptFilter, role: { in: config.roles } },
+    select: { id: true },
+  })
+
+  if (users.length === 0) return
+
+  const deadline = newStatus === 'self_review'
+    ? cycle?.self_review_deadline?.toLocaleDateString()
+    : newStatus === 'manager_review'
+    ? cycle?.manager_review_deadline?.toLocaleDateString()
+    : undefined
+
+  await notifyUsers(
+    users.map(u => u.id),
+    config.type,
+    {
+      cycle_name: cycle?.name ?? '',
+      ...(deadline ? { deadline } : {}),
+    }
+  )
 }

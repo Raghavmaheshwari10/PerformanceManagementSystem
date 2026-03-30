@@ -65,8 +65,9 @@ export function NewUserForm({ departments, managers }: Props) {
       </div>
 
       <div className="space-y-1">
-        <label className="text-xs font-medium">Password *</label>
-        <input name="password" type="password" required placeholder="Set initial password" className="w-full rounded border px-3 py-2 text-sm" />
+        <label className="text-xs font-medium">Password</label>
+        <input name="password" type="password" placeholder="Leave blank to send invite email" className="w-full rounded border px-3 py-2 text-sm" />
+        <p className="text-[11px] text-muted-foreground">If blank, user receives an invite email to set their own password (72hr expiry).</p>
       </div>
 
       <div className="space-y-1">
@@ -77,11 +78,6 @@ export function NewUserForm({ departments, managers }: Props) {
             <option key={m.id} value={m.id}>{m.full_name}</option>
           ))}
         </select>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <input type="checkbox" name="send_invite" value="true" id="send_invite" />
-        <label htmlFor="send_invite" className="text-sm">Send magic link invite</label>
       </div>
 
       <SubmitButton className="w-full">Create User</SubmitButton>

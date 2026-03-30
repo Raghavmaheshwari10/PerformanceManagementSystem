@@ -7,6 +7,8 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import type { ActionResult, UserRole } from '@/lib/types'
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
+import { sendInviteEmail } from '@/lib/email'
 
 export async function triggerZimyoSync(): Promise<{ error?: string }> {
   const user = await requireRole(['admin'])
@@ -117,9 +119,13 @@ export async function createUser(_prev: ActionResult | null, formData: FormData)
   const password      = (formData.get('password') as string)?.trim()
 
   if (!email || !full_name || !role) return { data: null, error: 'Email, name and role are required' }
-  if (!password) return { data: null, error: 'Password is required' }
 
-  const password_hash = await bcrypt.hash(password, 12)
+  // Password is optional — if not provided, user gets an invite email
+  const password_hash = password ? await bcrypt.hash(password, 12) : null
+
+  // Generate invite token (72hr expiry) when no password set
+  const invite_token = !password ? crypto.randomBytes(32).toString('hex') : null
+  const invite_token_expires_at = !password ? new Date(Date.now() + 72 * 60 * 60 * 1000) : null
 
   // Generate a zimyo_id placeholder for manually created users
   const zimyo_id = `manual_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
@@ -137,9 +143,23 @@ export async function createUser(_prev: ActionResult | null, formData: FormData)
       is_active: true,
       zimyo_id,
       password_hash,
+      invite_token,
+      invite_token_expires_at,
+      invited_at: invite_token ? new Date() : null,
     },
     select: { id: true },
   })
+
+  // Send invite email if no password was set
+  if (invite_token) {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://hrms.emb.global'
+    const inviteUrl = `${appUrl}/login/accept-invite?token=${invite_token}`
+    try {
+      await sendInviteEmail(email, inviteUrl, full_name)
+    } catch (err) {
+      console.error('Failed to send invite email:', err)
+    }
+  }
 
   await prisma.auditLog.create({
     data: {
@@ -147,7 +167,7 @@ export async function createUser(_prev: ActionResult | null, formData: FormData)
       action: 'user_created',
       entity_type: 'user',
       entity_id: newUser.id,
-      new_value: { email, full_name, role },
+      new_value: { email, full_name, role, invited: !!invite_token },
     },
   })
 
@@ -294,6 +314,50 @@ export async function toggleUserActive(userId: string, currentActive: boolean): 
   })
 
   revalidatePath('/admin/users')
+}
+
+// ─── Invite Management ───────────────────────────────────────────────
+
+export async function resendInvite(userId: string): Promise<ActionResult> {
+  await requireRole(['admin'])
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true, full_name: true, password_hash: true },
+  })
+  if (!user) return { data: null, error: 'User not found' }
+  if (user.password_hash) return { data: null, error: 'User already has a password set' }
+
+  const invite_token = crypto.randomBytes(32).toString('hex')
+  const invite_token_expires_at = new Date(Date.now() + 72 * 60 * 60 * 1000)
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { invite_token, invite_token_expires_at, invited_at: new Date() },
+  })
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://hrms.emb.global'
+  const inviteUrl = `${appUrl}/login/accept-invite?token=${invite_token}`
+  try {
+    await sendInviteEmail(user.email, inviteUrl, user.full_name)
+  } catch (err) {
+    return { data: null, error: `Invite saved but email failed: ${err}` }
+  }
+
+  revalidatePath('/admin/users')
+  return { data: null, error: null }
+}
+
+export async function revokeInvite(userId: string): Promise<ActionResult> {
+  await requireRole(['admin'])
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { invite_token: null, invite_token_expires_at: null },
+  })
+
+  revalidatePath('/admin/users')
+  return { data: null, error: null }
 }
 
 // ─── Delete ──────────────────────────────────────────────────────────
