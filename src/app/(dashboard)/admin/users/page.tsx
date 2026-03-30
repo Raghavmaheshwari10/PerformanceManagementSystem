@@ -10,10 +10,16 @@ import type { User } from '@/lib/types'
 export default async function AdminUsersPage() {
   await requireRole(['admin'])
 
-  const users = await prisma.user.findMany({
-    orderBy: { full_name: 'asc' },
-    include: { department: true },
-  })
+  const [users, departments] = await Promise.all([
+    prisma.user.findMany({
+      orderBy: { full_name: 'asc' },
+      include: { department: true },
+    }),
+    prisma.department.findMany({
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true },
+    }),
+  ])
 
   return (
     <div className="space-y-6">
@@ -35,7 +41,7 @@ export default async function AdminUsersPage() {
       {users.length === 0 ? (
         <p className="text-muted-foreground">No users yet — upload a CSV or sync with Zimyo.</p>
       ) : (
-        <UsersTable users={users as unknown as User[]} />
+        <UsersTable users={users as unknown as User[]} departments={departments} />
       )}
     </div>
   )

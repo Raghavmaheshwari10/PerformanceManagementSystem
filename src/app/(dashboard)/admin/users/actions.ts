@@ -295,3 +295,162 @@ export async function toggleUserActive(userId: string, currentActive: boolean): 
 
   revalidatePath('/admin/users')
 }
+
+// ─── Delete ──────────────────────────────────────────────────────────
+
+export async function deleteUser(userId: string): Promise<ActionResult> {
+  const admin = await requireRole(['admin'])
+
+  // Check for dependent records
+  const [reviews, appraisals, kpis] = await Promise.all([
+    prisma.review.count({ where: { employee_id: userId } }),
+    prisma.appraisal.count({ where: { OR: [{ employee_id: userId }, { manager_id: userId }] } }),
+    prisma.kpi.count({ where: { OR: [{ employee_id: userId }, { manager_id: userId }] } }),
+  ])
+
+  if (reviews > 0 || appraisals > 0 || kpis > 0) {
+    return {
+      data: null,
+      error: `Cannot delete: user has ${reviews} review(s), ${appraisals} appraisal(s), ${kpis} KPI(s). Deactivate instead.`,
+    }
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, full_name: true } })
+
+  await prisma.$transaction([
+    prisma.notification.deleteMany({ where: { recipient_id: userId } }),
+    prisma.notificationPreference.deleteMany({ where: { user_id: userId } }),
+    prisma.draft.deleteMany({ where: { user_id: userId } }),
+    prisma.hrbpDepartment.deleteMany({ where: { hrbp_id: userId } }),
+    prisma.cycleEmployee.deleteMany({ where: { employee_id: userId } }),
+    prisma.peerReviewRequest.deleteMany({ where: { OR: [{ reviewee_id: userId }, { peer_user_id: userId }, { requested_by: userId }] } }),
+    prisma.user.delete({ where: { id: userId } }),
+  ])
+
+  await prisma.auditLog.create({
+    data: {
+      changed_by: admin.id,
+      action: 'user_deleted',
+      entity_type: 'user',
+      entity_id: userId,
+      old_value: { email: user?.email, full_name: user?.full_name },
+    },
+  })
+
+  revalidatePath('/admin/users')
+  return { data: null, error: null }
+}
+
+// ─── Bulk Operations ─────────────────────────────────────────────────
+
+export async function bulkUpdateDepartment(userIds: string[], departmentId: string | null): Promise<ActionResult> {
+  const admin = await requireRole(['admin'])
+
+  await prisma.user.updateMany({
+    where: { id: { in: userIds } },
+    data: { department_id: departmentId },
+  })
+
+  await prisma.auditLog.create({
+    data: {
+      changed_by: admin.id,
+      action: 'bulk_department_update',
+      entity_type: 'user',
+      new_value: { user_count: userIds.length, department_id: departmentId },
+    },
+  })
+
+  revalidatePath('/admin/users')
+  return { data: null, error: null }
+}
+
+export async function bulkUpdateRole(userIds: string[], role: UserRole): Promise<ActionResult> {
+  const admin = await requireRole(['admin'])
+
+  await prisma.user.updateMany({
+    where: { id: { in: userIds } },
+    data: { role: role as import('@prisma/client').UserRole },
+  })
+
+  await prisma.auditLog.create({
+    data: {
+      changed_by: admin.id,
+      action: 'bulk_role_update',
+      entity_type: 'user',
+      new_value: { user_count: userIds.length, role },
+    },
+  })
+
+  revalidatePath('/admin/users')
+  return { data: null, error: null }
+}
+
+export async function bulkToggleActive(userIds: string[], isActive: boolean): Promise<ActionResult> {
+  const admin = await requireRole(['admin'])
+
+  await prisma.user.updateMany({
+    where: { id: { in: userIds } },
+    data: { is_active: isActive },
+  })
+
+  await prisma.auditLog.create({
+    data: {
+      changed_by: admin.id,
+      action: 'bulk_toggle_active',
+      entity_type: 'user',
+      new_value: { user_count: userIds.length, is_active: isActive },
+    },
+  })
+
+  revalidatePath('/admin/users')
+  return { data: null, error: null }
+}
+
+export async function bulkDeleteUsers(userIds: string[]): Promise<ActionResult> {
+  const admin = await requireRole(['admin'])
+
+  const blocked: string[] = []
+  const deletable: string[] = []
+
+  for (const userId of userIds) {
+    const [reviews, appraisals] = await Promise.all([
+      prisma.review.count({ where: { employee_id: userId } }),
+      prisma.appraisal.count({ where: { OR: [{ employee_id: userId }, { manager_id: userId }] } }),
+    ])
+    if (reviews > 0 || appraisals > 0) blocked.push(userId)
+    else deletable.push(userId)
+  }
+
+  if (deletable.length > 0) {
+    await prisma.$transaction([
+      prisma.notification.deleteMany({ where: { recipient_id: { in: deletable } } }),
+      prisma.notificationPreference.deleteMany({ where: { user_id: { in: deletable } } }),
+      prisma.draft.deleteMany({ where: { user_id: { in: deletable } } }),
+      prisma.hrbpDepartment.deleteMany({ where: { hrbp_id: { in: deletable } } }),
+      prisma.cycleEmployee.deleteMany({ where: { employee_id: { in: deletable } } }),
+      prisma.peerReviewRequest.deleteMany({ where: { OR: [{ reviewee_id: { in: deletable } }, { peer_user_id: { in: deletable } }, { requested_by: { in: deletable } }] } }),
+      prisma.kpi.deleteMany({ where: { OR: [{ employee_id: { in: deletable } }, { manager_id: { in: deletable } }] } }),
+      prisma.kra.deleteMany({ where: { employee_id: { in: deletable } } }),
+      prisma.user.deleteMany({ where: { id: { in: deletable } } }),
+    ])
+
+    await prisma.auditLog.create({
+      data: {
+        changed_by: admin.id,
+        action: 'bulk_delete_users',
+        entity_type: 'user',
+        new_value: { deleted_count: deletable.length, blocked_count: blocked.length },
+      },
+    })
+  }
+
+  revalidatePath('/admin/users')
+
+  if (blocked.length > 0) {
+    return {
+      data: null,
+      error: `Deleted ${deletable.length} user(s). ${blocked.length} user(s) have reviews/appraisals and were skipped.`,
+    }
+  }
+  return { data: null, error: null }
+}

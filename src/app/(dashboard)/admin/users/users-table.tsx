@@ -1,15 +1,16 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Input } from '@/components/ui/input'
-import { updateUserRole, toggleUserActive } from './actions'
+import { Button } from '@/components/ui/button'
+import { updateUserRole, toggleUserActive, deleteUser, bulkUpdateDepartment, bulkUpdateRole, bulkToggleActive, bulkDeleteUsers } from './actions'
 import type { User } from '@/lib/types'
 
 const ROLES = ['employee', 'manager', 'hrbp', 'admin'] as const
 
-export function UsersTable({ users }: { users: User[] }) {
+export function UsersTable({ users, departments }: { users: User[]; departments: { id: string; name: string }[] }) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -20,8 +21,13 @@ export function UsersTable({ users }: { users: User[] }) {
   const activeFilter = searchParams.get('active') ?? ''
 
   const [, startTransition] = useTransition()
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [bulkAction, setBulkAction] = useState<string>('')
+  const [bulkValue, setBulkValue] = useState<string>('')
+  const [bulkLoading, setBulkLoading] = useState(false)
+  const [bulkError, setBulkError] = useState<string | null>(null)
 
-  const departments = [...new Set(users.map(u => u.department?.name).filter(Boolean))].sort() as string[]
+  const deptNames = [...new Set(users.map(u => u.department?.name).filter(Boolean))].sort() as string[]
 
   function updateParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString())
@@ -38,12 +44,78 @@ export function UsersTable({ users }: { users: User[] }) {
     return true
   })
 
+  const allSelected = filtered.length > 0 && filtered.every(u => selected.has(u.id))
+
+  function toggleAll() {
+    if (allSelected) {
+      setSelected(new Set())
+    } else {
+      setSelected(new Set(filtered.map(u => u.id)))
+    }
+  }
+
+  function toggleOne(id: string) {
+    const next = new Set(selected)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    setSelected(next)
+  }
+
+  async function handleBulkAction() {
+    if (selected.size === 0) return
+    const ids = [...selected]
+    setBulkLoading(true)
+    setBulkError(null)
+
+    let result
+    switch (bulkAction) {
+      case 'department':
+        result = await bulkUpdateDepartment(ids, bulkValue || null)
+        break
+      case 'role':
+        result = await bulkUpdateRole(ids, bulkValue as User['role'])
+        break
+      case 'activate':
+        result = await bulkToggleActive(ids, true)
+        break
+      case 'deactivate':
+        result = await bulkToggleActive(ids, false)
+        break
+      case 'delete':
+        if (!confirm(`Delete ${ids.length} user(s)? This cannot be undone. Users with reviews/appraisals will be skipped.`)) {
+          setBulkLoading(false)
+          return
+        }
+        result = await bulkDeleteUsers(ids)
+        break
+      default:
+        setBulkLoading(false)
+        return
+    }
+
+    setBulkLoading(false)
+    if (result?.error) setBulkError(result.error)
+    else {
+      setSelected(new Set())
+      setBulkAction('')
+      setBulkValue('')
+    }
+  }
+
+  async function handleDeleteSingle(userId: string, name: string) {
+    if (!confirm(`Delete "${name}"? This cannot be undone. If they have reviews/appraisals, deletion will fail.`)) return
+    startTransition(async () => {
+      const result = await deleteUser(userId)
+      if (result.error) alert(result.error)
+    })
+  }
+
   return (
     <div className="space-y-4">
       {/* Filter bar */}
       <div className="flex flex-wrap gap-3">
         <Input
-          placeholder="Search name or email…"
+          placeholder="Search name or email..."
           value={search}
           onChange={e => updateParam('search', e.target.value)}
           className="max-w-xs bg-white/5 border-white/10 text-white placeholder:text-white/30"
@@ -62,7 +134,7 @@ export function UsersTable({ users }: { users: User[] }) {
           className="rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white"
         >
           <option value="">All departments</option>
-          {departments.map(d => <option key={d} value={d}>{d}</option>)}
+          {deptNames.map(d => <option key={d} value={d}>{d}</option>)}
         </select>
         <select
           value={activeFilter}
@@ -77,10 +149,79 @@ export function UsersTable({ users }: { users: User[] }) {
 
       <p className="text-xs text-muted-foreground">Showing {filtered.length} of {users.length} users</p>
 
+      {/* Bulk action bar */}
+      {selected.size > 0 && (
+        <div className="glass-strong rounded-xl p-4 flex flex-wrap items-center gap-3">
+          <span className="text-sm font-medium">{selected.size} selected</span>
+          <select
+            value={bulkAction}
+            onChange={e => { setBulkAction(e.target.value); setBulkValue(''); setBulkError(null) }}
+            className="rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white"
+          >
+            <option value="">Choose action...</option>
+            <option value="department">Change Department</option>
+            <option value="role">Change Role</option>
+            <option value="activate">Activate</option>
+            <option value="deactivate">Deactivate</option>
+            <option value="delete">Delete</option>
+          </select>
+
+          {bulkAction === 'department' && (
+            <select
+              value={bulkValue}
+              onChange={e => setBulkValue(e.target.value)}
+              className="rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white"
+            >
+              <option value="">No department</option>
+              {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </select>
+          )}
+
+          {bulkAction === 'role' && (
+            <select
+              value={bulkValue}
+              onChange={e => setBulkValue(e.target.value)}
+              className="rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white"
+            >
+              <option value="">Select role...</option>
+              {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+            </select>
+          )}
+
+          <Button
+            size="sm"
+            disabled={!bulkAction || bulkLoading || (bulkAction === 'role' && !bulkValue)}
+            onClick={handleBulkAction}
+            variant={bulkAction === 'delete' ? 'destructive' : 'default'}
+          >
+            {bulkLoading ? 'Processing...' : 'Apply'}
+          </Button>
+
+          <button
+            onClick={() => { setSelected(new Set()); setBulkAction(''); setBulkError(null) }}
+            className="text-xs text-muted-foreground hover:text-foreground ml-auto"
+          >
+            Clear selection
+          </button>
+
+          {bulkError && (
+            <p className="w-full text-xs text-amber-400 mt-1">{bulkError}</p>
+          )}
+        </div>
+      )}
+
       <div className="glass overflow-hidden">
         <table className="w-full text-sm table-row-hover">
           <thead>
             <tr className="border-b border-white/8 bg-white/[0.03]">
+              <th className="p-3 w-10">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={toggleAll}
+                  className="rounded"
+                />
+              </th>
               <th className="p-3 text-left text-white/50">Name</th>
               <th className="p-3 text-left text-white/50">Email</th>
               <th className="p-3 text-left text-white/50">Department</th>
@@ -92,7 +233,15 @@ export function UsersTable({ users }: { users: User[] }) {
           </thead>
           <tbody>
             {filtered.map(u => (
-              <tr key={u.id} className="border-b border-white/5">
+              <tr key={u.id} className={`border-b border-white/5 ${selected.has(u.id) ? 'bg-primary/5' : ''}`}>
+                <td className="p-3">
+                  <input
+                    type="checkbox"
+                    checked={selected.has(u.id)}
+                    onChange={() => toggleOne(u.id)}
+                    className="rounded"
+                  />
+                </td>
                 <td className="p-3 font-medium">{u.full_name}</td>
                 <td className="p-3 text-white/70">{u.email}</td>
                 <td className="p-3 text-white/70">{u.department?.name ?? '—'}</td>
@@ -119,14 +268,22 @@ export function UsersTable({ users }: { users: User[] }) {
                   </button>
                 </td>
                 <td className="p-3">
-                  <Link href={`/admin/users/${u.id}/edit`} className="text-xs text-primary hover:text-primary/80">
-                    Edit
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Link href={`/admin/users/${u.id}/edit`} className="text-xs text-primary hover:text-primary/80">
+                      Edit
+                    </Link>
+                    <button
+                      onClick={() => handleDeleteSingle(u.id, u.full_name)}
+                      className="text-xs text-destructive hover:text-destructive/80"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan={7} className="p-6 text-center text-white/40">No users match your filters</td></tr>
+              <tr><td colSpan={8} className="p-6 text-center text-white/40">No users match your filters</td></tr>
             )}
           </tbody>
         </table>
