@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { RatingPillSelector, STANDARD_RATING_OPTIONS } from '@/components/rating-pill-selector'
 import { RATING_TIERS } from '@/lib/constants'
 import { useToast } from '@/lib/toast'
-import type { ActionResult, Review } from '@/lib/types'
+import type { ActionResult, Review, ReviewQuestionWithCompetency } from '@/lib/types'
 
 const INITIAL: ActionResult = { data: null, error: null }
 
@@ -24,9 +24,13 @@ const SENTENCE_STARTERS = [
 interface SelfReviewFormProps {
   cycleId: string
   review: Review | null
+  questions?: ReviewQuestionWithCompetency[]
+  existingResponses?: Record<string, { rating_value: number | null; text_value: string | null }>
 }
 
-export function SelfReviewForm({ cycleId, review }: SelfReviewFormProps) {
+const STAR_LABELS = ['Poor', 'Below Average', 'Average', 'Good', 'Excellent']
+
+export function SelfReviewForm({ cycleId, review, questions = [], existingResponses = {} }: SelfReviewFormProps) {
   const [submitState, submitAction] = useActionState(submitSelfReview, INITIAL)
   const [draftState, draftAction] = useActionState(saveDraftReview, INITIAL)
   const [rating, setRating] = useState(review?.self_rating ?? '')
@@ -113,6 +117,75 @@ export function SelfReviewForm({ cycleId, review }: SelfReviewFormProps) {
             required
           />
         </div>
+
+        {/* ── Competency Assessment ── */}
+        {questions.length > 0 && (
+          <div className="space-y-4 rounded border border-white/10 p-4">
+            <div>
+              <h3 className="text-base font-semibold">Competency Assessment</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                Rate yourself on each competency question below (1-5 scale).
+              </p>
+            </div>
+
+            {questions.map(q => {
+              const existing = existingResponses[q.id]
+              return (
+                <div key={q.id} className="space-y-2 border-t border-white/5 pt-3">
+                  <div>
+                    <p className="text-sm font-medium">{q.question_text}</p>
+                    {q.competency && (
+                      <span className="inline-block mt-0.5 rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
+                        {q.competency.name}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Rating (for rating or mixed answer_type) */}
+                  {(q.answer_type === 'rating' || q.answer_type === 'mixed') && (
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Rating</Label>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map(val => (
+                          <label key={val} className="group relative cursor-pointer">
+                            <input
+                              type="radio"
+                              name={`response_${q.id}`}
+                              value={val}
+                              defaultChecked={existing?.rating_value === val}
+                              className="peer sr-only"
+                              required={q.is_required}
+                            />
+                            <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-sm font-semibold transition-all peer-checked:border-blue-500 peer-checked:bg-blue-500/20 peer-checked:text-blue-400 hover:bg-white/5" title={STAR_LABELS[val - 1]}>
+                              {val}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">1 = Poor, 5 = Excellent</p>
+                    </div>
+                  )}
+
+                  {/* Text (for text or mixed answer_type) */}
+                  {(q.answer_type === 'text' || q.answer_type === 'mixed') && (
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">
+                        {q.answer_type === 'text' ? 'Your response' : 'Additional comments (optional)'}
+                      </Label>
+                      <Textarea
+                        name={`response_text_${q.id}`}
+                        rows={2}
+                        defaultValue={existing?.text_value ?? ''}
+                        placeholder="Write your response..."
+                        required={q.answer_type === 'text' && q.is_required}
+                      />
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
 
         <div className="flex gap-2" data-tour="submit-review">
           <SubmitButton formAction={draftAction} variant="outline" pendingLabel="Saving…">

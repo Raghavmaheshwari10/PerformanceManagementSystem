@@ -196,6 +196,7 @@ model User {
   peer_reviews_as_reviewee  PeerReviewRequest[] @relation("PeerReviewReviewee")
   peer_reviews_as_peer      PeerReviewRequest[] @relation("PeerReviewPeer")
   peer_reviews_requested    PeerReviewRequest[] @relation("PeerReviewRequester")
+  review_responses         ReviewResponse[] @relation("ReviewResponder")
   review_templates_created ReviewTemplate[] @relation("ReviewTemplateCreator")
   kras_as_employee Kra[] @relation("KraEmployee")
   aop_targets      AopTarget[]   @relation("AopTargetEmployee")
@@ -373,8 +374,9 @@ model Review {
   updated_at    DateTime     @default(now()) @db.Timestamptz(6)
 
   // Relations
-  cycle    Cycle @relation(fields: [cycle_id], references: [id])
-  employee User  @relation(fields: [employee_id], references: [id])
+  cycle     Cycle @relation(fields: [cycle_id], references: [id])
+  employee  User  @relation(fields: [employee_id], references: [id])
+  responses ReviewResponse[]
 
   @@unique([cycle_id, employee_id])
   @@index([cycle_id, employee_id], name: "idx_reviews_cycle_employee")
@@ -602,8 +604,26 @@ model ReviewQuestion {
 
   template   ReviewTemplate @relation(fields: [template_id], references: [id], onDelete: Cascade)
   competency Competency?    @relation(fields: [competency_id], references: [id])
+  responses  ReviewResponse[]
 
   @@map("review_questions")
+}
+
+model ReviewResponse {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  review_id      String   @db.Uuid
+  question_id    String   @db.Uuid
+  respondent_id  String   @db.Uuid
+  rating_value   Int?
+  text_value     String?
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+
+  review     Review         @relation(fields: [review_id], references: [id], onDelete: Cascade)
+  question   ReviewQuestion @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  respondent User           @relation("ReviewResponder", fields: [respondent_id], references: [id])
+
+  @@unique([review_id, question_id, respondent_id])
+  @@map("review_responses")
 }
 
 model PayoutConfig {

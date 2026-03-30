@@ -38,6 +38,21 @@ export function scoreToRatingTier(score: number): RatingTier {
 }
 
 /**
+ * Calculates a 0–100 competency score from review response ratings.
+ * Maps 1-5 ratings to 20-100 scale (1=20, 2=40, 3=60, 4=80, 5=100).
+ * Returns null if no rated responses exist.
+ */
+export function calculateCompetencyScore(
+  responses: Array<{ rating_value: number | null }>
+): number | null {
+  const rated = responses.filter(r => r.rating_value != null && r.rating_value >= 1 && r.rating_value <= 5)
+  if (rated.length === 0) return null
+
+  const sum = rated.reduce((acc, r) => acc + r.rating_value! * 20, 0)
+  return Math.round((sum / rated.length) * 100) / 100
+}
+
+/**
  * Calculates a 0–100 goal score from an array of goals.
  * Only goals with both weight and target_value are included.
  * Achievement per goal is capped at 100%.

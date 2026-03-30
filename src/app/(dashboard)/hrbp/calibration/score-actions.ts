@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
-import { calculateFinalScore, calculateGoalScore, scoreToRatingTier } from '@/lib/score-engine'
+import { calculateFinalScore, calculateGoalScore, calculateCompetencyScore, scoreToRatingTier } from '@/lib/score-engine'
 import { revalidatePath } from 'next/cache'
 
 const TIER_SCORES: Record<string, number> = { FEE: 95, EE: 80, ME: 60, SME: 40, BE: 15 }
@@ -17,7 +17,7 @@ export async function calculateCycleScores(cycleId: string): Promise<{ error?: s
 
   let count = 0
   for (const appraisal of appraisals) {
-    const [goals, peerReviews] = await Promise.all([
+    const [goals, peerReviews, reviewResponses] = await Promise.all([
       prisma.goal.findMany({
         where: { cycle_id: cycleId, employee_id: appraisal.employee_id, status: { in: ['approved', 'completed'] } },
         select: { weight: true, target_value: true, current_value: true },
@@ -25,6 +25,13 @@ export async function calculateCycleScores(cycleId: string): Promise<{ error?: s
       prisma.peerReviewRequest.findMany({
         where: { cycle_id: cycleId, reviewee_id: appraisal.employee_id, status: 'submitted' },
         select: { peer_rating: true },
+      }),
+      // Fetch competency assessment responses for this employee's review
+      prisma.reviewResponse.findMany({
+        where: {
+          review: { cycle_id: cycleId, employee_id: appraisal.employee_id },
+        },
+        select: { rating_value: true },
       }),
     ])
 
@@ -37,7 +44,10 @@ export async function calculateCycleScores(cycleId: string): Promise<{ error?: s
     )
 
     const managerScore = appraisal.manager_rating ? (TIER_SCORES[appraisal.manager_rating] ?? 60) : 60
-    const competencyScore = managerScore // fallback: use manager score
+
+    // Calculate real competency score from review responses; fall back to manager score
+    const realCompetencyScore = calculateCompetencyScore(reviewResponses)
+    const competencyScore = realCompetencyScore ?? managerScore
 
     const peerScore = peerReviews.length > 0
       ? peerReviews.reduce((s, r) => s + (r.peer_rating ? (TIER_SCORES[r.peer_rating] ?? 60) : 60), 0) / peerReviews.length

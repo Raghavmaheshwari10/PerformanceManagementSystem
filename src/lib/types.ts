@@ -266,6 +266,10 @@ export interface ReviewQuestion {
   order_index: number
 }
 
+export interface ReviewQuestionWithCompetency extends ReviewQuestion {
+  competency: Competency | null
+}
+
 // ─────────────────────────────────────────
 // MIS Integration Types
 // ─────────────────────────────────────────

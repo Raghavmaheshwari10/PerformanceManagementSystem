@@ -52,6 +52,38 @@ export async function submitSelfReview(_prev: ActionResult, formData: FormData):
     select: { id: true },
   })
 
+  // Save competency assessment responses
+  const responseEntries: Array<{ question_id: string; rating_value: number | null; text_value: string | null }> = []
+  for (const [key, value] of formData.entries()) {
+    if (key.startsWith('response_') && !key.startsWith('response_text_')) {
+      const questionId = key.replace('response_', '')
+      const ratingValue = value ? parseInt(String(value), 10) : null
+      const textValue = (formData.get(`response_text_${questionId}`) as string) || null
+      responseEntries.push({ question_id: questionId, rating_value: ratingValue, text_value: textValue })
+    } else if (key.startsWith('response_text_') && !formData.has(`response_${key.replace('response_text_', '')}`)) {
+      // Text-only questions (answer_type = 'text') that have no rating field
+      const questionId = key.replace('response_text_', '')
+      const textValue = String(value) || null
+      responseEntries.push({ question_id: questionId, rating_value: null, text_value: textValue })
+    }
+  }
+
+  if (responseEntries.length > 0) {
+    // Delete existing responses for this review + respondent, then re-create
+    await prisma.reviewResponse.deleteMany({
+      where: { review_id: insertedReview.id, respondent_id: user.id },
+    })
+    await prisma.reviewResponse.createMany({
+      data: responseEntries.map(entry => ({
+        review_id: insertedReview.id,
+        question_id: entry.question_id,
+        respondent_id: user.id,
+        rating_value: entry.rating_value,
+        text_value: entry.text_value,
+      })),
+    })
+  }
+
   await prisma.auditLog.create({
     data: {
       changed_by: user.id,
@@ -87,7 +119,7 @@ export async function saveDraftReview(_prev: ActionResult, formData: FormData): 
   const cycleId = formData.get('cycle_id') as string
   const selfRating = formData.get('self_rating') as string
 
-  await prisma.review.upsert({
+  const draftReview = await prisma.review.upsert({
     where: { cycle_id_employee_id: { cycle_id: cycleId, employee_id: user.id } },
     update: {
       self_rating: (selfRating as RatingTier) || null,
@@ -102,7 +134,38 @@ export async function saveDraftReview(_prev: ActionResult, formData: FormData): 
       self_comments: formData.get('self_comments') as string,
       status: 'draft',
     },
+    select: { id: true },
   })
+
+  // Save competency assessment responses as draft too
+  const responseEntries: Array<{ question_id: string; rating_value: number | null; text_value: string | null }> = []
+  for (const [key, value] of formData.entries()) {
+    if (key.startsWith('response_') && !key.startsWith('response_text_')) {
+      const questionId = key.replace('response_', '')
+      const ratingValue = value ? parseInt(String(value), 10) : null
+      const textValue = (formData.get(`response_text_${questionId}`) as string) || null
+      responseEntries.push({ question_id: questionId, rating_value: ratingValue, text_value: textValue })
+    } else if (key.startsWith('response_text_') && !formData.has(`response_${key.replace('response_text_', '')}`)) {
+      const questionId = key.replace('response_text_', '')
+      const textValue = String(value) || null
+      responseEntries.push({ question_id: questionId, rating_value: null, text_value: textValue })
+    }
+  }
+
+  if (responseEntries.length > 0) {
+    await prisma.reviewResponse.deleteMany({
+      where: { review_id: draftReview.id, respondent_id: user.id },
+    })
+    await prisma.reviewResponse.createMany({
+      data: responseEntries.map(entry => ({
+        review_id: draftReview.id,
+        question_id: entry.question_id,
+        respondent_id: user.id,
+        rating_value: entry.rating_value,
+        text_value: entry.text_value,
+      })),
+    })
+  }
 
   revalidatePath('/employee')
   return { data: null, error: null }

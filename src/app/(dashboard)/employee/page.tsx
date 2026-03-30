@@ -7,7 +7,7 @@ import { DeadlineBanner } from '@/components/deadline-banner'
 import { SelfReviewForm } from './self-review-form'
 import { PayoutBreakdown } from '@/components/payout-breakdown'
 import { CycleTimeline } from '@/components/cycle-timeline'
-import type { Cycle, Kpi, Kra, Review, Appraisal } from '@/lib/types'
+import type { Cycle, Kpi, Kra, Review, Appraisal, ReviewQuestionWithCompetency } from '@/lib/types'
 
 /* ── Action computation (inlined from action-inbox) ── */
 
@@ -159,7 +159,7 @@ export default async function EmployeeReviewPage() {
     </div>
   )
 
-  const [kpis, kras, review, appraisal, misTargets] = await Promise.all([
+  const [kpis, kras, review, appraisal, misTargets, activeTemplate] = await Promise.all([
     prisma.kpi.findMany({
       where: { cycle_id: cycle.id, employee_id: user.id },
       include: { kra: true },
@@ -179,7 +179,46 @@ export default async function EmployeeReviewPage() {
       take: 3,
       orderBy: { metric_name: 'asc' },
     }),
+    prisma.reviewTemplate.findFirst({
+      orderBy: { created_at: 'desc' },
+      include: {
+        questions: {
+          orderBy: { order_index: 'asc' },
+          include: { competency: true },
+        },
+      },
+    }),
   ])
+
+  // Fetch existing responses if user has a review
+  const existingResponses: Record<string, { rating_value: number | null; text_value: string | null }> = {}
+  if (review) {
+    const responses = await prisma.reviewResponse.findMany({
+      where: { review_id: review.id, respondent_id: user.id },
+      select: { question_id: true, rating_value: true, text_value: true },
+    })
+    for (const r of responses) {
+      existingResponses[r.question_id] = { rating_value: r.rating_value, text_value: r.text_value }
+    }
+  }
+
+  const templateQuestions: ReviewQuestionWithCompetency[] = activeTemplate?.questions
+    ? activeTemplate.questions.map(q => ({
+        id: q.id,
+        template_id: q.template_id,
+        competency_id: q.competency_id,
+        question_text: q.question_text,
+        answer_type: q.answer_type as ReviewQuestionWithCompetency['answer_type'],
+        is_required: q.is_required,
+        order_index: q.order_index,
+        competency: q.competency ? {
+          id: q.competency.id,
+          name: q.competency.name,
+          description: q.competency.description,
+          created_at: q.competency.created_at.toISOString(),
+        } : null,
+      }))
+    : []
 
   /* ── Group KPIs by KRA ── */
   const hasKras = kras.length > 0
@@ -505,7 +544,12 @@ export default async function EmployeeReviewPage() {
       {/* ── Self-review form ── */}
       {isSelfReview && review?.status !== 'submitted' && (
         <div id="self-review-form" data-tour="self-review-form">
-          <SelfReviewForm cycleId={cycle.id} review={review as unknown as Review | null} />
+          <SelfReviewForm
+            cycleId={cycle.id}
+            review={review as unknown as Review | null}
+            questions={templateQuestions}
+            existingResponses={existingResponses}
+          />
         </div>
       )}
 
