@@ -3,7 +3,6 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { canTransition, getTransitionRequirements } from '@/lib/cycle-machine'
-import { validateMultiplier } from '@/lib/validate'
 import type { ActionResult, CycleStatus } from '@/lib/types'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
@@ -11,36 +10,12 @@ import { redirect } from 'next/navigation'
 export async function createCycle(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const user = await requireRole(['admin', 'hrbp'])
 
-  const smeMultiplierRaw = Number(formData.get('sme_multiplier'))
-  if (!validateMultiplier(smeMultiplierRaw)) {
-    return { data: null, error: 'SME multiplier must be between 0 and 5' }
-  }
+  const name = (formData.get('name') as string)?.trim()
+  const quarter = (formData.get('quarter') as string)?.trim()
+  const year = Number(formData.get('year'))
 
-  const businessMultiplierRaw = Number(formData.get('business_multiplier') ?? 1.0)
-  if (businessMultiplierRaw < 0 || businessMultiplierRaw > 2.0) {
-    return { data: null, error: 'Business multiplier must be between 0 and 2.0' }
-  }
-  const totalBudgetRaw = formData.get('total_budget') as string
-  const budgetCurrency = (formData.get('budget_currency') as string) || 'INR'
-
-  const fee_multiplier = formData.get('fee_multiplier')
-    ? parseFloat(formData.get('fee_multiplier') as string)
-    : null
-  const ee_multiplier = formData.get('ee_multiplier')
-    ? parseFloat(formData.get('ee_multiplier') as string)
-    : null
-  const me_multiplier = formData.get('me_multiplier')
-    ? parseFloat(formData.get('me_multiplier') as string)
-    : null
-
-  if (fee_multiplier !== null && !validateMultiplier(fee_multiplier)) {
-    return { data: null, error: 'FEE multiplier override must be between 0 and 5' }
-  }
-  if (ee_multiplier !== null && !validateMultiplier(ee_multiplier)) {
-    return { data: null, error: 'EE multiplier override must be between 0 and 5' }
-  }
-  if (me_multiplier !== null && !validateMultiplier(me_multiplier)) {
-    return { data: null, error: 'ME multiplier override must be between 0 and 5' }
+  if (!name || !quarter || !year) {
+    return { data: null, error: 'Name, quarter, and year are required' }
   }
 
   // Parse scope: department_ids and employee exclusions/inclusions
@@ -51,21 +26,14 @@ export async function createCycle(_prev: ActionResult, formData: FormData): Prom
   try {
     const cycle = await prisma.cycle.create({
       data: {
-        name: formData.get('name') as string,
-        quarter: formData.get('quarter') as string,
-        year: Number(formData.get('year')),
-        sme_multiplier: smeMultiplierRaw,
-        business_multiplier: businessMultiplierRaw,
-        total_budget: totalBudgetRaw ? Number(totalBudgetRaw) : null,
-        budget_currency: budgetCurrency,
+        name,
+        quarter,
+        year,
         kpi_setting_deadline: formData.get('kpi_setting_deadline') ? new Date(formData.get('kpi_setting_deadline') as string) : null,
         self_review_deadline: formData.get('self_review_deadline') ? new Date(formData.get('self_review_deadline') as string) : null,
         manager_review_deadline: formData.get('manager_review_deadline') ? new Date(formData.get('manager_review_deadline') as string) : null,
         calibration_deadline: formData.get('calibration_deadline') ? new Date(formData.get('calibration_deadline') as string) : null,
         created_by: user.id,
-        fee_multiplier,
-        ee_multiplier,
-        me_multiplier,
       },
     })
 

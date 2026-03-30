@@ -272,61 +272,6 @@ export function CycleForm({ departments, employeesByDept, unassignedEmployees }:
         </div>
       </section>
 
-      {/* ── Section 4: Payout Settings ── */}
-      <details className="glass rounded-xl group">
-        <summary className="cursor-pointer p-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground hover:bg-white/5 rounded-xl list-none [&::-webkit-details-marker]:hidden flex items-center justify-between">
-          Payout Settings
-          <svg xmlns="http://www.w3.org/2000/svg" className="size-4 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-          </svg>
-        </summary>
-        <div className="px-5 pb-5 space-y-4 border-t border-white/5 pt-4">
-          <div className="space-y-2">
-            <Label htmlFor="sme_multiplier">SME Payout Multiplier (0-5)</Label>
-            <Input id="sme_multiplier" name="sme_multiplier" type="number" step="0.01" placeholder="0.50" required />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="business_multiplier">Business Multiplier (0-2.0)</Label>
-              <Input id="business_multiplier" name="business_multiplier" type="number" step="0.05" defaultValue={1.0} min={0} max={2} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="budget_currency">Currency</Label>
-              <select id="budget_currency" name="budget_currency" defaultValue="INR" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs">
-                <option value="INR">INR</option>
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-              </select>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="total_budget">Total Budget (optional)</Label>
-            <Input id="total_budget" name="total_budget" type="number" step="1000" placeholder="Leave blank if not applicable" />
-          </div>
-
-          <div className="border-t border-white/5 pt-4 space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground">Per-cycle multiplier overrides (optional)</p>
-            <p className="text-xs text-muted-foreground">Leave blank to use global payout config defaults.</p>
-            <div className="grid grid-cols-3 gap-3 mt-2">
-              {(['FEE', 'EE', 'ME'] as const).map(tier => (
-                <div key={tier} className="space-y-1">
-                  <label className="text-xs font-medium">{tier} override</label>
-                  <input
-                    name={`${tier.toLowerCase()}_multiplier`}
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="e.g. 1.30"
-                    className="w-full rounded border px-2 py-1.5 text-sm"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </details>
-
       <SubmitButton className="w-full" pendingLabel="Creating cycle...">Create Cycle</SubmitButton>
     </form>
   )
