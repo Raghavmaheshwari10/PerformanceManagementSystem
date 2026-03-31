@@ -15,7 +15,7 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
     }),
     prisma.department.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true } }),
     prisma.user.findMany({
-      where: { role: 'manager', is_active: true },
+      where: { role: { in: ['manager', 'admin', 'hrbp'] }, is_active: true },
       orderBy: { full_name: 'asc' },
       select: { id: true, full_name: true },
     }),
