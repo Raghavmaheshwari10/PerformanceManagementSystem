@@ -3,24 +3,19 @@ import type { RatingTier } from '@prisma/client'
 interface ScoreInputs {
   goalScore: number
   managerScore: number
-  peerScore: number | null
+  peerScore: number | null // kept for interface compatibility — not used in calculation
   competencyScore: number
 }
 
 /**
  * Calculates weighted final score (0–100).
- * Default weights: goal 50%, competency 20%, manager 20%, peer 10%.
- * If peer score is missing, its 10% weight is redistributed to goal (making goal 60%).
+ * Weights: goal 60%, competency 20%, manager 20%.
+ * Peer review score is disabled — weight redistributed to goals.
  */
 export function calculateFinalScore(inputs: ScoreInputs): number {
-  const { goalScore, managerScore, peerScore, competencyScore } = inputs
+  const { goalScore, managerScore, competencyScore } = inputs
 
-  let score: number
-  if (peerScore !== null) {
-    score = goalScore * 0.50 + competencyScore * 0.20 + managerScore * 0.20 + peerScore * 0.10
-  } else {
-    score = goalScore * 0.60 + competencyScore * 0.20 + managerScore * 0.20
-  }
+  const score = goalScore * 0.60 + competencyScore * 0.20 + managerScore * 0.20
 
   return Math.min(100, Math.max(0, Math.round(score * 100) / 100))
 }

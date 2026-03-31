@@ -123,36 +123,7 @@ export default async function ManagerReviewPage({
         </div>
       )}
 
-      {/* Peer Reviews */}
-      {peerReviews.length > 0 && (
-        <div className="glass rounded-xl p-4 space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Peer Reviews ({peerReviews.length})
-          </h2>
-          <div className="space-y-2">
-            {peerReviews.map(pr => (
-              <div key={pr.id} className="rounded border bg-background p-3 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{pr.peer_user?.full_name ?? 'Anonymous'}</span>
-                  {pr.peer_rating && (
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                      pr.peer_rating === 'FEE' ? 'bg-emerald-500/20 text-emerald-400'
-                      : pr.peer_rating === 'EE' ? 'bg-blue-500/20 text-blue-400'
-                      : pr.peer_rating === 'ME' ? 'bg-amber-500/20 text-amber-400'
-                      : 'bg-red-500/20 text-red-400'
-                    }`}>
-                      {pr.peer_rating}
-                    </span>
-                  )}
-                </div>
-                {pr.peer_comments && (
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{pr.peer_comments}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Peer Reviews — hidden, feature disabled */}
 
       {/* Side-by-side layout */}
       <div className="grid gap-6 xl:grid-cols-2">

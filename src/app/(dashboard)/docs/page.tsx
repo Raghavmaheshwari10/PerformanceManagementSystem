@@ -11,7 +11,7 @@ const SECTIONS = [
   { id: 'cycle-lifecycle', label: 'Cycle Lifecycle' },
   { id: 'kra-kpi',         label: 'KRA & KPI Setup' },
   { id: 'user-flows',      label: 'User Flows' },
-  { id: 'peer-reviews',    label: 'Peer Reviews' },
+  // { id: 'peer-reviews',    label: 'Peer Reviews' }, // Hidden — feature disabled
   { id: 'calculations',    label: 'Payout Calculations' },
   { id: 'quick-ref',       label: 'Quick Reference' },
 ]
@@ -255,7 +255,7 @@ export default function DocsPage() {
               ['KRAs',          'Key Result Areas — broad outcome categories (e.g., Product Delivery) set by managers for each employee'],
               ['KPIs',          'Key Performance Indicators — specific measurable targets under each KRA, with weighted percentages'],
               ['Self Reviews',  'Employee self-assessment submitted during self_review stage'],
-              ['Peer Reviews',  'Colleagues review each other — employee-initiated, rating + comments'],
+              // ['Peer Reviews',  'Colleagues review each other — feature coming soon'],
               ['Appraisals',    'Manager rating + HRBP override + final payout record per employee per cycle'],
               ['Goals',         'Individual employee objectives (business/development/behavior) with manager approval workflow'],
               ['Audit Log',     'Immutable record of every override, lock, publish, and sync action'],
@@ -270,7 +270,7 @@ export default function DocsPage() {
           <Table
             headers={['Role', 'Who', 'Key Capabilities']}
             rows={[
-              [<Tag key="e" color="default">Employee</Tag>,  'Individual contributors',     'View KRAs/KPIs, submit self-review, request peer reviews, view final payout'],
+              [<Tag key="e" color="default">Employee</Tag>,  'Individual contributors',     'View KRAs/KPIs, submit self-review, view goals, view final payout'],
               [<Tag key="m" color="default">Manager</Tag>,   'Team leads with direct reports', 'Define KRAs and KPIs, finalize/lock KPIs, submit manager ratings, view team'],
               [<Tag key="h" color="amber">HRBP</Tag>,        'HR Business Partners',        'Override ratings, calibrate, lock cycles, publish results, export payroll'],
               [<Tag key="a" color="blue">Admin</Tag>,        'System administrators',       'Create cycles with dept scoping, manage users, advance department stages, configure flags'],
@@ -426,43 +426,14 @@ export default function DocsPage() {
             <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
               <li>During <Code>kpi_setting</Code>: view assigned KRAs and KPIs (read-only) on <Code>/employee</Code></li>
               <li>During <Code>self_review</Code>: select a self-rating, write comments, and submit</li>
-              <li>Request peer reviews from colleagues at <Code>/employee/peer-reviews</Code></li>
-              <li>Submit peer reviews when requested by colleagues</li>
+              {/* Peer reviews hidden — feature disabled */}
               <li>After publication: view final rating and payout on the dashboard</li>
               <li>View past cycle history at <Code>/employee/history</Code></li>
             </ol>
           </RoleSection>
         </section>
 
-        {/* ── PEER REVIEWS ────────────────────────────────────── */}
-        <section>
-          <SectionHeading id="peer-reviews">Peer Reviews</SectionHeading>
-
-          <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-            Peer reviews allow employees to request feedback from colleagues. The peer score feeds into the final rating calculation during HRBP calibration.
-          </p>
-
-          <SubHeading>Workflow</SubHeading>
-          <Table
-            headers={['Step', 'Who', 'Action']}
-            rows={[
-              ['1. Request',  <Tag key="1" color="purple">Employee</Tag>, 'Select a colleague from dropdown, creates request with status "requested"'],
-              ['2. Submit',   <Tag key="2" color="default">Peer</Tag>,    'Peer fills in rating (FEE/EE/ME/SME/BE) + comments, status becomes "submitted"'],
-              ['3. Scoring',  <Tag key="3" color="amber">HRBP</Tag>,      'Peer scores are averaged and included in final rating calculation during calibration'],
-            ]}
-          />
-
-          <SubHeading>Statuses</SubHeading>
-          <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 ml-2">
-            <li><Tag color="blue">requested</Tag> — Peer review has been requested, awaiting response</li>
-            <li><Tag color="green">submitted</Tag> — Peer has submitted their rating and comments</li>
-          </ul>
-
-          <Note>
-            <strong>Scoring:</strong> Peer ratings are converted to numeric scores (FEE=95, EE=80, ME=60, SME=40, BE=15)
-            and averaged across all submitted reviews. This average feeds into the composite final score.
-          </Note>
-        </section>
+        {/* Peer Reviews section hidden — feature disabled */}
 
         {/* ── CALCULATIONS ──────────────────────────────────────── */}
         <section>

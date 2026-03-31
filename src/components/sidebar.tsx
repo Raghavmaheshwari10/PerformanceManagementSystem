@@ -31,7 +31,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Goals',        href: '/employee/goals',        icon: Target },
     { label: 'MIS Targets',  href: '/employee/mis',          icon: BarChart3 },
     { label: 'Feedback',     href: '/employee/feedback',     icon: MessageSquare },
-    { label: 'Peer Reviews', href: '/employee/peer-reviews', icon: Users2 },
+    // { label: 'Peer Reviews', href: '/employee/peer-reviews', icon: Users2 }, // Hidden — feature disabled
     { label: 'Profile',      href: '/employee/profile',      icon: UserCircle },
     { label: 'Docs',         href: '/docs',                  icon: BookOpen },
     { label: 'Help',         href: '#help',                  icon: HelpCircle },
