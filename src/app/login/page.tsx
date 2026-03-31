@@ -5,31 +5,12 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { AuthLayout } from './auth-layout'
 
-const TEST_ACCOUNTS = [
-  { label: 'Admin',   email: 'admin@test.com',    password: 'admin123' },
-  { label: 'Alice',   email: 'manager@test.com',  password: 'manager123' },
-  { label: 'Frank',   email: 'frank@test.com',    password: 'frank123' },
-  { label: 'Bob',     email: 'employee@test.com', password: 'employee123' },
-  { label: 'Dave',    email: 'dave@test.com',     password: 'dave123' },
-  { label: 'Eve',     email: 'eve@test.com',      password: 'eve123' },
-  { label: 'Grace',   email: 'grace@test.com',    password: 'grace123' },
-  { label: 'Henry',   email: 'henry@test.com',    password: 'henry123' },
-  { label: 'Irene',   email: 'irene@test.com',    password: 'irene123' },
-  { label: 'HRBP',    email: 'hrbp@test.com',     password: 'hrbp123' },
-]
-
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-
-  function fill(acc: typeof TEST_ACCOUNTS[0]) {
-    setEmail(acc.email)
-    setPassword(acc.password)
-    setError('')
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -50,23 +31,6 @@ export default function LoginPage() {
         <div>
           <h1 className="text-[1.75rem] font-semibold tracking-tight text-white">Welcome back</h1>
           <p className="mt-1 text-sm text-white/40">Sign in to your workspace</p>
-        </div>
-
-        {/* Test account pills */}
-        <div>
-          <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.12em] text-white/25">Quick fill — test accounts</p>
-          <div className="flex flex-wrap gap-1.5">
-            {TEST_ACCOUNTS.map(a => (
-              <button
-                key={a.email}
-                type="button"
-                onClick={() => fill(a)}
-                className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[11px] font-medium text-white/60 transition-all hover:border-[oklch(0.65_0.22_265)] hover:bg-[oklch(0.65_0.22_265)] hover:text-white hover:shadow-[0_0_12px_oklch(0.55_0.22_265/0.3)]"
-              >
-                {a.label}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Google OAuth */}
