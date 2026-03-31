@@ -26,6 +26,13 @@ export function getPayoutMultiplier(
   return config[rating] ?? 0
 }
 
+export const ROLE_LABELS: Record<string, string> = {
+  employee: 'Employee',
+  manager: 'Manager',
+  hrbp: 'HRBP',
+  admin: 'Admin',
+}
+
 export const CYCLE_STATUS_ORDER: CycleStatus[] = [
   'draft', 'kpi_setting', 'self_review', 'manager_review', 'calibrating', 'locked', 'published',
 ]

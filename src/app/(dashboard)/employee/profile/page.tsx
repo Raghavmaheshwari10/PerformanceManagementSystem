@@ -79,7 +79,7 @@ export default async function ProfilePage() {
           </div>
           <div>
             <p className="text-lg font-semibold">{fullUser.full_name}</p>
-            <p className="text-sm text-muted-foreground capitalize">{fullUser.role} · {fullUser.designation ?? 'No designation'}</p>
+            <p className="text-sm text-muted-foreground">{fullUser.role === 'hrbp' ? 'HRBP' : fullUser.role.charAt(0).toUpperCase() + fullUser.role.slice(1)} · {fullUser.designation ?? 'No designation'}</p>
           </div>
         </div>
 
@@ -94,7 +94,7 @@ export default async function ProfilePage() {
           </div>
           <div>
             <p className="text-xs text-white/40">Role</p>
-            <p className="font-medium capitalize">{fullUser.role}</p>
+            <p className="font-medium">{fullUser.role === 'hrbp' ? 'HRBP' : fullUser.role.charAt(0).toUpperCase() + fullUser.role.slice(1)}</p>
           </div>
           <div>
             <p className="text-xs text-white/40">Designation</p>

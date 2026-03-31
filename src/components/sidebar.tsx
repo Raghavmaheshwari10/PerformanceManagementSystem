@@ -192,7 +192,7 @@ export function Sidebar({
           <UserAvatar name={userName} role={role} />
           <div className="min-w-0">
             <p className="text-[13px] font-semibold text-slate-800 truncate">{userName}</p>
-            <p className="text-[10px] font-medium text-slate-400 capitalize">{role}</p>
+            <p className="text-[10px] font-medium text-slate-400">{role === 'hrbp' ? 'HRBP' : role.charAt(0).toUpperCase() + role.slice(1)}</p>
           </div>
         </div>
       </div>

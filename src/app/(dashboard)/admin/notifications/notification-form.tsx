@@ -94,7 +94,7 @@ export function NotificationForm({
           {ROLES.map(r => (
             <label key={r} className="flex items-center gap-2 text-sm">
               <input type="checkbox" name="roles" value={r} defaultChecked />
-              <span className="capitalize">{r}</span>
+              <span>{r === 'hrbp' ? 'HRBP' : r.charAt(0).toUpperCase() + r.slice(1)}</span>
             </label>
           ))}
         </div>

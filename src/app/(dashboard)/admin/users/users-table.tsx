@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { updateUserRole, toggleUserActive, deleteUser, bulkUpdateDepartment, bulkUpdateRole, bulkToggleActive, bulkDeleteUsers, resendInvite } from './actions'
 import type { User } from '@/lib/types'
+import { ROLE_LABELS } from '@/lib/constants'
 
 const ROLES = ['employee', 'manager', 'hrbp', 'admin'] as const
 
@@ -126,7 +127,7 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
           className="rounded-md border border-input bg-background px-3 py-1.5 text-sm text-foreground"
         >
           <option value="">All roles</option>
-          {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+          {ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
         </select>
         <select
           value={deptFilter}
@@ -184,7 +185,7 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
               className="rounded-md border border-input bg-background px-3 py-1.5 text-sm text-foreground"
             >
               <option value="">Select role...</option>
-              {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+              {ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
             </select>
           )}
 
@@ -253,7 +254,7 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
                     onChange={e => startTransition(() => updateUserRole(u.id, e.target.value))}
                     className="rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                   >
-                    {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                    {ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
                   </select>
                 </td>
                 <td className="p-3">

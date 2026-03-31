@@ -64,7 +64,7 @@ export default async function EmployeeDirectoryPage({
             </div>
             <div className="text-right text-xs text-muted-foreground space-y-0.5">
               <p>{u.department?.name ?? '—'}</p>
-              <p className="capitalize">{u.role}</p>
+              <p>{u.role === 'hrbp' ? 'HRBP' : u.role.charAt(0).toUpperCase() + u.role.slice(1)}</p>
               {u.manager && <p className="text-muted-foreground/70">↑ {u.manager.full_name}</p>}
             </div>
           </div>

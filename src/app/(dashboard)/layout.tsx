@@ -62,7 +62,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
                   <p className="text-sm font-semibold text-slate-900">
                     {greeting}, {firstName}
                   </p>
-                  <p className="text-xs text-slate-400 capitalize">{user.role} Dashboard</p>
+                  <p className="text-xs text-slate-400">{user.role === 'hrbp' ? 'HRBP' : user.role.charAt(0).toUpperCase() + user.role.slice(1)} Dashboard</p>
                 </div>
               </div>
               {/* Spacer for mobile (hamburger takes left side) */}

@@ -270,10 +270,10 @@ export default function DocsPage() {
           <Table
             headers={['Role', 'Who', 'Key Capabilities']}
             rows={[
-              [<Tag key="e" color="default">employee</Tag>,  'Individual contributors',     'View KRAs/KPIs, submit self-review, request peer reviews, view final payout'],
-              [<Tag key="m" color="default">manager</Tag>,   'Team leads with direct reports', 'Define KRAs and KPIs, finalize/lock KPIs, submit manager ratings, view team'],
-              [<Tag key="h" color="amber">hrbp</Tag>,        'HR Business Partners',        'Override ratings, calibrate, lock cycles, publish results, export payroll'],
-              [<Tag key="a" color="blue">admin</Tag>,        'System administrators',       'Create cycles with dept scoping, manage users, advance department stages, configure flags'],
+              [<Tag key="e" color="default">Employee</Tag>,  'Individual contributors',     'View KRAs/KPIs, submit self-review, request peer reviews, view final payout'],
+              [<Tag key="m" color="default">Manager</Tag>,   'Team leads with direct reports', 'Define KRAs and KPIs, finalize/lock KPIs, submit manager ratings, view team'],
+              [<Tag key="h" color="amber">HRBP</Tag>,        'HR Business Partners',        'Override ratings, calibrate, lock cycles, publish results, export payroll'],
+              [<Tag key="a" color="blue">Admin</Tag>,        'System administrators',       'Create cycles with dept scoping, manage users, advance department stages, configure flags'],
             ]}
           />
 
@@ -318,8 +318,8 @@ export default function DocsPage() {
               ['kpi_setting → self_review',        <Tag key="2" color="blue">admin</Tag>,  'Per department or org-wide'],
               ['self_review → manager_review',     <Tag key="3" color="blue">admin</Tag>,  'Per department or org-wide'],
               ['manager_review → calibrating',     <Tag key="4" color="blue">admin</Tag>,  'Per department or org-wide'],
-              ['calibrating → locked',             <Tag key="5" color="amber">hrbp</Tag>, 'Per department or org-wide'],
-              ['locked → published',               <Tag key="6" color="amber">hrbp</Tag>, 'Per department or org-wide'],
+              ['calibrating → locked',             <Tag key="5" color="amber">HRBP</Tag>, 'Per department or org-wide'],
+              ['locked → published',               <Tag key="6" color="amber">HRBP</Tag>, 'Per department or org-wide'],
             ]}
           />
 
