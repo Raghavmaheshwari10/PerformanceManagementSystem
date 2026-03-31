@@ -93,18 +93,41 @@ function UserAvatar({ name, role }: { name: string; role?: UserRole }) {
   )
 }
 
+const ROLE_HOME: Record<UserRole, string> = {
+  admin: '/admin',
+  manager: '/manager',
+  hrbp: '/hrbp',
+  employee: '/employee',
+}
+
+const ROLE_DISPLAY: Record<string, string> = {
+  admin: 'Admin',
+  manager: 'Manager',
+  hrbp: 'HRBP',
+  employee: 'Employee',
+}
+
 export function Sidebar({
-  role, userName, isAlsoEmployee = false
+  role, userName, isAlsoEmployee = false, availableRoles = []
 }: {
   role: UserRole
   userName: string
   isAlsoEmployee?: boolean
+  availableRoles?: string[]
 }) {
   const pathname = usePathname()
   const router = useRouter()
   const [helpOpen, setHelpOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
-  const visibleItems = NAV_ITEMS[role].filter(
+
+  // Determine active view based on current path
+  const activeView: UserRole = pathname.startsWith('/admin') ? 'admin'
+    : pathname.startsWith('/manager') ? 'manager'
+    : pathname.startsWith('/hrbp') ? 'hrbp'
+    : 'employee'
+
+  const currentRole = availableRoles.includes(activeView) ? activeView : role
+  const visibleItems = NAV_ITEMS[currentRole].filter(
     item => !item.requireAlsoEmployee || isAlsoEmployee
   )
 
@@ -129,6 +152,28 @@ export function Sidebar({
           </div>
         </div>
       </div>
+
+      {/* Role Switcher */}
+      {availableRoles.length > 1 && (
+        <div className="px-4 mb-3">
+          <div className="flex rounded-lg bg-slate-100 p-0.5">
+            {availableRoles.map(r => (
+              <button
+                key={r}
+                onClick={() => router.push(ROLE_HOME[r as UserRole])}
+                className={cn(
+                  'flex-1 rounded-md px-2 py-1.5 text-[11px] font-medium transition-all',
+                  currentRole === r
+                    ? 'bg-white text-indigo-700 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                )}
+              >
+                {ROLE_DISPLAY[r]}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Search */}
       <div className="px-4 mb-4">

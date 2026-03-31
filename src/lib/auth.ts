@@ -23,14 +23,30 @@ export async function getCurrentUser() {
 
 /**
  * Returns the current user and verifies they have one of the allowed roles.
+ * Supports multi-role: an HRBP/admin with direct reports can access manager pages.
+ * A manager can access employee pages (for self-review).
  * Redirects to /unauthorized otherwise.
  */
 export async function requireRole(allowedRoles: UserRole[]) {
   const user = await getCurrentUser()
-  if (!allowedRoles.includes(user.role)) {
-    redirect('/unauthorized')
+
+  // Direct role match
+  if (allowedRoles.includes(user.role)) return user
+
+  // Multi-role: if 'manager' is allowed, check if user has direct reports
+  if (allowedRoles.includes('manager')) {
+    const hasReports = await prisma.user.count({
+      where: { manager_id: user.id, is_active: true },
+    })
+    if (hasReports > 0) return user
   }
-  return user
+
+  // Multi-role: if 'employee' is allowed, managers/HRBPs/admins can access employee pages
+  if (allowedRoles.includes('employee')) {
+    if (['manager', 'hrbp', 'admin'].includes(user.role)) return user
+  }
+
+  redirect('/unauthorized')
 }
 
 /** Pure testable check — returns true if managerId matches the user's id. */

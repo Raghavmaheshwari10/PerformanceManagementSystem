@@ -42,6 +42,20 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const firstName = user.full_name.split(' ')[0]
 
+  // Detect all available roles for this user
+  const hasDirectReports = await prisma.user.count({ where: { manager_id: user.id, is_active: true } }) > 0
+  const availableRoles: string[] = [user.role]
+  if (user.role !== 'employee' && (user.is_also_employee || user.role === 'manager')) {
+    if (!availableRoles.includes('employee')) availableRoles.push('employee')
+  }
+  if (hasDirectReports && !availableRoles.includes('manager')) {
+    availableRoles.push('manager')
+  }
+  // Managers are always also employees (they submit self-reviews)
+  if (user.role === 'manager' && !availableRoles.includes('employee')) {
+    availableRoles.push('employee')
+  }
+
   return (
     <ClientProviders>
       <CommandPaletteProvider role={user.role}>
@@ -50,6 +64,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             role={user.role}
             userName={user.full_name}
             isAlsoEmployee={user.is_also_employee ?? false}
+            availableRoles={availableRoles}
           />
           <div className="flex flex-1 flex-col overflow-hidden gradient-mesh noise-overlay">
             <header className="flex items-center justify-between bg-white border-b border-slate-200 px-6 py-3 lg:px-8">
