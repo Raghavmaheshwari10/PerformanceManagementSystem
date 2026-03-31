@@ -172,7 +172,7 @@ export function EditUserForm({ user, departments, managers, assignedDeptIds }: P
           </form>
         </div>
         <p className="text-xs text-muted-foreground">
-          Generate Login Link creates a one-time magic link to copy and share. Send Password Reset emails {user.email} a reset link.
+          Send Password Reset will email a reset link to {user.email}.
         </p>
       </div>
     </div>
