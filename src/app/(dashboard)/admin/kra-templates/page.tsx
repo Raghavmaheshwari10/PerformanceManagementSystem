@@ -87,7 +87,7 @@ export default async function KraTemplatesPage({
             </thead>
             <tbody>
               {items.map(t => (
-                <tr key={t.id} className="border-t hover:bg-white/[0.02] transition-colors">
+                <tr key={t.id} className="border-t hover:bg-muted/30 transition-colors">
                   <td className="p-3 font-medium">{t.title}</td>
                   <td className="p-3">
                     <Badge className={CATEGORY_STYLES[t.category] ?? 'bg-muted text-muted-foreground'}>

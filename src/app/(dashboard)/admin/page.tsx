@@ -146,7 +146,7 @@ export default async function AdminDashboard() {
           {(['employee', 'manager', 'hrbp', 'admin'] as const).map(r => (
             <div key={r} className="flex items-center gap-3 text-xs">
               <span className="w-16 text-right text-muted-foreground capitalize">{r}</span>
-              <div className="flex-1 h-3 rounded-full bg-[rgba(255,255,255,0.06)] overflow-hidden">
+              <div className="flex-1 h-3 rounded-full bg-muted/40 overflow-hidden">
                 <div
                   className="h-full rounded-full"
                   style={{

@@ -154,19 +154,19 @@ export default async function AdminCyclesPage() {
       <div className="glass overflow-hidden">
         <table className="w-full text-sm table-row-hover">
           <thead>
-            <tr className="border-b border-white/8 bg-white/[0.03]">
-              <th className="p-3 text-left text-white/50">Name</th>
-              <th className="p-3 text-left text-white/50">Status</th>
-              <th className="p-3 text-left text-white/50">Scope</th>
-              <th className="p-3 text-left text-white/50">Year</th>
-              <th className="p-3 text-left text-white/50">Actions</th>
+            <tr className="border-b border-border bg-muted/30">
+              <th className="p-3 text-left text-muted-foreground">Name</th>
+              <th className="p-3 text-left text-muted-foreground">Status</th>
+              <th className="p-3 text-left text-muted-foreground">Scope</th>
+              <th className="p-3 text-left text-muted-foreground">Year</th>
+              <th className="p-3 text-left text-muted-foreground">Actions</th>
             </tr>
           </thead>
           <tbody>
             {allCycles.map(cycle => {
               const next = getNextStatus(cycle.status)
               return (
-                <tr key={cycle.id} className="border-b border-white/5">
+                <tr key={cycle.id} className="border-b border-border">
                   <td className="p-3">
                     <Link href={`/admin/cycles/${cycle.id}`} className="text-primary hover:text-primary/80 font-medium">
                       {cycle.name}
@@ -175,7 +175,7 @@ export default async function AdminCyclesPage() {
                   <td className="p-3"><span data-tour="cycle-status"><CycleStatusBadge status={cycle.status} /></span></td>
                   <td className="p-3">
                     {cycle.departments.length === 0 ? (
-                      <span className="bg-white/10 text-white/60 text-xs px-2 py-0.5 rounded-full">Org-wide</span>
+                      <span className="bg-muted/50 text-muted-foreground text-xs px-2 py-0.5 rounded-full">Org-wide</span>
                     ) : (
                       <div className="flex flex-wrap gap-1">
                         {cycle.departments.map(cd => (
@@ -186,7 +186,7 @@ export default async function AdminCyclesPage() {
                       </div>
                     )}
                   </td>
-                  <td className="p-3 text-white/70">{cycle.year}</td>
+                  <td className="p-3 text-muted-foreground">{cycle.year}</td>
                   <td className="p-3">
                     {next && (
                       <div data-tour="advance-btn">

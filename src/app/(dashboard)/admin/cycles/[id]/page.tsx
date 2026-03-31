@@ -83,7 +83,7 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
             <h1 className="text-2xl font-bold">{cycle.name}</h1>
             {!isDeptScoped && <CycleStatusBadge status={cycle.status} />}
             {!isDeptScoped ? (
-              <span className="bg-white/10 text-white/60 text-xs px-2 py-0.5 rounded-full">Org-wide</span>
+              <span className="bg-muted/50 text-muted-foreground text-xs px-2 py-0.5 rounded-full">Org-wide</span>
             ) : (
               cycle.departments.map(cd => (
                 <span key={cd.department_id} className="bg-primary/15 text-primary text-xs px-2 py-0.5 rounded-full">
@@ -154,10 +154,10 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
                     return (
                       <div key={s} className="flex items-center gap-1 flex-1">
                         <div className={`size-2.5 rounded-full flex-shrink-0 ${
-                          isPast ? 'bg-emerald-400' : isCurrent ? 'bg-primary' : 'bg-white/15'
+                          isPast ? 'bg-emerald-400' : isCurrent ? 'bg-primary' : 'bg-muted/50'
                         }`} />
                         {i < STATUS_ORDER.length - 1 && (
-                          <div className={`h-px flex-1 ${isPast ? 'bg-emerald-400/50' : 'bg-white/10'}`} />
+                          <div className={`h-px flex-1 ${isPast ? 'bg-emerald-400/50' : 'bg-muted/50'}`} />
                         )}
                       </div>
                     )

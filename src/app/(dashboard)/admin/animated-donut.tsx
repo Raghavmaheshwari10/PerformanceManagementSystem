@@ -11,7 +11,7 @@ export function AnimatedDonut({ percent, color, label, sub }: { percent: number;
   return (
     <div className="flex flex-col items-center gap-2">
       <svg width="80" height="80" viewBox="0 0 80 80">
-        <circle cx="40" cy="40" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6" />
+        <circle cx="40" cy="40" r={r} fill="none" stroke="currentColor" className="text-muted/40" strokeWidth="6" />
         <circle
           cx="40" cy="40" r={r} fill="none"
           stroke={color} strokeWidth="6"
