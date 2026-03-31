@@ -11,7 +11,7 @@ function parseTemplateForm(formData: FormData) {
     role_slug: (formData.get('role_slug') as string).trim(),
     title: (formData.get('title') as string).trim(),
     description: (formData.get('description') as string | null)?.trim() || null,
-    unit: formData.get('unit') as string,
+    unit: (formData.get('unit') as string) || 'rating',
     target: formData.get('target') ? Number(formData.get('target')) : null,
     weight: formData.get('weight') ? Number(formData.get('weight')) : null,
     category: formData.get('category') as string,
