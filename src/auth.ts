@@ -48,7 +48,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!dbUser || !dbUser.is_active) {
           return '/login?error=not_provisioned'
         }
-        // Inject role for JWT callback
+        // Inject DB id and role for JWT callback
+        user.id = dbUser.id
         user.role = dbUser.role as UserRole
       }
       return true

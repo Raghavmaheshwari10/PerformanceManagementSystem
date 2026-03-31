@@ -25,7 +25,7 @@ export async function requestPasswordReset(_prev: ActionResult, formData: FormDa
     data: { reset_token: token, reset_token_expires_at: expires },
   })
 
-  const baseUrl = process.env.NEXTAUTH_URL ?? process.env.AUTH_URL ?? 'http://localhost:3000'
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.AUTH_URL ?? 'https://pms.emb.global'
   const resetUrl = `${baseUrl}/login/reset-password?token=${token}`
 
   try {
