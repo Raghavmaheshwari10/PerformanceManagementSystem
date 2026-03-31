@@ -135,6 +135,79 @@
   --body-size: 0.8125rem; /* 13px */
 }
 
+/* Apply density variables to actual elements */
+body {
+  font-size: var(--body-size);
+}
+
+.space-y-6 {
+  gap: var(--gap);
+}
+
+/* Table rows respect density */
+table tbody tr td {
+  padding-top: calc(var(--row-height) / 4);
+  padding-bottom: calc(var(--row-height) / 4);
+}
+
+table thead tr th {
+  padding-top: calc(var(--row-height) / 4);
+  padding-bottom: calc(var(--row-height) / 4);
+}
+
+/* Glass cards respect density */
+[data-density="compact"] .glass {
+  padding: 0.75rem;
+}
+
+[data-density="compact"] .glass-strong {
+  padding: 0.75rem;
+}
+
+/* Reduce heading sizes in compact */
+[data-density="compact"] h1 {
+  font-size: 1.375rem;
+}
+
+[data-density="compact"] h2 {
+  font-size: 1rem;
+}
+
+/* Tighter section spacing */
+[data-density="compact"] .space-y-6 > * + * {
+  margin-top: var(--gap);
+}
+
+[data-density="compact"] .space-y-4 > * + * {
+  margin-top: 0.5rem;
+}
+
+[data-density="compact"] .space-y-3 > * + * {
+  margin-top: 0.375rem;
+}
+
+/* Compact grid gaps */
+[data-density="compact"] .gap-4 {
+  gap: 0.5rem;
+}
+
+[data-density="compact"] .gap-6 {
+  gap: 0.75rem;
+}
+
+[data-density="compact"] .p-5 {
+  padding: 0.75rem;
+}
+
+[data-density="compact"] .p-6 {
+  padding: 1rem;
+}
+
+[data-density="compact"] .py-2 {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
 /* =========================================================
    Page entry animations
    ========================================================= */
