@@ -29,6 +29,7 @@ export interface PayoutConfig {
 export interface User {
   id: string
   zimyo_id: string
+  emp_code?: string | null
   email: string
   full_name: string
   role: UserRole

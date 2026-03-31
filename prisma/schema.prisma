@@ -151,6 +151,7 @@ model Department {
 model User {
   id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   zimyo_id      String    @unique
+  emp_code      String?   @unique
   email         String    @unique
   full_name     String
   role          UserRole  @default(employee)

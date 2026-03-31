@@ -108,6 +108,7 @@ export async function createUser(_prev: ActionResult | null, formData: FormData)
   await requireRole(['admin'])
   const admin = await getCurrentUser()
 
+  const emp_code      = (formData.get('emp_code') as string)?.trim() || null
   const email         = (formData.get('email') as string)?.trim()
   const full_name     = (formData.get('full_name') as string)?.trim()
   const role          = formData.get('role') as UserRole
@@ -132,6 +133,7 @@ export async function createUser(_prev: ActionResult | null, formData: FormData)
 
   const newUser = await prisma.user.create({
     data: {
+      emp_code,
       email,
       full_name,
       role: role as import('@prisma/client').UserRole,
@@ -182,6 +184,7 @@ export async function updateUser(_prev: ActionResult | null, formData: FormData)
   const userId = formData.get('user_id') as string
   if (!userId) return { data: null, error: 'User ID missing' }
 
+  const emp_code      = (formData.get('emp_code') as string)?.trim() || null
   const full_name     = (formData.get('full_name') as string)?.trim()
   const role          = formData.get('role') as UserRole
   const department_id = formData.get('department_id') as string || null
@@ -200,6 +203,7 @@ export async function updateUser(_prev: ActionResult | null, formData: FormData)
   await prisma.user.update({
     where: { id: userId },
     data: {
+      emp_code,
       full_name,
       role: role as import('@prisma/client').UserRole,
       department_id,

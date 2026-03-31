@@ -223,6 +223,7 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
                   className="rounded"
                 />
               </th>
+              <th className="p-3 text-left text-muted-foreground">Emp Code</th>
               <th className="p-3 text-left text-muted-foreground">Name</th>
               <th className="p-3 text-left text-muted-foreground">Email</th>
               <th className="p-3 text-left text-muted-foreground">Department</th>
@@ -244,6 +245,7 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
                     className="rounded"
                   />
                 </td>
+                <td className="p-3 text-xs font-mono text-muted-foreground">{u.emp_code ?? '—'}</td>
                 <td className="p-3 font-medium">{u.full_name}</td>
                 <td className="p-3 text-muted-foreground">{u.email}</td>
                 <td className="p-3 text-muted-foreground">{u.department?.name ?? '—'}</td>
@@ -314,7 +316,7 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">No users match your filters</td></tr>
+              <tr><td colSpan={10} className="p-6 text-center text-muted-foreground">No users match your filters</td></tr>
             )}
           </tbody>
         </table>

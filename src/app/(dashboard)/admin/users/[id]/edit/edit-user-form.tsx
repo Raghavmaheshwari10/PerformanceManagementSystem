@@ -6,6 +6,7 @@ import { SubmitButton } from '@/components/submit-button'
 
 interface EditableUser {
   id: string
+  emp_code: string | null
   email: string
   full_name: string
   role: string
@@ -42,7 +43,11 @@ export function EditUserForm({ user, departments, managers, assignedDeptIds }: P
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-1">
+            <label className="text-xs font-medium">Emp Code</label>
+            <input name="emp_code" defaultValue={user.emp_code ?? ''} placeholder="e.g. EMB001" className="w-full rounded border bg-background px-3 py-2 text-sm" />
+          </div>
           <div className="space-y-1">
             <label className="text-xs font-medium">Full Name *</label>
             <input name="full_name" defaultValue={user.full_name} required className="w-full rounded border bg-background px-3 py-2 text-sm" />

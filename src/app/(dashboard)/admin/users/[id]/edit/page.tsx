@@ -11,7 +11,7 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
   const [user, departments, managers, hrbpDepts] = await Promise.all([
     prisma.user.findUnique({
       where: { id },
-      select: { id: true, email: true, full_name: true, role: true, department_id: true, designation: true, variable_pay: true, manager_id: true, is_also_employee: true, is_active: true },
+      select: { id: true, emp_code: true, email: true, full_name: true, role: true, department_id: true, designation: true, variable_pay: true, manager_id: true, is_also_employee: true, is_active: true },
     }),
     prisma.department.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true } }),
     prisma.user.findMany({
