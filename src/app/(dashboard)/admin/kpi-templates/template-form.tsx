@@ -41,7 +41,7 @@ export function TemplateForm({ action, defaultValues = {} }: Props) {
           className="w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="category">Category</Label>
           <select id="category" name="category" defaultValue={defaultValues.category ?? 'performance'}
@@ -60,10 +60,6 @@ export function TemplateForm({ action, defaultValues = {} }: Props) {
             <option value="boolean">Boolean</option>
             <option value="rating">Rating (1-5)</option>
           </select>
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="sort_order">Sort Order</Label>
-          <Input id="sort_order" name="sort_order" type="number" defaultValue={defaultValues.sort_order ?? 0} />
         </div>
       </div>
 
