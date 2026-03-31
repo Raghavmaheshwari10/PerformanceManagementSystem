@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { toggleTemplateActive } from './actions'
+import { toTitleCase } from '@/lib/constants'
 import type { KpiTemplate } from '@/lib/types'
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -56,7 +57,7 @@ export default async function KpiTemplatesPage({
       {Object.entries(grouped).map(([slug, items]) => (
         <div key={slug} className="rounded-lg border">
           <div className="px-4 py-2 bg-muted/50 border-b">
-            <h2 className="font-semibold text-sm capitalize">{slug.replace(/_/g, ' ')}</h2>
+            <h2 className="font-semibold text-sm">{toTitleCase(slug)}</h2>
           </div>
           <table className="w-full text-sm">
             <thead>

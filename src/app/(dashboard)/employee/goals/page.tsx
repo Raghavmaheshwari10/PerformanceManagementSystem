@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { GOAL_STATUS_LABELS } from '@/lib/constants'
 import { GoalForm } from './goal-form'
 
 const STATUS_COLORS: Record<string, string> = {
@@ -90,7 +91,7 @@ export default async function EmployeeGoalsPage() {
                           <span className="text-xs bg-muted/50 rounded-full px-2 py-0.5">{String(goal.weight)}%</span>
                         )}
                         <span className={cn('text-xs rounded-full px-2 py-0.5', STATUS_COLORS[goal.status] ?? 'bg-muted/50')}>
-                          {goal.status}
+                          {GOAL_STATUS_LABELS[goal.status] ?? goal.status}
                         </span>
                       </div>
                     </div>

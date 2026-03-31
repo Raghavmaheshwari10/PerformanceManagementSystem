@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole, requireManagerOwnership } from '@/lib/auth'
+import { toTitleCase } from '@/lib/constants'
 import { calculateEmployeeScore } from '@/lib/mis-scoring'
 import { ReviewForm } from './review-form'
 import type { User, Kpi, Kra, Review, Appraisal } from '@/lib/types'
@@ -193,8 +194,8 @@ export default async function ManagerReviewPage({
                     <div key={kra.id} className="rounded-lg border border-border bg-muted/30 backdrop-blur-sm p-3 space-y-2">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-sm font-semibold">{kra.title}</p>
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${catColor}`}>
-                          {kra.category}
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${catColor}`}>
+                          {toTitleCase(kra.category)}
                         </span>
                         {kra.weight != null && (
                           <span className="ml-auto shrink-0 text-xs text-muted-foreground">{kra.weight}%</span>

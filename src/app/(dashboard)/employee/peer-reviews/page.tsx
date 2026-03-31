@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
+import { PEER_REVIEW_STATUS_LABELS } from '@/lib/constants'
 import { PeerRequestForm } from './peer-request-form'
 import { PeerReviewSubmitForm } from './peer-review-submit-form'
 import { PeerReviewActions } from './peer-review-actions'
@@ -85,8 +86,8 @@ export default async function PeerReviewsPage() {
             {myRequests.map(req => (
               <div key={req.id} className="glass p-3 flex justify-between items-center text-sm">
                 <span>{req.peer_user?.full_name ?? 'Unknown'}</span>
-                <span className={`text-xs rounded-full px-2 py-0.5 capitalize ${STATUS_COLORS[req.status] ?? 'bg-muted/50'}`}>
-                  {req.status}
+                <span className={`text-xs rounded-full px-2 py-0.5 ${STATUS_COLORS[req.status] ?? 'bg-muted/50'}`}>
+                  {PEER_REVIEW_STATUS_LABELS[req.status] ?? req.status}
                 </span>
               </div>
             ))}

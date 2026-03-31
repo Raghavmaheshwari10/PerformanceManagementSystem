@@ -33,6 +33,39 @@ export const ROLE_LABELS: Record<string, string> = {
   admin: 'Admin',
 }
 
+export const GOAL_TYPE_LABELS: Record<string, string> = {
+  business: 'Business',
+  development: 'Development',
+  behavior: 'Behavior',
+}
+
+export const GOAL_STATUS_LABELS: Record<string, string> = {
+  draft: 'Draft',
+  submitted: 'Submitted',
+  approved: 'Approved',
+  rejected: 'Rejected',
+  completed: 'Completed',
+  closed: 'Closed',
+}
+
+export const ANSWER_TYPE_LABELS: Record<string, string> = {
+  rating: 'Rating',
+  text: 'Text',
+  mixed: 'Mixed',
+}
+
+export const PEER_REVIEW_STATUS_LABELS: Record<string, string> = {
+  requested: 'Requested',
+  accepted: 'Accepted',
+  declined: 'Declined',
+  submitted: 'Submitted',
+}
+
+/** Convert underscore_separated slugs to Title Case */
+export function toTitleCase(str: string): string {
+  return str.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+}
+
 export const CYCLE_STATUS_ORDER: CycleStatus[] = [
   'draft', 'kpi_setting', 'self_review', 'manager_review', 'calibrating', 'locked', 'published',
 ]

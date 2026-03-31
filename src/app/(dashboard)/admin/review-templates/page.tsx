@@ -3,6 +3,7 @@ import { requireRole } from '@/lib/auth'
 import { TemplateQuestionForm } from './template-question-form'
 import { CreateTemplateForm } from './create-template-form'
 import { deleteReviewTemplate } from './actions'
+import { ANSWER_TYPE_LABELS } from '@/lib/constants'
 import type { Competency } from '@/lib/types'
 
 export default async function ReviewTemplatesPage() {
@@ -48,7 +49,7 @@ export default async function ReviewTemplatesPage() {
                     <li key={q.id} className="flex items-start gap-2 text-sm">
                       <span className="text-muted-foreground shrink-0">{i + 1}.</span>
                       <span className="flex-1">{q.question_text}</span>
-                      <span className="text-xs text-muted-foreground capitalize shrink-0">{q.answer_type}</span>
+                      <span className="text-xs text-muted-foreground shrink-0">{ANSWER_TYPE_LABELS[q.answer_type] ?? q.answer_type}</span>
                     </li>
                   ))}
                 </ol>

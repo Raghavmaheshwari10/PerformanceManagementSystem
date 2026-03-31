@@ -5,6 +5,7 @@ import { AlertCircle, CheckCircle2, Clock, ArrowRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { CYCLE_STATUS_LABELS } from '@/lib/constants'
 
 type ActionState = 'action_required' | 'waiting' | 'complete' | 'no_cycle'
 
@@ -62,8 +63,8 @@ export function CycleActionCard({
             <Badge variant="outline" className="text-xs">
               {ROLE_LABELS[role]}
             </Badge>
-            <Badge variant="secondary" className="text-xs capitalize">
-              {cycleStatus.replace(/_/g, ' ')}
+            <Badge variant="secondary" className="text-xs">
+              {CYCLE_STATUS_LABELS[cycleStatus as keyof typeof CYCLE_STATUS_LABELS] ?? cycleStatus}
             </Badge>
           </div>
         </div>

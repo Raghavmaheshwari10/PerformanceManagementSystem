@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
+import { GOAL_TYPE_LABELS, GOAL_STATUS_LABELS } from '@/lib/constants'
 import { notFound } from 'next/navigation'
 import { GoalProgressForm } from './progress-form'
 import { GoalSubmitButton } from './submit-button'
@@ -27,8 +28,8 @@ export default async function GoalDetailPage({ params }: { params: Promise<{ id:
       </div>
 
       <div className="grid grid-cols-2 gap-3 text-sm">
-        <div><span className="text-muted-foreground">Type</span><p className="font-medium capitalize">{goal.goal_type}</p></div>
-        <div><span className="text-muted-foreground">Status</span><p className="font-medium capitalize">{goal.status}</p></div>
+        <div><span className="text-muted-foreground">Type</span><p className="font-medium">{GOAL_TYPE_LABELS[goal.goal_type] ?? goal.goal_type}</p></div>
+        <div><span className="text-muted-foreground">Status</span><p className="font-medium">{GOAL_STATUS_LABELS[goal.status] ?? goal.status}</p></div>
         <div><span className="text-muted-foreground">Weight</span><p className="font-medium">{goal.weight ? `${goal.weight}%` : '—'}</p></div>
         <div><span className="text-muted-foreground">Due</span><p className="font-medium">{goal.due_date ? String(goal.due_date).split('T')[0] : '—'}</p></div>
         {goal.target_value && (

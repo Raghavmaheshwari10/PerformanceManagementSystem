@@ -5,6 +5,7 @@ import { approveGoal, rejectGoal } from './actions'
 import { SubmitButton } from '@/components/submit-button'
 import { useToast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
+import { GOAL_TYPE_LABELS, GOAL_STATUS_LABELS } from '@/lib/constants'
 import type { ActionResult, Goal } from '@/lib/types'
 
 const INITIAL: ActionResult = { data: null, error: null }
@@ -44,10 +45,10 @@ export function GoalApprovalRow({ goal }: { goal: Goal }) {
         <div>
           <p className="font-medium">{goal.title}</p>
           {goal.description && <p className="text-xs text-muted-foreground">{goal.description}</p>}
-          <p className="text-xs text-muted-foreground mt-1 capitalize">{goal.goal_type} · Weight: {goal.weight ?? '—'}%</p>
+          <p className="text-xs text-muted-foreground mt-1">{GOAL_TYPE_LABELS[goal.goal_type] ?? goal.goal_type} · Weight: {goal.weight ?? '—'}%</p>
         </div>
         <span className={cn('text-xs rounded-full px-2 py-0.5 shrink-0', STATUS_COLORS[goal.status] ?? 'bg-muted')}>
-          {goal.status}
+          {GOAL_STATUS_LABELS[goal.status] ?? goal.status}
         </span>
       </div>
 

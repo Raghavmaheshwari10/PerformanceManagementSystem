@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
+import { toTitleCase } from '@/lib/constants'
 import Link from 'next/link'
 import { SyncButton } from './sync-button'
 
@@ -122,7 +123,7 @@ export default async function AdminMisPage(props: {
                     : null
                   return (
                     <tr key={log.id} className="border-b border-border">
-                      <td className="p-3 capitalize">{log.sync_type}</td>
+                      <td className="p-3">{toTitleCase(log.sync_type)}</td>
                       <td className="p-3">
                         <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
                           log.status === 'success' ? 'bg-emerald-500/20 text-emerald-400'
@@ -167,9 +168,9 @@ export default async function AdminMisPage(props: {
                 <Link
                   key={c.category}
                   href={`/admin/mis?category=${c.category}${filterLevel ? `&level=${filterLevel}` : ''}`}
-                  className={`rounded-md px-2.5 py-1 text-xs font-medium capitalize transition ${filterCategory === c.category ? 'bg-primary/20 text-primary' : 'glass-interactive'}`}
+                  className={`rounded-md px-2.5 py-1 text-xs font-medium transition ${filterCategory === c.category ? 'bg-primary/20 text-primary' : 'glass-interactive'}`}
                 >
-                  {c.category} ({c._count})
+                  {toTitleCase(c.category)} ({c._count})
                 </Link>
               ))}
             </div>
@@ -187,9 +188,9 @@ export default async function AdminMisPage(props: {
                 <Link
                   key={l.level}
                   href={`/admin/mis?level=${l.level}${filterCategory ? `&category=${filterCategory}` : ''}`}
-                  className={`rounded-md px-2.5 py-1 text-xs font-medium capitalize transition ${filterLevel === l.level ? 'bg-primary/20 text-primary' : 'glass-interactive'}`}
+                  className={`rounded-md px-2.5 py-1 text-xs font-medium transition ${filterLevel === l.level ? 'bg-primary/20 text-primary' : 'glass-interactive'}`}
                 >
-                  {l.level} ({l._count})
+                  {toTitleCase(l.level)} ({l._count})
                 </Link>
               ))}
             </div>
@@ -221,8 +222,8 @@ export default async function AdminMisPage(props: {
                   return (
                     <tr key={t.id} className="border-b border-border">
                       <td className="p-3 font-medium">{t.metric_name}</td>
-                      <td className="p-3 text-muted-foreground capitalize">{t.category}</td>
-                      <td className="p-3 text-muted-foreground capitalize">{t.level}</td>
+                      <td className="p-3 text-muted-foreground">{toTitleCase(t.category)}</td>
+                      <td className="p-3 text-muted-foreground">{toTitleCase(t.level)}</td>
                       <td className="p-3 text-muted-foreground">
                         {t.employee?.full_name ?? t.department?.name ?? '—'}
                       </td>

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
+import { toTitleCase } from '@/lib/constants'
 import type { AopTarget, MisActual } from '@prisma/client'
 
 /* ── Category styling ── */
@@ -163,7 +164,7 @@ export default async function EmployeeMisPage(props: {
               key={cat}
               href={cat === 'all' ? '/employee/mis' : `/employee/mis?category=${cat}`}
               className={`
-                rounded-full px-3 py-1 text-xs font-semibold capitalize transition-all
+                rounded-full px-3 py-1 text-xs font-semibold transition-all
                 ${isActive
                   ? 'bg-white/15 text-white ring-1 ring-white/20'
                   : style
@@ -172,7 +173,7 @@ export default async function EmployeeMisPage(props: {
                 }
               `}
             >
-              {cat}
+              {toTitleCase(cat)}
             </Link>
           )
         })}
@@ -209,8 +210,8 @@ export default async function EmployeeMisPage(props: {
                   <div className="space-y-1">
                     <p className="font-semibold text-sm leading-snug">{target.metric_name}</p>
                     <div className="flex items-center gap-2">
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${catStyle.bg} ${catStyle.text}`}>
-                        {target.category}
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${catStyle.bg} ${catStyle.text}`}>
+                        {toTitleCase(target.category)}
                       </span>
                       <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
                         {target.unit}{target.currency ? ` (${target.currency})` : ''}

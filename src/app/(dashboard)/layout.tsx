@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { Sidebar } from '@/components/sidebar'
 import { CommandPaletteProvider } from '@/components/command-palette'
 import { NotificationBell } from '@/components/notification-bell'
+import { Greeting } from '@/components/greeting'
 import { ClientProviders } from '@/components/client-providers'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -40,8 +41,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
   })
 
   const firstName = user.full_name.split(' ')[0]
-  const hour = new Date().getHours()
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
   return (
     <ClientProviders>
@@ -59,9 +58,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
                   {firstName[0]}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">
-                    {greeting}, {firstName}
-                  </p>
+                  <Greeting name={firstName} />
                   <p className="text-xs text-slate-400">{user.role === 'hrbp' ? 'HRBP' : user.role.charAt(0).toUpperCase() + user.role.slice(1)} Dashboard</p>
                 </div>
               </div>

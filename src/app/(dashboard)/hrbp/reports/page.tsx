@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
+import { CYCLE_STATUS_LABELS } from '@/lib/constants'
 
 const TIER_LABELS: Record<string, string> = {
   FEE: 'Outstanding',
@@ -105,7 +106,7 @@ export default async function HrReportsPage() {
                   ))
                 )}
               </div>
-              <p className="text-xs text-muted-foreground capitalize">{cycle.quarter} {cycle.year} · {cycle.status}</p>
+              <p className="text-xs text-muted-foreground">{cycle.quarter} {cycle.year} · {CYCLE_STATUS_LABELS[cycle.status] ?? cycle.status}</p>
             </div>
           </div>
 
