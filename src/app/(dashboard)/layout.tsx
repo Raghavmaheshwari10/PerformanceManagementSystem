@@ -53,7 +53,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             isAlsoEmployee={user.is_also_employee ?? false}
           />
           <div className="flex flex-1 flex-col overflow-hidden gradient-mesh noise-overlay">
-            <header className="flex items-center justify-between glass-strong border-b border-[rgba(255,255,255,0.06)] px-6 py-2.5 lg:px-8">
+            <header className="flex items-center justify-between glass-strong border-b border-border px-6 py-2.5 lg:px-8">
               <div className="hidden lg:block">
                 <p className="text-sm font-medium text-foreground">
                   {greeting}, {firstName}

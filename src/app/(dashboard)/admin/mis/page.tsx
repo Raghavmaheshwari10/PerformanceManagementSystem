@@ -103,13 +103,13 @@ export default async function AdminMisPage(props: {
         <div className="glass overflow-hidden rounded-xl">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/8 bg-white/[0.03]">
-                <th className="p-3 text-left text-white/50">Type</th>
-                <th className="p-3 text-left text-white/50">Status</th>
-                <th className="p-3 text-right text-white/50">Synced</th>
-                <th className="p-3 text-right text-white/50">Failed</th>
-                <th className="p-3 text-left text-white/50">Started</th>
-                <th className="p-3 text-left text-white/50">Duration</th>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="p-3 text-left text-muted-foreground">Type</th>
+                <th className="p-3 text-left text-muted-foreground">Status</th>
+                <th className="p-3 text-right text-muted-foreground">Synced</th>
+                <th className="p-3 text-right text-muted-foreground">Failed</th>
+                <th className="p-3 text-left text-muted-foreground">Started</th>
+                <th className="p-3 text-left text-muted-foreground">Duration</th>
               </tr>
             </thead>
             <tbody>
@@ -121,7 +121,7 @@ export default async function AdminMisPage(props: {
                     ? Math.round((new Date(log.completed_at).getTime() - new Date(log.started_at).getTime()) / 1000)
                     : null
                   return (
-                    <tr key={log.id} className="border-b border-white/5">
+                    <tr key={log.id} className="border-b border-border">
                       <td className="p-3 capitalize">{log.sync_type}</td>
                       <td className="p-3">
                         <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -135,10 +135,10 @@ export default async function AdminMisPage(props: {
                       </td>
                       <td className="p-3 text-right">{log.records_synced}</td>
                       <td className="p-3 text-right">{log.records_failed}</td>
-                      <td className="p-3 text-white/70">
+                      <td className="p-3 text-muted-foreground">
                         {new Date(log.started_at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
                       </td>
-                      <td className="p-3 text-white/70">{duration != null ? `${duration}s` : '...'}</td>
+                      <td className="p-3 text-muted-foreground">{duration != null ? `${duration}s` : '...'}</td>
                     </tr>
                   )
                 })
@@ -199,15 +199,15 @@ export default async function AdminMisPage(props: {
         <div className="glass overflow-hidden rounded-xl">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/8 bg-white/[0.03]">
-                <th className="p-3 text-left text-white/50">Metric</th>
-                <th className="p-3 text-left text-white/50">Category</th>
-                <th className="p-3 text-left text-white/50">Level</th>
-                <th className="p-3 text-left text-white/50">Department / Employee</th>
-                <th className="p-3 text-right text-white/50">Annual Target</th>
-                <th className="p-3 text-right text-white/50">YTD Actual</th>
-                <th className="p-3 text-right text-white/50">Achievement</th>
-                <th className="p-3 text-center text-white/50">RAG</th>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="p-3 text-left text-muted-foreground">Metric</th>
+                <th className="p-3 text-left text-muted-foreground">Category</th>
+                <th className="p-3 text-left text-muted-foreground">Level</th>
+                <th className="p-3 text-left text-muted-foreground">Department / Employee</th>
+                <th className="p-3 text-right text-muted-foreground">Annual Target</th>
+                <th className="p-3 text-right text-muted-foreground">YTD Actual</th>
+                <th className="p-3 text-right text-muted-foreground">Achievement</th>
+                <th className="p-3 text-center text-muted-foreground">RAG</th>
               </tr>
             </thead>
             <tbody>
@@ -219,11 +219,11 @@ export default async function AdminMisPage(props: {
                   const ytd = Number(t.ytd_actual ?? 0)
                   const achievement = annual > 0 ? (ytd / annual) * 100 : 0
                   return (
-                    <tr key={t.id} className="border-b border-white/5">
+                    <tr key={t.id} className="border-b border-border">
                       <td className="p-3 font-medium">{t.metric_name}</td>
-                      <td className="p-3 text-white/70 capitalize">{t.category}</td>
-                      <td className="p-3 text-white/70 capitalize">{t.level}</td>
-                      <td className="p-3 text-white/70">
+                      <td className="p-3 text-muted-foreground capitalize">{t.category}</td>
+                      <td className="p-3 text-muted-foreground capitalize">{t.level}</td>
+                      <td className="p-3 text-muted-foreground">
                         {t.employee?.full_name ?? t.department?.name ?? '—'}
                       </td>
                       <td className="p-3 text-right">

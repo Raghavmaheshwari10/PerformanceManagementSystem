@@ -133,15 +133,15 @@ export default async function ManagerMisPage(props: {
                 {empTargets.length === 0 ? (
                   <p className="px-4 pb-4 text-sm text-muted-foreground italic">No AOP targets assigned</p>
                 ) : (
-                  <div className="overflow-hidden border-t border-white/5">
+                  <div className="overflow-hidden border-t border-border">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="bg-white/[0.02]">
-                          <th className="p-3 text-left text-white/50">Metric</th>
-                          <th className="p-3 text-right text-white/50">Annual Target</th>
-                          <th className="p-3 text-right text-white/50">YTD Actual</th>
-                          <th className="p-3 text-right text-white/50">Achievement</th>
-                          <th className="p-3 text-center text-white/50">Status</th>
+                        <tr className="bg-muted/30">
+                          <th className="p-3 text-left text-muted-foreground">Metric</th>
+                          <th className="p-3 text-right text-muted-foreground">Annual Target</th>
+                          <th className="p-3 text-right text-muted-foreground">YTD Actual</th>
+                          <th className="p-3 text-right text-muted-foreground">Achievement</th>
+                          <th className="p-3 text-center text-muted-foreground">Status</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -150,7 +150,7 @@ export default async function ManagerMisPage(props: {
                           const ytd = Number(t.ytd_actual ?? 0)
                           const ach = annual > 0 ? (ytd / annual) * 100 : 0
                           return (
-                            <tr key={t.id} className="border-b border-white/5">
+                            <tr key={t.id} className="border-b border-border">
                               <td className="p-3 font-medium">{t.metric_name}</td>
                               <td className="p-3 text-right">{annual.toLocaleString('en-IN')} {t.unit}</td>
                               <td className="p-3 text-right">{ytd.toLocaleString('en-IN')}</td>

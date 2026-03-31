@@ -115,14 +115,14 @@ export function KpiMisLink({ kpiId, kpiTitle, employeeId, currentMapping }: Prop
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2.5 py-0.5 text-xs font-medium text-muted-foreground hover:bg-white/10 transition-colors">
+        <button className="inline-flex items-center gap-1 rounded-full bg-muted/30 px-2.5 py-0.5 text-xs font-medium text-muted-foreground hover:bg-muted/50 transition-colors">
           <svg className="size-3" viewBox="0 0 16 16" fill="currentColor">
             <path d="M6.354 5.5H4a3 3 0 000 6h3a3 3 0 002.83-4H9.4a2 2 0 01-1.4.58H4a2 2 0 110-4h2.354a4.002 4.002 0 010-1.58zM9 4a4 4 0 11.58 1.5H12a2 2 0 110 4H9.646a4.002 4.002 0 010 1.58H12a3 3 0 100-6H9z" />
           </svg>
           Link to MIS
         </button>
       </DialogTrigger>
-      <DialogContent className="glass border-white/10">
+      <DialogContent className="glass border-border">
         <DialogHeader>
           <DialogTitle>Link KPI to MIS Target</DialogTitle>
         </DialogHeader>
@@ -175,12 +175,12 @@ export function KpiMisLink({ kpiId, kpiTitle, employeeId, currentMapping }: Prop
             </div>
 
             {selectedTarget && (
-              <div className="rounded-lg bg-white/5 p-3 text-sm">
+              <div className="rounded-lg bg-muted/30 p-3 text-sm">
                 <p className="font-medium">
                   {targets.find(t => t.id === selectedTarget)?.metric_name}
                 </p>
                 <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                  <span className={`rounded-full px-2 py-0.5 ${CATEGORY_BADGE[targets.find(t => t.id === selectedTarget)?.category ?? ''] ?? 'bg-white/10 text-muted-foreground'}`}>
+                  <span className={`rounded-full px-2 py-0.5 ${CATEGORY_BADGE[targets.find(t => t.id === selectedTarget)?.category ?? ''] ?? 'bg-muted/50 text-muted-foreground'}`}>
                     {targets.find(t => t.id === selectedTarget)?.category}
                   </span>
                   <span>Target: {targets.find(t => t.id === selectedTarget)?.annual_target} {targets.find(t => t.id === selectedTarget)?.unit}</span>

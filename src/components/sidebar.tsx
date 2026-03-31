@@ -182,7 +182,7 @@ export function Sidebar({
               <button
                 key="help"
                 onClick={() => setHelpOpen(true)}
-                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/70 transition-colors hover:bg-[rgba(255,255,255,0.05)] hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] hover:text-sidebar-accent-foreground"
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/70 transition-colors hover:bg-muted/40 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] hover:text-sidebar-accent-foreground"
               >
                 <Icon className="h-4 w-4 shrink-0" />
                 {item.label}
@@ -199,7 +199,7 @@ export function Sidebar({
                 'flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all',
                 (isActive || isExactActive)
                   ? 'text-sidebar-accent-foreground font-medium shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]'
-                  : 'text-sidebar-foreground/70 hover:bg-[rgba(255,255,255,0.05)] hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] hover:text-sidebar-accent-foreground'
+                  : 'text-sidebar-foreground/70 hover:bg-muted/40 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] hover:text-sidebar-accent-foreground'
               )}
               style={(isActive || isExactActive) ? activeNavStyle : undefined}
             >
@@ -223,12 +223,12 @@ export function Sidebar({
         <DensityToggle />
         <button
           onClick={handleSignOut}
-          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/60 transition-colors hover:bg-[rgba(255,255,255,0.05)] hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] hover:text-sidebar-accent-foreground"
+          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/60 transition-colors hover:bg-muted/40 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] hover:text-sidebar-accent-foreground"
         >
           <LogOut className="h-4 w-4" />
           Sign out
         </button>
-        <div className="flex items-center gap-2.5 px-3 py-2 mt-1 rounded-lg bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)]">
+        <div className="flex items-center gap-2.5 px-3 py-2 mt-1 rounded-lg bg-muted/30 border border-border">
           <UserAvatar name={userName} size="sm" role={role} />
           <div className="min-w-0">
             <p className="text-sm font-medium text-sidebar-foreground truncate">{userName}</p>

@@ -82,7 +82,7 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
         <div className="relative">
           <select
             id="dept-filter"
-            className="glass appearance-none rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 pr-8 text-sm text-white/90 backdrop-blur focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
+            className="glass appearance-none rounded-lg border border-border bg-muted/30 px-3 py-1.5 pr-8 text-sm text-foreground backdrop-blur focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
             defaultValue={selectedDept ?? ''}
             // Client-side navigation via inline script below
             data-cycle-id={cycleId}
@@ -92,7 +92,7 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
               <option key={d.id} value={d.id}>{d.name}</option>
             ))}
           </select>
-          <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-white/40">
+          <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-muted-foreground">
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
           </div>
         </div>
@@ -129,35 +129,35 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
       <div className="glass overflow-hidden" data-tour="override-form">
         <table className="w-full text-sm table-row-hover">
           <thead>
-            <tr className="border-b border-white/8 bg-white/[0.03]">
-              <th className="p-3 text-left text-white/50">Employee</th>
-              <th className="p-3 text-left text-white/50">Department</th>
-              <th className="p-3 text-left text-white/50">Manager Rating</th>
-              <th className="p-3 text-right text-white/50">MIS Score</th>
-              <th className="p-3 text-left text-white/50">Suggested</th>
-              <th className="p-3 text-left text-white/50">Final Rating</th>
+            <tr className="border-b border-border bg-muted/30">
+              <th className="p-3 text-left text-muted-foreground">Employee</th>
+              <th className="p-3 text-left text-muted-foreground">Department</th>
+              <th className="p-3 text-left text-muted-foreground">Manager Rating</th>
+              <th className="p-3 text-right text-muted-foreground">MIS Score</th>
+              <th className="p-3 text-left text-muted-foreground">Suggested</th>
+              <th className="p-3 text-left text-muted-foreground">Final Rating</th>
               {['locked', 'published'].includes(typedCycle?.status ?? '') && (
                 <>
-                  <th className="p-3 text-right text-white/50">Multiplier</th>
-                  <th className="p-3 text-right text-white/50">Payout</th>
+                  <th className="p-3 text-right text-muted-foreground">Multiplier</th>
+                  <th className="p-3 text-right text-muted-foreground">Payout</th>
                 </>
               )}
-              {isCalibrating && <th className="p-3 text-left text-white/50">Override</th>}
+              {isCalibrating && <th className="p-3 text-left text-muted-foreground">Override</th>}
             </tr>
           </thead>
           <tbody>
             {rows.map(a => {
               const mismatch = a.suggested_rating && a.manager_rating && a.suggested_rating !== a.manager_rating
               return (
-              <tr key={a.id} className={`border-b border-white/5 ${mismatch ? 'bg-amber-500/[0.04]' : ''}`}>
+              <tr key={a.id} className={`border-b border-border ${mismatch ? 'bg-amber-500/[0.04]' : ''}`}>
                 <td className="p-3">{a.employee?.full_name}</td>
-                <td className="p-3 text-white/70">{a.employee?.department?.name ?? '—'}</td>
-                <td className="p-3 text-white/70">{a.manager_rating}</td>
-                <td className="p-3 text-right text-white/70">{a.mis_score != null ? Number(a.mis_score).toFixed(1) + '%' : '—'}</td>
+                <td className="p-3 text-muted-foreground">{a.employee?.department?.name ?? '—'}</td>
+                <td className="p-3 text-muted-foreground">{a.manager_rating}</td>
+                <td className="p-3 text-right text-muted-foreground">{a.mis_score != null ? Number(a.mis_score).toFixed(1) + '%' : '—'}</td>
                 <td className="p-3">
                   {a.suggested_rating ? (
                     <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                      a.suggested_rating !== a.manager_rating ? 'bg-amber-500/20 text-amber-400' : 'bg-white/10 text-white/70'
+                      a.suggested_rating !== a.manager_rating ? 'bg-amber-500/20 text-amber-400' : 'bg-muted/50 text-muted-foreground'
                     }`}>
                       {a.suggested_rating}
                     </span>
@@ -166,8 +166,8 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
                 <td className="p-3 font-medium">{a.final_rating ?? a.manager_rating}</td>
                 {['locked', 'published'].includes(typedCycle?.status ?? '') && (
                   <>
-                    <td className="p-3 text-right text-white/70">x{Number(a.payout_multiplier)?.toFixed(3) ?? '—'}</td>
-                    <td className="p-3 text-right text-white/70">Rs.{(Number(a.payout_amount) ?? 0).toLocaleString('en-IN')}</td>
+                    <td className="p-3 text-right text-muted-foreground">x{Number(a.payout_multiplier)?.toFixed(3) ?? '—'}</td>
+                    <td className="p-3 text-right text-muted-foreground">Rs.{(Number(a.payout_amount) ?? 0).toLocaleString('en-IN')}</td>
                   </>
                 )}
                 {isCalibrating && (
@@ -185,7 +185,7 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
           </tbody>
           {['locked', 'published'].includes(typedCycle?.status ?? '') && (
             <tfoot>
-              <tr className="border-t border-white/8 font-semibold bg-white/[0.02]">
+              <tr className="border-t border-border font-semibold bg-muted/30">
                 <td colSpan={7} className="py-2 pr-3 text-right text-sm">Total payout</td>
                 <td className="py-2 pr-3 text-right text-sm">
                   Rs.{rows.reduce((s, a) => s + (Number(a.payout_amount) ?? 0), 0).toLocaleString('en-IN')}

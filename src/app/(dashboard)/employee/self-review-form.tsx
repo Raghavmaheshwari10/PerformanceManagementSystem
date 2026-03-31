@@ -120,7 +120,7 @@ export function SelfReviewForm({ cycleId, review, questions = [], existingRespon
 
         {/* ── Competency Assessment ── */}
         {questions.length > 0 && (
-          <div className="space-y-4 rounded border border-white/10 p-4">
+          <div className="space-y-4 rounded border border-border p-4">
             <div>
               <h3 className="text-base font-semibold">Competency Assessment</h3>
               <p className="text-xs text-muted-foreground mt-1">
@@ -131,7 +131,7 @@ export function SelfReviewForm({ cycleId, review, questions = [], existingRespon
             {questions.map(q => {
               const existing = existingResponses[q.id]
               return (
-                <div key={q.id} className="space-y-2 border-t border-white/5 pt-3">
+                <div key={q.id} className="space-y-2 border-t border-border pt-3">
                   <div>
                     <p className="text-sm font-medium">{q.question_text}</p>
                     {q.competency && (
@@ -156,7 +156,7 @@ export function SelfReviewForm({ cycleId, review, questions = [], existingRespon
                               className="peer sr-only"
                               required={q.is_required}
                             />
-                            <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 text-sm font-semibold transition-all peer-checked:border-blue-500 peer-checked:bg-blue-500/20 peer-checked:text-blue-400 hover:bg-white/5" title={STAR_LABELS[val - 1]}>
+                            <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-sm font-semibold transition-all peer-checked:border-blue-500 peer-checked:bg-blue-500/20 peer-checked:text-blue-400 hover:bg-muted/30" title={STAR_LABELS[val - 1]}>
                               {val}
                             </span>
                           </label>

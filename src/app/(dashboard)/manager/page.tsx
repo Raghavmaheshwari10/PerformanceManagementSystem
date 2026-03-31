@@ -183,31 +183,31 @@ export default async function ManagerTeamPage() {
   return (
     <div className="space-y-6">
       {/* Page header */}
-      <h1 className="text-2xl font-bold text-white">My Team</h1>
+      <h1 className="text-2xl font-bold text-foreground">My Team</h1>
 
       {/* No active cycle empty state */}
       {!hasCycles && (
         <div className="glass flex flex-col items-center justify-center py-12 text-center">
-          <div className="rounded-full bg-white/5 p-4 mb-4">
-            <svg className="h-8 w-8 text-white/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <div className="rounded-full bg-muted/30 p-4 mb-4">
+            <svg className="h-8 w-8 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-white mb-1">No Active Cycle</h3>
-          <p className="text-sm text-white/50 max-w-sm">There&apos;s no review cycle in progress. Your team&apos;s reviews will appear here when the next cycle starts.</p>
+          <h3 className="text-lg font-semibold text-foreground mb-1">No Active Cycle</h3>
+          <p className="text-sm text-muted-foreground max-w-sm">There&apos;s no review cycle in progress. Your team&apos;s reviews will appear here when the next cycle starts.</p>
         </div>
       )}
 
       {/* No direct reports empty state */}
       {employees.length === 0 && (
         <div className="glass flex flex-col items-center justify-center py-12 text-center">
-          <div className="rounded-full bg-white/5 p-4 mb-4">
-            <svg className="h-8 w-8 text-white/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <div className="rounded-full bg-muted/30 p-4 mb-4">
+            <svg className="h-8 w-8 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100-8 4 4 0 000 8zm14 14v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-white mb-1">No Direct Reports</h3>
-          <p className="text-sm text-white/50 max-w-sm">No team members are assigned to you yet. Contact your admin to set up your team.</p>
+          <h3 className="text-lg font-semibold text-foreground mb-1">No Direct Reports</h3>
+          <p className="text-sm text-muted-foreground max-w-sm">No team members are assigned to you yet. Contact your admin to set up your team.</p>
         </div>
       )}
 
@@ -223,20 +223,20 @@ export default async function ManagerTeamPage() {
             {/* Cycle section header (only shown in multi-cycle mode) */}
             {isMultiCycle && (
               <div className="glass p-4 flex items-center gap-3">
-                <h2 className="text-lg font-semibold text-white">{activeCycle.name}</h2>
+                <h2 className="text-lg font-semibold text-foreground">{activeCycle.name}</h2>
                 {departmentNames.length > 0 ? (
                   <div className="flex flex-wrap gap-1.5">
                     {departmentNames.map(name => (
                       <span
                         key={name}
-                        className="glass-interactive rounded-full px-2.5 py-0.5 text-xs text-white/60"
+                        className="glass-interactive rounded-full px-2.5 py-0.5 text-xs text-muted-foreground"
                       >
                         {name}
                       </span>
                     ))}
                   </div>
                 ) : (
-                  <span className="glass-interactive rounded-full px-2.5 py-0.5 text-xs text-white/60">
+                  <span className="glass-interactive rounded-full px-2.5 py-0.5 text-xs text-muted-foreground">
                     Org-wide
                   </span>
                 )}
@@ -261,31 +261,31 @@ export default async function ManagerTeamPage() {
               >
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <p className="text-sm text-white/50 mb-1">Review Progress</p>
-                    <p className="text-3xl font-bold text-white">
+                    <p className="text-sm text-muted-foreground mb-1">Review Progress</p>
+                    <p className="text-3xl font-bold text-foreground">
                       {submitted}
-                      <span className="text-lg text-white/40 font-normal">/{totalReviews}</span>
+                      <span className="text-lg text-muted-foreground font-normal">/{totalReviews}</span>
                     </p>
                   </div>
                   <div className="text-right">
                     {isOverdue && remaining > 0 ? (
                       <p className="text-sm font-semibold text-red-400">
                         {remaining} review{remaining !== 1 ? 's' : ''} overdue
-                        <span className="block text-xs text-white/40 font-normal mt-0.5">
+                        <span className="block text-xs text-muted-foreground font-normal mt-0.5">
                           Deadline was {Math.abs(daysLeft!)} day{Math.abs(daysLeft!) !== 1 ? 's' : ''} ago
                         </span>
                       </p>
                     ) : submitted === totalReviews ? (
                       <p className="text-sm font-semibold text-emerald-400">All reviews submitted</p>
                     ) : daysLeft !== null && daysLeft >= 0 ? (
-                      <p className="text-sm text-white/50">
+                      <p className="text-sm text-muted-foreground">
                         {daysLeft} day{daysLeft !== 1 ? 's' : ''} remaining
                       </p>
                     ) : null}
                   </div>
                 </div>
                 {/* Animated progress bar */}
-                <div className="h-2.5 w-full rounded-full bg-white/10 overflow-hidden">
+                <div className="h-2.5 w-full rounded-full bg-muted/50 overflow-hidden">
                   <div
                     className={cn(
                       'h-full rounded-full transition-all',
@@ -297,7 +297,7 @@ export default async function ManagerTeamPage() {
                     }}
                   />
                 </div>
-                <p className="text-xs text-white/40 mt-2">{completionPct}% complete</p>
+                <p className="text-xs text-muted-foreground mt-2">{completionPct}% complete</p>
               </div>
             )}
 
@@ -321,7 +321,7 @@ export default async function ManagerTeamPage() {
                     ? 'ring-emerald-500/70'
                     : needsReview
                       ? 'ring-amber-400/70'
-                      : 'ring-white/20'
+                      : 'ring-border'
 
                   return (
                     <div
@@ -337,15 +337,15 @@ export default async function ManagerTeamPage() {
                       <div className="flex items-center gap-3">
                         <div
                           className={cn(
-                            'flex items-center justify-center w-11 h-11 rounded-full ring-2 text-sm font-semibold bg-white/10 text-white shrink-0',
+                            'flex items-center justify-center w-11 h-11 rounded-full ring-2 text-sm font-semibold bg-muted/50 text-foreground shrink-0',
                             ringColor,
                           )}
                         >
                           {getInitials(emp.full_name)}
                         </div>
                         <div className="min-w-0">
-                          <p className="font-medium text-white truncate">{emp.full_name}</p>
-                          <p className="text-xs text-white/40 truncate">{emp.department?.name ?? '—'}</p>
+                          <p className="font-medium text-foreground truncate">{emp.full_name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{emp.department?.name ?? '—'}</p>
                         </div>
                       </div>
 
@@ -357,19 +357,19 @@ export default async function ManagerTeamPage() {
                             ? 'text-emerald-300'
                             : selfReviewStatus === 'draft'
                               ? 'text-blue-300'
-                              : 'text-white/50',
+                              : 'text-muted-foreground',
                         )}>
                           Self: {selfReviewStatus === 'submitted' ? '✓ Done' : selfReviewStatus === 'draft' ? 'Draft' : 'Pending'}
                         </span>
                         <span className={cn(
                           'glass-interactive rounded-full px-2.5 py-1',
-                          reviewDone ? 'text-emerald-300' : 'text-white/50',
+                          reviewDone ? 'text-emerald-300' : 'text-muted-foreground',
                         )}>
                           Mgr: {reviewDone ? '✓ Done' : 'Pending'}
                         </span>
                         <span className={cn(
                           'glass-interactive rounded-full px-2.5 py-1',
-                          kpiCount > 0 ? 'text-white/70' : 'text-red-400',
+                          kpiCount > 0 ? 'text-muted-foreground' : 'text-red-400',
                         )}>
                           {kpiCount > 0 ? `${kpiCount} KPI${kpiCount !== 1 ? 's' : ''}` : 'No KPIs'}
                         </span>
@@ -377,7 +377,7 @@ export default async function ManagerTeamPage() {
 
                       {/* Mini progress bar */}
                       <div>
-                        <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
+                        <div className="h-1.5 w-full rounded-full bg-muted/50 overflow-hidden">
                           <div
                             className="h-full rounded-full bg-[oklch(0.65_0.22_265)] transition-all"
                             style={{
@@ -392,13 +392,13 @@ export default async function ManagerTeamPage() {
                       <div className="flex gap-2 mt-auto">
                         <Link
                           href={`/manager/${emp.id}/goals?cycle=${activeCycle.id}`}
-                          className="glass-interactive rounded-md px-3 py-1.5 text-xs text-white/70 hover:text-white transition-colors"
+                          className="glass-interactive rounded-md px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
                         >
                           Goals
                         </Link>
                         <Link
                           href={`/manager/${emp.id}/kpis?cycle=${activeCycle.id}`}
-                          className="glass-interactive rounded-md px-3 py-1.5 text-xs text-white/70 hover:text-white transition-colors"
+                          className="glass-interactive rounded-md px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
                           {...(isFirstRow ? { 'data-tour': 'kpi-button' } : {})}
                         >
                           KPIs
@@ -409,7 +409,7 @@ export default async function ManagerTeamPage() {
                             'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
                             needsReview
                               ? 'glow-button'
-                              : 'glass-interactive text-white/70 hover:text-white',
+                              : 'glass-interactive text-muted-foreground hover:text-foreground',
                           )}
                           {...(isFirstRow ? { 'data-tour': 'review-button' } : {})}
                         >

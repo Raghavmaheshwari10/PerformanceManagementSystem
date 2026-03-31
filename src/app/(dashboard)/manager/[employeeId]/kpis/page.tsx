@@ -168,7 +168,7 @@ export default async function KpiSettingPage({
           </div>
           <div className="h-px flex-1 bg-border" />
           <div className="flex items-center gap-2">
-            <span className={`flex size-7 items-center justify-center rounded-full text-xs font-bold ${kras.length > 0 ? 'bg-primary text-primary-foreground' : 'bg-white/10 text-muted-foreground'}`}>2</span>
+            <span className={`flex size-7 items-center justify-center rounded-full text-xs font-bold ${kras.length > 0 ? 'bg-primary text-primary-foreground' : 'bg-muted/50 text-muted-foreground'}`}>2</span>
             <div>
               <span className={`text-sm font-medium ${kras.length > 0 ? '' : 'text-muted-foreground'}`}>Add KPIs</span>
               <p className="text-[11px] text-muted-foreground leading-tight">Specific measurable targets</p>
@@ -206,7 +206,7 @@ export default async function KpiSettingPage({
       {/* Collapsible "Add another KRA" when KRAs already exist */}
       {cycleId && !isFinalized && kras.length > 0 && (
         <details className="glass rounded-xl group">
-          <summary className="cursor-pointer p-4 flex items-center gap-2 text-sm font-semibold hover:bg-white/5 rounded-xl list-none [&::-webkit-details-marker]:hidden">
+          <summary className="cursor-pointer p-4 flex items-center gap-2 text-sm font-semibold hover:bg-muted/40 rounded-xl list-none [&::-webkit-details-marker]:hidden">
             <svg xmlns="http://www.w3.org/2000/svg" className="size-4 text-primary transition-transform group-open:rotate-45" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
@@ -215,7 +215,7 @@ export default async function KpiSettingPage({
               <span className="ml-auto text-xs font-normal text-amber-400">{100 - totalKraWeight}% weight remaining</span>
             )}
           </summary>
-          <form action={addKra as unknown as (fd: FormData) => Promise<void>} className="px-5 pb-5 space-y-4 border-t border-white/5 pt-4">
+          <form action={addKra as unknown as (fd: FormData) => Promise<void>} className="px-5 pb-5 space-y-4 border-t border-border pt-4">
             <input type="hidden" name="cycle_id" value={cycleId} />
             <input type="hidden" name="employee_id" value={employeeId} />
             {kraFormFields}
@@ -238,7 +238,7 @@ export default async function KpiSettingPage({
             {/* KRA Header */}
             <div className="flex items-center justify-between gap-3 p-5 pb-3">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="flex size-6 items-center justify-center rounded-full bg-white/10 text-xs font-bold text-muted-foreground">
+                <span className="flex size-6 items-center justify-center rounded-full bg-muted/50 text-xs font-bold text-muted-foreground">
                   {index + 1}
                 </span>
                 <h2 className="text-lg font-semibold">{kra.title}</h2>
@@ -246,7 +246,7 @@ export default async function KpiSettingPage({
                   {kra.category}
                 </span>
                 {kra.weight != null && (
-                  <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                  <span className="rounded-full bg-muted/50 px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
                     {String(kra.weight)}% weight
                   </span>
                 )}
@@ -272,7 +272,7 @@ export default async function KpiSettingPage({
                   {kraKpiWeight}% / 100%{!isFull && ` \u2022 ${remaining}% remaining`}
                 </span>
               </div>
-              <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+              <div className="h-1.5 rounded-full bg-muted/50 overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all ${isFull ? 'bg-emerald-500/70' : 'bg-primary/60'}`}
                   style={{ width: `${Math.min(100, kraKpiWeight)}%` }}
@@ -298,7 +298,7 @@ export default async function KpiSettingPage({
                       currentMapping={getMisMapping(kpi)}
                     />
                     {kpi.weight != null && (
-                      <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-muted-foreground">
+                      <span className="rounded-full bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground">
                         {String(kpi.weight)}%
                       </span>
                     )}
@@ -314,7 +314,7 @@ export default async function KpiSettingPage({
 
             {/* Add KPI form — hidden when finalized or weight is fully allocated */}
             {cycleId && !isFinalized && (
-              <div className="border-t border-white/5 mt-3 p-5">
+              <div className="border-t border-border mt-3 p-5">
                 {isFull ? (
                   <div className="flex items-center gap-2 text-sm text-emerald-400">
                     <svg xmlns="http://www.w3.org/2000/svg" className="size-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -384,7 +384,7 @@ export default async function KpiSettingPage({
                     currentMapping={getMisMapping(kpi)}
                   />
                   {kpi.weight != null && (
-                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-muted-foreground">
+                    <span className="rounded-full bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground">
                       {String(kpi.weight)}%
                     </span>
                   )}

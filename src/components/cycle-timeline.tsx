@@ -35,7 +35,7 @@ export function CycleTimeline({ currentStatus }: { currentStatus: CycleStatus })
                 <div
                   className={cn(
                     'absolute left-[9px] top-5 h-[calc(100%-12px)] w-px',
-                    isPast ? 'bg-white/10' : isCurrent ? 'bg-primary/20' : 'bg-white/5'
+                    isPast ? 'bg-muted/50' : isCurrent ? 'bg-primary/20' : 'bg-muted/30'
                   )}
                 />
               )}
@@ -43,9 +43,9 @@ export function CycleTimeline({ currentStatus }: { currentStatus: CycleStatus })
               <span
                 className={cn(
                   'relative z-10 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold',
-                  isPast    && 'bg-white/8 text-white/30',
+                  isPast    && 'bg-muted/50 text-muted-foreground/60',
                   isCurrent && 'bg-primary text-primary-foreground ring-2 ring-primary/30',
-                  isFuture  && 'border border-white/20 text-white/20',
+                  isFuture  && 'border border-border text-muted-foreground/40',
                 )}
                 style={isCurrent ? { animation: 'pulseGlow 2s ease-in-out infinite' } : undefined}
               >
@@ -53,9 +53,9 @@ export function CycleTimeline({ currentStatus }: { currentStatus: CycleStatus })
               </span>
               <span className={cn(
                 'text-sm pt-0.5',
-                isPast    && 'text-white/30 line-through',
-                isCurrent && 'font-semibold text-white',
-                isFuture  && 'text-white/20',
+                isPast    && 'text-muted-foreground/60 line-through',
+                isCurrent && 'font-semibold text-foreground',
+                isFuture  && 'text-muted-foreground/40',
               )}>
                 {stage.label}
               </span>

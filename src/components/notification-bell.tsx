@@ -57,7 +57,7 @@ export function NotificationBell({ notifications: initial }: { notifications: No
             className="absolute right-0 top-10 z-50 w-80 rounded-lg glass-strong"
             style={{ animation: 'fadeInUp 0.2s ease-out', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}
           >
-            <div className="flex items-center justify-between border-b border-white/8 px-4 py-2">
+            <div className="flex items-center justify-between border-b border-border px-4 py-2">
               <span className="text-sm font-semibold">Notifications</span>
               {unread > 0 && (
                 <button
@@ -76,8 +76,8 @@ export function NotificationBell({ notifications: initial }: { notifications: No
                   <div
                     key={n.id}
                     className={cn(
-                      'border-b border-white/5 px-4 py-3 last:border-0',
-                      !n.is_read && 'border-l-2 border-l-primary bg-white/[0.03]'
+                      'border-b border-border px-4 py-3 last:border-0',
+                      !n.is_read && 'border-l-2 border-l-primary bg-muted/30'
                     )}
                   >
                     <p className="text-sm">{n.message}</p>

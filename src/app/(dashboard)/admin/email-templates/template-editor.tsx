@@ -273,7 +273,7 @@ export function TemplateEditor({ templates }: TemplateEditorProps) {
                 {showPreview ? 'Hide Preview' : 'Show Preview'}
               </button>
               {showPreview && (
-                <div className="mt-3 rounded-md border bg-white p-4">
+                <div className="mt-3 rounded-md border bg-card p-4">
                   <p className="text-xs text-muted-foreground mb-2 font-medium">
                     Subject: {renderPreview(subject)}
                   </p>

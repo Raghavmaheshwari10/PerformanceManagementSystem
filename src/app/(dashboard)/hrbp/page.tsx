@@ -17,7 +17,7 @@ interface CycleWithDepts extends Cycle {
 
 function DepartmentScopeBadges({ departments }: { departments: CycleWithDepts['departments'] }) {
   if (departments.length === 0) {
-    return <span className="bg-white/10 text-white/60 text-xs px-2 py-0.5 rounded-full">Org-wide</span>
+    return <span className="bg-muted/50 text-muted-foreground text-xs px-2 py-0.5 rounded-full">Org-wide</span>
   }
   return (
     <div className="flex flex-wrap gap-1">

@@ -85,7 +85,7 @@ export default async function PeerReviewsPage() {
             {myRequests.map(req => (
               <div key={req.id} className="glass p-3 flex justify-between items-center text-sm">
                 <span>{req.peer_user?.full_name ?? 'Unknown'}</span>
-                <span className={`text-xs rounded-full px-2 py-0.5 capitalize ${STATUS_COLORS[req.status] ?? 'bg-white/10'}`}>
+                <span className={`text-xs rounded-full px-2 py-0.5 capitalize ${STATUS_COLORS[req.status] ?? 'bg-muted/50'}`}>
                   {req.status}
                 </span>
               </div>

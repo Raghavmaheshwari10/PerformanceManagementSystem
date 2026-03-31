@@ -109,8 +109,8 @@ export default async function ManagerReviewPage({
           </div>
           <div className="space-y-1.5">
             {misScore.kpi_scores.map(k => (
-              <div key={k.kpi_id} className="flex items-center justify-between text-sm rounded border border-white/5 bg-white/[0.02] px-3 py-1.5">
-                <span className="text-white/70 truncate mr-2">{k.kpi_title}</span>
+              <div key={k.kpi_id} className="flex items-center justify-between text-sm rounded border border-border bg-muted/20 px-3 py-1.5">
+                <span className="text-muted-foreground truncate mr-2">{k.kpi_title}</span>
                 <span className={`shrink-0 font-medium ${
                   k.achievement_pct >= 95 ? 'text-emerald-400' : k.achievement_pct >= 80 ? 'text-amber-400' : 'text-red-400'
                 }`}>
@@ -190,7 +190,7 @@ export default async function ManagerReviewPage({
                     : kra.category === 'learning' ? 'bg-emerald-500/15 text-emerald-400'
                     : 'bg-primary/15 text-primary'
                   return (
-                    <div key={kra.id} className="rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm p-3 space-y-2">
+                    <div key={kra.id} className="rounded-lg border border-border bg-muted/30 backdrop-blur-sm p-3 space-y-2">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-sm font-semibold">{kra.title}</p>
                         <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${catColor}`}>
@@ -215,7 +215,7 @@ export default async function ManagerReviewPage({
                   )
                 })}
                 {ungroupedKpis.length > 0 && (
-                  <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm p-3 space-y-2">
+                  <div className="rounded-lg border border-border bg-muted/30 backdrop-blur-sm p-3 space-y-2">
                     <p className="text-sm font-semibold text-muted-foreground">General</p>
                     {ungroupedKpis.map(kpi => (
                       <div key={kpi.id} className="rounded border bg-background p-2.5 ml-2">

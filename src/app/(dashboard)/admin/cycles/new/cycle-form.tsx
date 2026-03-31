@@ -136,7 +136,7 @@ export function CycleForm({ departments, employeesByDept, unassignedEmployees }:
             type="button"
             onClick={() => setScopeType('org')}
             className={`flex-1 rounded-lg border p-3 text-left text-sm transition-colors ${
-              scopeType === 'org' ? 'border-primary bg-primary/10 text-primary' : 'border-white/10 hover:border-white/20'
+              scopeType === 'org' ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:border-border/80'
             }`}
           >
             <p className="font-medium">Org-wide</p>
@@ -146,7 +146,7 @@ export function CycleForm({ departments, employeesByDept, unassignedEmployees }:
             type="button"
             onClick={() => setScopeType('dept')}
             className={`flex-1 rounded-lg border p-3 text-left text-sm transition-colors ${
-              scopeType === 'dept' ? 'border-primary bg-primary/10 text-primary' : 'border-white/10 hover:border-white/20'
+              scopeType === 'dept' ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:border-border/80'
             }`}
           >
             <p className="font-medium">Select Departments</p>
@@ -170,7 +170,7 @@ export function CycleForm({ departments, employeesByDept, unassignedEmployees }:
                 const isExpanded = expandedDepts.has(dept.id)
 
                 return (
-                  <div key={dept.id} className={`rounded-lg border transition-colors ${isSelected ? 'border-primary/30 bg-primary/5' : 'border-white/10'}`}>
+                  <div key={dept.id} className={`rounded-lg border transition-colors ${isSelected ? 'border-primary/30 bg-primary/5' : 'border-border'}`}>
                     <div className="flex items-center justify-between p-3">
                       <label className="flex items-center gap-2 cursor-pointer flex-1">
                         <input
@@ -197,7 +197,7 @@ export function CycleForm({ departments, employeesByDept, unassignedEmployees }:
                     </div>
 
                     {isSelected && isExpanded && deptEmps.length > 0 && (
-                      <div className="border-t border-white/5 px-3 py-2 grid grid-cols-2 gap-1">
+                      <div className="border-t border-border px-3 py-2 grid grid-cols-2 gap-1">
                         {deptEmps.map(emp => (
                           <label key={emp.id} className="flex items-center gap-2 py-1 text-xs cursor-pointer">
                             <input
@@ -220,8 +220,8 @@ export function CycleForm({ departments, employeesByDept, unassignedEmployees }:
 
             {/* Include employees from non-selected departments */}
             {nonSelectedEmployees.length > 0 && selectedDepts.size > 0 && (
-              <details className="rounded-lg border border-white/10">
-                <summary className="cursor-pointer p-3 text-sm font-medium hover:bg-white/5 list-none [&::-webkit-details-marker]:hidden flex items-center gap-2">
+              <details className="rounded-lg border border-border">
+                <summary className="cursor-pointer p-3 text-sm font-medium hover:bg-muted/30 list-none [&::-webkit-details-marker]:hidden flex items-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" className="size-4 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                   </svg>
@@ -230,7 +230,7 @@ export function CycleForm({ departments, employeesByDept, unassignedEmployees }:
                     <span className="text-xs text-primary">({includedEmps.size} selected)</span>
                   )}
                 </summary>
-                <div className="border-t border-white/5 px-3 py-2 grid grid-cols-2 gap-1 max-h-48 overflow-y-auto">
+                <div className="border-t border-border px-3 py-2 grid grid-cols-2 gap-1 max-h-48 overflow-y-auto">
                   {nonSelectedEmployees.map(emp => (
                     <label key={emp.id} className="flex items-center gap-2 py-1 text-xs cursor-pointer">
                       <input

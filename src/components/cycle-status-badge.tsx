@@ -3,7 +3,7 @@ import { CYCLE_STATUS_LABELS } from '@/lib/constants'
 import type { CycleStatus } from '@/lib/types'
 
 const STATUS_COLORS: Record<CycleStatus, { className: string; textShadow: string }> = {
-  draft:          { className: 'bg-white/10 text-white/60',          textShadow: '0 0 8px rgba(255,255,255,0.15)' },
+  draft:          { className: 'bg-muted/50 text-muted-foreground',          textShadow: '0 0 8px rgba(255,255,255,0.15)' },
   kpi_setting:    { className: 'bg-blue-500/15 text-blue-400',      textShadow: '0 0 8px rgba(96,165,250,0.4)' },
   self_review:    { className: 'bg-yellow-500/15 text-yellow-400',   textShadow: '0 0 8px rgba(250,204,21,0.4)' },
   manager_review: { className: 'bg-orange-500/15 text-orange-400',   textShadow: '0 0 8px rgba(251,146,60,0.4)' },

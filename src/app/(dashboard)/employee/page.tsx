@@ -149,7 +149,7 @@ export default async function EmployeeReviewPage() {
 
   if (!cycle || !resolvedStatus) return (
     <div className="glass flex flex-col items-center justify-center py-16 text-center">
-      <div className="rounded-full bg-white/5 p-4 mb-4">
+      <div className="rounded-full bg-muted/30 p-4 mb-4">
         <svg className="h-8 w-8 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
@@ -313,7 +313,7 @@ export default async function EmployeeReviewPage() {
 
           {kpis.length === 0 ? (
             <div className="glass flex flex-col items-center justify-center py-10 text-center">
-              <div className="rounded-full bg-white/5 p-3 mb-3">
+              <div className="rounded-full bg-muted/30 p-3 mb-3">
                 <svg className="h-5 w-5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
@@ -330,7 +330,7 @@ export default async function EmployeeReviewPage() {
                   <div key={kpi.id} className="glass-interactive p-4 space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <p className="font-medium text-sm leading-snug">{kpi.title}</p>
-                      <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-xs font-semibold tabular-nums">
+                      <span className="shrink-0 rounded-full bg-muted/50 px-2 py-0.5 text-xs font-semibold tabular-nums">
                         {String(kpi.weight)}%
                       </span>
                     </div>
@@ -338,7 +338,7 @@ export default async function EmployeeReviewPage() {
                       <p className="text-xs text-muted-foreground line-clamp-2">{kpi.description}</p>
                     )}
                     <div className="space-y-1">
-                      <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
+                      <div className="h-1.5 w-full rounded-full bg-muted/30 overflow-hidden">
                         <div
                           className="h-full rounded-full"
                           style={{
@@ -371,7 +371,7 @@ export default async function EmployeeReviewPage() {
                           {kra.category}
                         </span>
                       </div>
-                      <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-xs font-semibold tabular-nums">
+                      <span className="shrink-0 rounded-full bg-muted/50 px-2 py-0.5 text-xs font-semibold tabular-nums">
                         {kraWeight}%
                       </span>
                     </div>
@@ -389,7 +389,7 @@ export default async function EmployeeReviewPage() {
                             <div key={kpi.id} className="glass-interactive p-3 space-y-2">
                               <div className="flex items-start justify-between gap-2">
                                 <p className="font-medium text-sm leading-snug">{kpi.title}</p>
-                                <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-xs font-semibold tabular-nums">
+                                <span className="shrink-0 rounded-full bg-muted/50 px-2 py-0.5 text-xs font-semibold tabular-nums">
                                   {String(kpi.weight)}%
                                 </span>
                               </div>
@@ -397,7 +397,7 @@ export default async function EmployeeReviewPage() {
                                 <p className="text-xs text-muted-foreground line-clamp-2">{kpi.description}</p>
                               )}
                               <div className="space-y-1">
-                                <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
+                                <div className="h-1.5 w-full rounded-full bg-muted/30 overflow-hidden">
                                   <div
                                     className="h-full rounded-full"
                                     style={{
@@ -423,7 +423,7 @@ export default async function EmployeeReviewPage() {
                 <div className="glass p-4 space-y-3">
                   <div className="flex items-center gap-2">
                     <h3 className="font-semibold text-sm">General KPIs</h3>
-                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                    <span className="rounded-full bg-muted/50 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
                       Unassigned
                     </span>
                   </div>
@@ -434,7 +434,7 @@ export default async function EmployeeReviewPage() {
                         <div key={kpi.id} className="glass-interactive p-3 space-y-2">
                           <div className="flex items-start justify-between gap-2">
                             <p className="font-medium text-sm leading-snug">{kpi.title}</p>
-                            <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-xs font-semibold tabular-nums">
+                            <span className="shrink-0 rounded-full bg-muted/50 px-2 py-0.5 text-xs font-semibold tabular-nums">
                               {String(kpi.weight)}%
                             </span>
                           </div>
@@ -442,7 +442,7 @@ export default async function EmployeeReviewPage() {
                             <p className="text-xs text-muted-foreground line-clamp-2">{kpi.description}</p>
                           )}
                           <div className="space-y-1">
-                            <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
+                            <div className="h-1.5 w-full rounded-full bg-muted/30 overflow-hidden">
                               <div
                                 className="h-full rounded-full"
                                 style={{
@@ -522,7 +522,7 @@ export default async function EmployeeReviewPage() {
                           <span className={`inline-flex h-2 w-2 rounded-full ${style.bg} ring-1 ring-current ${style.text}`} />
                         </div>
                       </div>
-                      <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
+                      <div className="h-1.5 w-full rounded-full bg-muted/30 overflow-hidden">
                         <div
                           className="h-full rounded-full"
                           style={{
