@@ -45,15 +45,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // Detect all available roles for this user
   const hasDirectReports = await prisma.user.count({ where: { manager_id: user.id, is_active: true } }) > 0
   const availableRoles: string[] = [user.role]
-  if (user.role !== 'employee' && (user.is_also_employee || user.role === 'manager')) {
-    if (!availableRoles.includes('employee')) availableRoles.push('employee')
+  // Everyone can access employee view (self-review, goals, peer reviews)
+  if (!availableRoles.includes('employee')) {
+    availableRoles.push('employee')
   }
+  // Users with direct reports get manager view
   if (hasDirectReports && !availableRoles.includes('manager')) {
     availableRoles.push('manager')
-  }
-  // Managers are always also employees (they submit self-reviews)
-  if (user.role === 'manager' && !availableRoles.includes('employee')) {
-    availableRoles.push('employee')
   }
 
   return (
