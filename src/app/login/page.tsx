@@ -67,7 +67,7 @@ export default function LoginPage() {
               onChange={e => setEmail(e.target.value)}
               required
               placeholder="you@company.com"
-              className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm text-white placeholder:text-white/20 outline-none transition-all focus:border-[oklch(0.65_0.22_265)] focus:shadow-[0_0_0_3px_oklch(0.65_0.22_265/0.15)]"
+              className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm text-white placeholder:text-white/20 outline-none transition-all focus:border-indigo-500 focus:shadow-[0_0_0_3px_rgba(79,70,229,0.2)]"
             />
           </div>
 
@@ -80,7 +80,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2.5 pr-10 text-sm text-white placeholder:text-white/20 outline-none transition-all focus:border-[oklch(0.65_0.22_265)] focus:shadow-[0_0_0_3px_oklch(0.65_0.22_265/0.15)]"
+                className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2.5 pr-10 text-sm text-white placeholder:text-white/20 outline-none transition-all focus:border-indigo-500 focus:shadow-[0_0_0_3px_rgba(79,70,229,0.2)]"
               />
               <button
                 type="button"
@@ -106,7 +106,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-[oklch(0.65_0.22_265)] px-4 py-2.5 text-sm font-medium text-white shadow-[0_0_15px_oklch(0.55_0.22_265/0.3)] transition-all hover:shadow-[0_0_25px_oklch(0.6_0.25_265/0.45)] disabled:opacity-40 disabled:cursor-not-allowed"
+            className="glow-button w-full rounded-lg px-4 py-2.5 text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>

@@ -182,7 +182,7 @@ export function Sidebar({
               <button
                 key="help"
                 onClick={() => setHelpOpen(true)}
-                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/70 transition-colors hover:bg-muted/40 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] hover:text-sidebar-accent-foreground"
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/70 transition-colors hover:bg-accent hover:text-sidebar-accent-foreground"
               >
                 <Icon className="h-4 w-4 shrink-0" />
                 {item.label}
@@ -198,10 +198,9 @@ export function Sidebar({
               className={cn(
                 'flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all',
                 (isActive || isExactActive)
-                  ? 'text-sidebar-accent-foreground font-medium shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]'
-                  : 'text-sidebar-foreground/70 hover:bg-muted/40 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] hover:text-sidebar-accent-foreground'
+                  ? 'bg-accent text-sidebar-primary font-medium border-l-[3px] border-sidebar-primary pl-[9px]'
+                  : 'text-sidebar-foreground/70 hover:bg-accent hover:text-sidebar-accent-foreground'
               )}
-              style={(isActive || isExactActive) ? activeNavStyle : undefined}
             >
               <Icon className={cn(
                 'h-4 w-4 shrink-0',
@@ -223,7 +222,7 @@ export function Sidebar({
         <DensityToggle />
         <button
           onClick={handleSignOut}
-          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/60 transition-colors hover:bg-muted/40 hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] hover:text-sidebar-accent-foreground"
+          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/60 transition-colors hover:bg-accent hover:text-sidebar-accent-foreground"
         >
           <LogOut className="h-4 w-4" />
           Sign out

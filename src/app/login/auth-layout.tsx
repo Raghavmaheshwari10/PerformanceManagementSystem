@@ -53,14 +53,14 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
       <div
         ref={panelRef}
         className="relative hidden w-[48%] flex-col justify-between overflow-hidden p-10 lg:flex"
-        style={{ background: 'oklch(0.1 0.03 265)' }}
+        style={{ background: '#0c0a1a' }}
       >
         {/* Animated blobs */}
         <div
           className="pointer-events-none absolute rounded-full"
           style={{
             width: 460, height: 460, top: -60, left: -80,
-            background: 'radial-gradient(circle, oklch(0.45 0.25 300 / 0.55) 0%, oklch(0.3 0.2 280 / 0.2) 60%, transparent 100%)',
+            background: 'radial-gradient(circle, rgba(79,70,229,0.5) 0%, rgba(79,70,229,0.15) 60%, transparent 100%)',
             filter: 'blur(80px)',
             translate: 'var(--bx1, 0px) var(--by1, 0px)',
             animation: 'drift1 9s ease-in-out infinite',
@@ -70,7 +70,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
           className="pointer-events-none absolute rounded-full"
           style={{
             width: 300, height: 300, top: 160, left: 200,
-            background: 'radial-gradient(circle, oklch(0.5 0.22 330 / 0.35) 0%, oklch(0.35 0.18 310 / 0.15) 60%, transparent 100%)',
+            background: 'radial-gradient(circle, rgba(124,58,237,0.3) 0%, rgba(124,58,237,0.1) 60%, transparent 100%)',
             filter: 'blur(80px)',
             translate: 'var(--bx2, 0px) var(--by2, 0px)',
             animation: 'drift2 12s ease-in-out infinite',
@@ -80,7 +80,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
           className="pointer-events-none absolute rounded-full"
           style={{
             width: 200, height: 200, bottom: 120, right: 40,
-            background: 'radial-gradient(circle, oklch(0.4 0.22 265 / 0.3) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(16,185,129,0.2) 0%, transparent 70%)',
             filter: 'blur(80px)',
             translate: 'var(--bx3, 0px) var(--by3, 0px)',
             animation: 'drift3 7s ease-in-out infinite',
@@ -91,7 +91,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
         <div
           className="pointer-events-none absolute inset-0"
           style={{
-            background: 'radial-gradient(ellipse 280px 280px at var(--sx, 50%) var(--sy, 50%), oklch(0.55 0.2 280 / 0.12) 0%, transparent 70%)',
+            background: 'radial-gradient(ellipse 280px 280px at var(--sx, 50%) var(--sy, 50%), rgba(129,140,248,0.12) 0%, transparent 70%)',
           }}
         />
 
@@ -113,7 +113,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
           </p>
           <h2 className="font-serif text-[clamp(2rem,3.5vw,2.8rem)] leading-[1.15] text-white">
             Drive your<br />
-            <span className="italic bg-gradient-to-r from-[oklch(0.7_0.22_280)] via-[oklch(0.7_0.22_320)] to-[oklch(0.75_0.2_200)] bg-clip-text text-transparent">
+            <span className="italic bg-gradient-to-r from-indigo-400 via-violet-400 to-emerald-400 bg-clip-text text-transparent">
               team forward
             </span>
           </h2>
@@ -130,7 +130,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Right content panel */}
-      <div className="flex w-full items-center justify-center p-6 lg:w-[52%]" style={{ background: 'oklch(0.11 0.025 265)' }}>
+      <div className="flex w-full items-center justify-center p-6 lg:w-[52%]" style={{ background: '#09090b' }}>
         <div className="w-full max-w-[420px]">
           {children}
         </div>
