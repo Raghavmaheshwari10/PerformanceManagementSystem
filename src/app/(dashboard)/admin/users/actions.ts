@@ -384,6 +384,7 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
   try {
     await prisma.$transaction([
       // Clean up all related records
+      prisma.auditLog.deleteMany({ where: { changed_by: userId } }),
       prisma.notification.deleteMany({ where: { recipient_id: userId } }),
       prisma.notificationPreference.deleteMany({ where: { user_id: userId } }),
       prisma.draft.deleteMany({ where: { user_id: userId } }),
@@ -391,13 +392,14 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
       prisma.cycleEmployee.deleteMany({ where: { employee_id: userId } }),
       prisma.peerReviewRequest.deleteMany({ where: { OR: [{ reviewee_id: userId }, { peer_user_id: userId }, { requested_by: userId }] } }),
       prisma.goalUpdate.deleteMany({ where: { updated_by: userId } }),
-      prisma.goal.deleteMany({ where: { employee_id: userId } }),
+      prisma.goal.deleteMany({ where: { OR: [{ employee_id: userId }, { approved_by: userId }] } }),
       prisma.feedback.deleteMany({ where: { OR: [{ from_user_id: userId }, { to_user_id: userId }] } }),
       prisma.reviewResponse.deleteMany({ where: { respondent_id: userId } }),
       prisma.kra.deleteMany({ where: { employee_id: userId } }),
       prisma.kpi.deleteMany({ where: { OR: [{ employee_id: userId }, { manager_id: userId }] } }),
-      // Unlink direct reports before deleting
+      // Unlink direct reports and cycles created by this user
       prisma.user.updateMany({ where: { manager_id: userId }, data: { manager_id: null } }),
+      prisma.cycle.updateMany({ where: { created_by: userId }, data: { created_by: null } }),
       prisma.user.delete({ where: { id: userId } }),
     ])
   } catch (err) {
