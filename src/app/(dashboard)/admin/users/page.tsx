@@ -1,8 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
-import { triggerZimyoSync } from './actions'
-import { SubmitButton } from '@/components/submit-button'
 import { UsersTable } from './users-table'
 import Link from 'next/link'
 import type { User } from '@/lib/types'
@@ -32,14 +30,11 @@ export default async function AdminUsersPage() {
           <Link href="/admin/users/upload">
             <Button variant="outline">Upload CSV</Button>
           </Link>
-          <form action={triggerZimyoSync as unknown as (fd: FormData) => Promise<void>}>
-            <SubmitButton>Sync from Zimyo</SubmitButton>
-          </form>
         </div>
       </div>
 
       {users.length === 0 ? (
-        <p className="text-muted-foreground">No users yet — upload a CSV or sync with Zimyo.</p>
+        <p className="text-muted-foreground">No users yet — add a user or upload a CSV.</p>
       ) : (
         <UsersTable users={users as unknown as User[]} departments={departments} />
       )}
