@@ -51,6 +51,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // Inject DB id and role for JWT callback
         user.id = dbUser.id
         user.role = dbUser.role as UserRole
+
+        // Clear invite token on first Google sign-in (marks as accepted)
+        if (dbUser.invite_token) {
+          await prisma.user.update({
+            where: { id: dbUser.id },
+            data: { invite_token: null, invite_token_expires_at: null },
+          })
+        }
       }
       return true
     },

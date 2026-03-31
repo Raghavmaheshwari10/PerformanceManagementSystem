@@ -272,8 +272,8 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
                   </button>
                 </td>
                 <td className="p-3">
-                  {u.password_hash ? (
-                    <span className="text-xs text-emerald-400">Accepted</span>
+                  {u.password_hash || !u.invite_token ? (
+                    <span className="text-xs text-emerald-600">{u.password_hash ? 'Accepted' : 'Google'}</span>
                   ) : u.invite_token ? (
                     u.invite_token_expires_at && new Date(u.invite_token_expires_at) < new Date() ? (
                       <div className="flex items-center gap-1.5">
