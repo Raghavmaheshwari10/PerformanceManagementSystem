@@ -77,7 +77,7 @@ export function buildSlackBlocks(title: string, body: string, linkUrl?: string):
       elements: [
         {
           type: 'button',
-          text: { type: 'plain_text', text: 'Open in hRMS' },
+          text: { type: 'plain_text', text: 'Open in PMS' },
           url: linkUrl,
           style: 'primary',
         },

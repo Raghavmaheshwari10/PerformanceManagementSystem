@@ -152,7 +152,7 @@ export async function createUser(_prev: ActionResult | null, formData: FormData)
 
   // Send invite email if no password was set
   if (invite_token) {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://hrms.emb.global'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://pms.emb.global'
     const inviteUrl = `${appUrl}/login/accept-invite?token=${invite_token}`
     try {
       await sendInviteEmail(email, inviteUrl, full_name)
@@ -336,7 +336,7 @@ export async function resendInvite(userId: string): Promise<ActionResult> {
     data: { invite_token, invite_token_expires_at, invited_at: new Date() },
   })
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://hrms.emb.global'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://pms.emb.global'
   const inviteUrl = `${appUrl}/login/accept-invite?token=${invite_token}`
   try {
     await sendInviteEmail(user.email, inviteUrl, user.full_name)

@@ -79,7 +79,7 @@ export const HELP_CONTENT: Record<string, PageHelp> = {
       'Click a role badge to change it inline.',
       'Click the active/inactive status to toggle a user.',
       'Use Upload CSV to bulk-import users from a spreadsheet.',
-      'Sync from Zimyo pulls the latest employee list from your HRMS.',
+      'Sync from Zimyo pulls the latest employee list from your HR system.',
     ],
     articles: [],
   },

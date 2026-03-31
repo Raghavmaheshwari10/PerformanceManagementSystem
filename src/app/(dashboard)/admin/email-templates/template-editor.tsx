@@ -122,7 +122,7 @@ export function TemplateEditor({ templates }: TemplateEditorProps) {
       employee_name: 'Jane Smith',
       kind: 'self',
       message: 'This is a sample admin message.',
-      link: 'https://hrms.emb.global',
+      link: 'https://pms.emb.global',
       requester_name: 'John Doe',
       reviewee_name: 'Alice Johnson',
       peer_name: 'Bob Williams',

@@ -103,7 +103,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
                 <path d="M12 2v20M2 12h20M5.636 5.636l12.728 12.728M18.364 5.636L5.636 18.364" strokeLinecap="round" />
               </svg>
             </div>
-            <span className="text-sm font-medium tracking-wide text-white/90">hRMS</span>
+            <span className="text-sm font-medium tracking-wide text-white/90">PMS</span>
           </div>
         </div>
 

@@ -5,7 +5,7 @@ import type { NotificationType } from '@prisma/client'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const fromAddress = process.env.EMAIL_FROM ?? 'noreply@example.com'
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://hrms.emb.global'
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://pms.emb.global'
 
 // ─── Email Senders ───────────────────────────────────────────────────
 
@@ -13,7 +13,7 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string): Prom
   await resend.emails.send({
     from: fromAddress,
     to,
-    subject: 'Reset your password — hRMS',
+    subject: 'Reset your password — PMS',
     html: `
       <p>Hello,</p>
       <p>You requested a password reset. Click the link below to set a new password:</p>
@@ -28,10 +28,10 @@ export async function sendInviteEmail(to: string, inviteUrl: string, fullName: s
   await resend.emails.send({
     from: fromAddress,
     to,
-    subject: 'You\'ve been invited to hRMS — Set up your account',
+    subject: 'You\'ve been invited to PMS — Set up your account',
     html: `
       <p>Hello ${fullName},</p>
-      <p>You've been invited to the hRMS Performance Management System. Click below to set your password and get started:</p>
+      <p>You've been invited to the PMS Performance Management System. Click below to set your password and get started:</p>
       <p><a href="${inviteUrl}" style="background:#4f46e5;color:#fff;padding:12px 24px;text-decoration:none;border-radius:6px;display:inline-block;font-weight:600">Set Up Your Account</a></p>
       <p>This invitation link expires in 72 hours.</p>
       <p>If you have questions, contact your HR administrator.</p>
@@ -85,7 +85,7 @@ const NOTIFICATION_SLACK: Partial<Record<NotificationType, (payload: Record<stri
   manager_review_submitted: () => ({ title: 'Manager Review Done', body: 'Your manager has submitted their review for you.', link: `${appUrl}/employee` }),
   review_reminder: (p) => ({ title: 'Review Reminder', body: `You have a pending ${p.kind === 'manager_review' ? 'manager' : 'self'} review. Please complete it soon.`, link: `${appUrl}` }),
   admin_message: (p) => ({ title: 'Admin Message', body: p.message ?? 'You have a new message.', link: p.link }),
-  peer_review_requested: (p) => ({ title: 'Peer Review Requested', body: `${p.requester_name ?? 'A colleague'} has requested you to provide a peer review${p.reviewee_name ? ` for *${p.reviewee_name}*` : ''}. Accept or decline in hRMS.`, link: `${appUrl}/employee/peer-reviews` }),
+  peer_review_requested: (p) => ({ title: 'Peer Review Requested', body: `${p.requester_name ?? 'A colleague'} has requested you to provide a peer review${p.reviewee_name ? ` for *${p.reviewee_name}*` : ''}. Accept or decline in PMS.`, link: `${appUrl}/employee/peer-reviews` }),
   peer_review_submitted: (p) => ({ title: 'Peer Review Submitted', body: `${p.peer_name ?? 'A peer'} has submitted their peer review for you.`, link: `${appUrl}/employee/peer-reviews` }),
 }
 
@@ -140,9 +140,9 @@ export async function dispatchPendingNotifications(recipientId: string): Promise
             (_, key) => payload[key] ?? ''
           )
         } else {
-          subject = NOTIFICATION_SUBJECTS[notif.type] ?? 'hRMS Notification'
+          subject = NOTIFICATION_SUBJECTS[notif.type] ?? 'PMS Notification'
           html = NOTIFICATION_HTML[notif.type]?.(payload)
-            ?? '<p>You have a new notification in hRMS.</p>'
+            ?? '<p>You have a new notification in PMS.</p>'
         }
 
         await sendNotificationEmail(notif.recipient.email, subject, html)

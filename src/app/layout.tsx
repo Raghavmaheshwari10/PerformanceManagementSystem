@@ -18,7 +18,7 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   title: "Performance Management System | EMB Global",
   description:
-    "HRMS Performance Management System for EMB Global — manage appraisal cycles, KRAs, KPIs, ratings, and reviews across all employees and departments.",
+    "Performance Management System for EMB Global — manage appraisal cycles, KRAs, KPIs, ratings, and reviews across all employees and departments.",
 };
 
 export default function RootLayout({
