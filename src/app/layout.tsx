@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Sora, DM_Sans } from "next/font/google";
-import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
 const sora = Sora({
@@ -27,24 +26,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: `
-          (function() {
-            try {
-              var t = localStorage.getItem('pms-theme');
-              var dark = t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches);
-              if (dark) document.documentElement.classList.add('dark');
-            } catch(e) {}
-          })();
-        `}} />
-      </head>
+    <html lang="en">
       <body
         className={`${sora.variable} ${dmSans.variable} antialiased`}
       >
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        {children}
       </body>
     </html>
   );
