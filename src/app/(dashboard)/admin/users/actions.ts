@@ -381,15 +381,30 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
 
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, full_name: true } })
 
-  await prisma.$transaction([
-    prisma.notification.deleteMany({ where: { recipient_id: userId } }),
-    prisma.notificationPreference.deleteMany({ where: { user_id: userId } }),
-    prisma.draft.deleteMany({ where: { user_id: userId } }),
-    prisma.hrbpDepartment.deleteMany({ where: { hrbp_id: userId } }),
-    prisma.cycleEmployee.deleteMany({ where: { employee_id: userId } }),
-    prisma.peerReviewRequest.deleteMany({ where: { OR: [{ reviewee_id: userId }, { peer_user_id: userId }, { requested_by: userId }] } }),
-    prisma.user.delete({ where: { id: userId } }),
-  ])
+  try {
+    await prisma.$transaction([
+      // Clean up all related records
+      prisma.notification.deleteMany({ where: { recipient_id: userId } }),
+      prisma.notificationPreference.deleteMany({ where: { user_id: userId } }),
+      prisma.draft.deleteMany({ where: { user_id: userId } }),
+      prisma.hrbpDepartment.deleteMany({ where: { hrbp_id: userId } }),
+      prisma.cycleEmployee.deleteMany({ where: { employee_id: userId } }),
+      prisma.peerReviewRequest.deleteMany({ where: { OR: [{ reviewee_id: userId }, { peer_user_id: userId }, { requested_by: userId }] } }),
+      prisma.goalUpdate.deleteMany({ where: { updated_by: userId } }),
+      prisma.goal.deleteMany({ where: { employee_id: userId } }),
+      prisma.feedback.deleteMany({ where: { OR: [{ from_user_id: userId }, { to_user_id: userId }] } }),
+      prisma.reviewResponse.deleteMany({ where: { respondent_id: userId } }),
+      prisma.kra.deleteMany({ where: { employee_id: userId } }),
+      prisma.kpi.deleteMany({ where: { OR: [{ employee_id: userId }, { manager_id: userId }] } }),
+      // Unlink direct reports before deleting
+      prisma.user.updateMany({ where: { manager_id: userId }, data: { manager_id: null } }),
+      prisma.user.delete({ where: { id: userId } }),
+    ])
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('Delete user failed:', msg)
+    return { data: null, error: `Delete failed: ${msg.includes('foreign key') ? 'User has dependent records. Try deactivating instead.' : msg}` }
+  }
 
   await prisma.auditLog.create({
     data: {

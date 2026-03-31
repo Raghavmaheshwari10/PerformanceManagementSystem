@@ -8,6 +8,7 @@ import type { UserRole } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { CommandPaletteTrigger } from '@/components/command-palette-trigger'
 import { DensityToggle } from '@/components/density-toggle'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { HelpPanel } from '@/components/help-panel'
 import {
   ClipboardCheck, History, Target, MessageSquare, Users2,
@@ -218,6 +219,7 @@ export function Sidebar({
       {/* Footer */}
       <div className="mt-auto px-3 py-3 space-y-1">
         <div className="gradient-divider mb-3" />
+        <ThemeToggle />
         <DensityToggle />
         <button
           onClick={handleSignOut}
