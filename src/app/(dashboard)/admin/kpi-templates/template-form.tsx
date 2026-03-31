@@ -17,7 +17,7 @@ interface Props {
 
 export function TemplateForm({ action, defaultValues = {} }: Props) {
   const [state, formAction] = useActionState(action, INITIAL)
-  const [category, setCategory] = useState(defaultValues.category ?? 'performance')
+  const [category, setCategory] = useState<string>(defaultValues.category ?? 'performance')
 
   const isPerformance = category === 'performance'
 
