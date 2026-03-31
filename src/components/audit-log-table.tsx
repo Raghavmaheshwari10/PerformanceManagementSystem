@@ -20,7 +20,7 @@ interface AuditLogTableProps {
 const ACTION_GROUPS: Record<string, string[] | null> = {
   'All':        null,
   'User Mgmt':  ['user_created','user_updated','user_deleted','role_change','toggle_active','bulk_department_update','bulk_role_update','bulk_toggle_active','bulk_delete_users','csv_upload'],
-  'Cycle':      ['cycle_status_changed','department_status_changed','employee_status_override_set','employee_status_override_cleared'],
+  'Cycle':      ['cycle_created','cycle_status_changed','department_status_changed','employee_status_override_set','employee_status_override_cleared'],
   'KRA/KPI':    ['kra_added','kra_deleted','kpi_added','kpi_deleted','kpis_finalized','kpis_unfinalized'],
   'Reviews':    ['review_submitted','manager_review_submitted','override_rating','rating_override'],
   'Config':     ['payout_config_updated','department_created','hrbp_departments_updated'],

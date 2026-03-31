@@ -72,6 +72,16 @@ export async function createCycle(_prev: ActionResult, formData: FormData): Prom
         })),
       })
     }
+    // Audit log
+    await prisma.auditLog.create({
+      data: {
+        changed_by: user.id,
+        action: 'cycle_created',
+        entity_type: 'cycle',
+        entity_id: cycle.id,
+        new_value: { name, quarter, year, departments: departmentIds.length },
+      },
+    })
   } catch (e) {
     return { data: null, error: e instanceof Error ? e.message : 'Failed to create cycle' }
   }
