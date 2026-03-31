@@ -8,7 +8,7 @@ import type { ActionResult } from '@/lib/types'
 import type { RatingTier } from '@prisma/client'
 
 export async function saveMisConfig(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
-  await requireRole(['admin'])
+  const user = await requireRole(['admin'])
 
   const api_base_url = (formData.get('api_base_url') as string).trim()
   const api_key_raw = (formData.get('api_key') as string).trim()
@@ -38,6 +38,15 @@ export async function saveMisConfig(_prev: ActionResult, formData: FormData): Pr
   } catch (e) {
     return { data: null, error: e instanceof Error ? e.message : 'Failed to save MIS config' }
   }
+
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'mis_config_saved',
+      entity_type: 'mis_config',
+      new_value: { api_base_url, fiscal_year, auto_sync_enabled, sync_cron },
+    },
+  })
 
   revalidatePath('/admin/mis/settings')
   return { data: null, error: null }
@@ -71,7 +80,7 @@ export async function saveDepartmentMapping(_prev: ActionResult, formData: FormD
 }
 
 export async function saveScoringConfig(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
-  await requireRole(['admin'])
+  const user = await requireRole(['admin'])
 
   const thresholds: { tier: RatingTier; min_score: number }[] = [
     { tier: 'FEE', min_score: Number(formData.get('fee_min') || 110) },
@@ -91,6 +100,15 @@ export async function saveScoringConfig(_prev: ActionResult, formData: FormData)
   } catch (e) {
     return { data: null, error: e instanceof Error ? e.message : 'Failed to save scoring config' }
   }
+
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'scoring_config_saved',
+      entity_type: 'scoring_config',
+      new_value: { thresholds: thresholds.map(t => ({ tier: t.tier, min_score: t.min_score })) },
+    },
+  })
 
   revalidatePath('/admin/mis/settings')
   return { data: null, error: null }

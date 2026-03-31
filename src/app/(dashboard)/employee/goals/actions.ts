@@ -98,6 +98,16 @@ export async function updateGoalProgress(_prev: ActionResult, formData: FormData
     }),
   ])
 
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'goal_progress_updated',
+      entity_type: 'goal',
+      entity_id: goalId,
+      new_value: { previous_value: goal.current_value ? Number(goal.current_value) : null, new_value: newValue, note },
+    },
+  })
+
   revalidatePath('/employee/goals')
   revalidatePath(`/employee/goals/${goalId}`)
   return { data: null, error: null }

@@ -21,14 +21,23 @@ function parseTemplateForm(formData: FormData) {
 }
 
 export async function createKpiTemplate(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
-  await requireRole(['admin'])
+  const user = await requireRole(['admin'])
   const data = parseTemplateForm(formData)
 
   if (!data.role_slug) return { data: null, error: 'Role slug is required' }
   if (!data.title) return { data: null, error: 'Title is required' }
 
   try {
-    await prisma.kpiTemplate.create({ data })
+    const template = await prisma.kpiTemplate.create({ data })
+    await prisma.auditLog.create({
+      data: {
+        changed_by: user.id,
+        action: 'kpi_template_created',
+        entity_type: 'kpi_template',
+        entity_id: template.id,
+        new_value: { title: data.title, role_slug: data.role_slug, category: data.category },
+      },
+    })
   } catch (e) {
     return { data: null, error: e instanceof Error ? e.message : 'Failed to create KPI template' }
   }
@@ -38,7 +47,7 @@ export async function createKpiTemplate(_prev: ActionResult, formData: FormData)
 }
 
 export async function updateKpiTemplate(id: string, _prev: ActionResult, formData: FormData): Promise<ActionResult> {
-  await requireRole(['admin'])
+  const user = await requireRole(['admin'])
   const data = parseTemplateForm(formData)
 
   if (!data.role_slug) return { data: null, error: 'Role slug is required' }
@@ -46,6 +55,15 @@ export async function updateKpiTemplate(id: string, _prev: ActionResult, formDat
 
   try {
     await prisma.kpiTemplate.update({ where: { id }, data })
+    await prisma.auditLog.create({
+      data: {
+        changed_by: user.id,
+        action: 'kpi_template_updated',
+        entity_type: 'kpi_template',
+        entity_id: id,
+        new_value: { title: data.title, role_slug: data.role_slug, category: data.category },
+      },
+    })
   } catch (e) {
     return { data: null, error: e instanceof Error ? e.message : 'Failed to update KPI template' }
   }
@@ -55,10 +73,19 @@ export async function updateKpiTemplate(id: string, _prev: ActionResult, formDat
 }
 
 export async function toggleTemplateActive(id: string, current: boolean): Promise<void> {
-  await requireRole(['admin'])
+  const user = await requireRole(['admin'])
   await prisma.kpiTemplate.update({
     where: { id },
     data: { is_active: !current },
+  })
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'kpi_template_toggled',
+      entity_type: 'kpi_template',
+      entity_id: id,
+      new_value: { is_active: !current },
+    },
   })
   revalidatePath('/admin/kpi-templates')
 }

@@ -23,12 +23,23 @@ export async function requestPeerReview(_prev: ActionResult, formData: FormData)
 
   const reviewee = await prisma.user.findUnique({ where: { id: user.id }, select: { full_name: true } })
 
-  await prisma.peerReviewRequest.create({
+  const peerRequest = await prisma.peerReviewRequest.create({
     data: {
       cycle_id: cycleId,
       reviewee_id: user.id,
       peer_user_id: peerUserId,
       requested_by: user.id,
+    },
+    select: { id: true },
+  })
+
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'peer_review_requested',
+      entity_type: 'peer_review',
+      entity_id: peerRequest.id,
+      new_value: { cycle_id: cycleId, peer_user_id: peerUserId },
     },
   })
 
@@ -62,6 +73,16 @@ export async function submitPeerReview(_prev: ActionResult, formData: FormData):
     data: { status: 'submitted', peer_rating: rating, peer_comments: comments, updated_at: new Date() },
   })
 
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'peer_review_submitted',
+      entity_type: 'peer_review',
+      entity_id: requestId,
+      new_value: { reviewee_id: req.reviewee_id, peer_rating: rating },
+    },
+  })
+
   // Notify the reviewee that a peer review was submitted
   const peer = await prisma.user.findUnique({ where: { id: user.id }, select: { full_name: true } })
   notifyUsers([req.reviewee_id], 'peer_review_submitted', {
@@ -87,6 +108,15 @@ export async function acceptPeerReview(requestId: string): Promise<ActionResult>
     data: { status: 'accepted', updated_at: new Date() },
   })
 
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'peer_review_accepted',
+      entity_type: 'peer_review',
+      entity_id: requestId,
+    },
+  })
+
   revalidatePath('/employee/peer-reviews')
   return { data: null, error: null }
 }
@@ -104,6 +134,15 @@ export async function declinePeerReview(requestId: string): Promise<ActionResult
   await prisma.peerReviewRequest.update({
     where: { id: requestId },
     data: { status: 'declined', updated_at: new Date() },
+  })
+
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'peer_review_declined',
+      entity_type: 'peer_review',
+      entity_id: requestId,
+    },
   })
 
   revalidatePath('/employee/peer-reviews')

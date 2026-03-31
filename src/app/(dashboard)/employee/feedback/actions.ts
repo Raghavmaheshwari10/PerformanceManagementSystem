@@ -20,13 +20,24 @@ export async function sendFeedback(_prev: ActionResult, formData: FormData): Pro
   const recipient = await prisma.user.findUnique({ where: { id: to_user_id }, select: { id: true } })
   if (!recipient) return { data: null, error: 'Recipient not found' }
 
-  await prisma.feedback.create({
+  const feedback = await prisma.feedback.create({
     data: {
       from_user_id: user.id,
       to_user_id,
       category,
       message,
       visibility,
+    },
+    select: { id: true },
+  })
+
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'feedback_sent',
+      entity_type: 'feedback',
+      entity_id: feedback.id,
+      new_value: { to_user_id, category, visibility },
     },
   })
 

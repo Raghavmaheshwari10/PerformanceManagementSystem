@@ -24,6 +24,16 @@ export async function toggleFeatureFlag(key: string, value: boolean): Promise<Ac
       })
     }
 
+    await prisma.auditLog.create({
+      data: {
+        changed_by: user.id,
+        action: 'feature_flag_toggled',
+        entity_type: 'feature_flag',
+        entity_id: key,
+        new_value: { flag_key: key, value },
+      },
+    })
+
     revalidatePath('/admin/feature-flags')
     return { data: null, error: null }
   } catch (e) {

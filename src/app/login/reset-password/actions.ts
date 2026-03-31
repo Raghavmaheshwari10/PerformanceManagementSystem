@@ -30,5 +30,14 @@ export async function resetPassword(_prev: ActionResult, formData: FormData): Pr
     data: { password_hash, reset_token: null, reset_token_expires_at: null },
   })
 
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'password_reset',
+      entity_type: 'user',
+      entity_id: user.id,
+    },
+  })
+
   return { data: null, error: null }
 }

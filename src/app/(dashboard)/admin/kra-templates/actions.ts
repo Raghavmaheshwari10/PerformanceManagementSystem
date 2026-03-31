@@ -20,13 +20,22 @@ function parseKraTemplateForm(formData: FormData) {
 }
 
 export async function createKraTemplate(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
-  await requireRole(['admin'])
+  const user = await requireRole(['admin'])
   const data = parseKraTemplateForm(formData)
 
   if (!data.title) return { data: null, error: 'Title is required' }
 
   try {
-    await prisma.kraTemplate.create({ data })
+    const template = await prisma.kraTemplate.create({ data })
+    await prisma.auditLog.create({
+      data: {
+        changed_by: user.id,
+        action: 'kra_template_created',
+        entity_type: 'kra_template',
+        entity_id: template.id,
+        new_value: { title: data.title, category: data.category },
+      },
+    })
   } catch (e) {
     return { data: null, error: e instanceof Error ? e.message : 'Failed to create KRA template' }
   }
@@ -36,13 +45,22 @@ export async function createKraTemplate(_prev: ActionResult, formData: FormData)
 }
 
 export async function updateKraTemplate(id: string, _prev: ActionResult, formData: FormData): Promise<ActionResult> {
-  await requireRole(['admin'])
+  const user = await requireRole(['admin'])
   const data = parseKraTemplateForm(formData)
 
   if (!data.title) return { data: null, error: 'Title is required' }
 
   try {
     await prisma.kraTemplate.update({ where: { id }, data })
+    await prisma.auditLog.create({
+      data: {
+        changed_by: user.id,
+        action: 'kra_template_updated',
+        entity_type: 'kra_template',
+        entity_id: id,
+        new_value: { title: data.title, category: data.category },
+      },
+    })
   } catch (e) {
     return { data: null, error: e instanceof Error ? e.message : 'Failed to update KRA template' }
   }
@@ -52,16 +70,34 @@ export async function updateKraTemplate(id: string, _prev: ActionResult, formDat
 }
 
 export async function toggleKraTemplateActive(id: string, current: boolean): Promise<void> {
-  await requireRole(['admin'])
+  const user = await requireRole(['admin'])
   await prisma.kraTemplate.update({
     where: { id },
     data: { is_active: !current },
+  })
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'kra_template_toggled',
+      entity_type: 'kra_template',
+      entity_id: id,
+      new_value: { is_active: !current },
+    },
   })
   revalidatePath('/admin/kra-templates')
 }
 
 export async function deleteKraTemplate(id: string): Promise<void> {
-  await requireRole(['admin'])
+  const user = await requireRole(['admin'])
   await prisma.kraTemplate.delete({ where: { id } })
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'kra_template_deleted',
+      entity_type: 'kra_template',
+      entity_id: id,
+      new_value: {},
+    },
+  })
   revalidatePath('/admin/kra-templates')
 }

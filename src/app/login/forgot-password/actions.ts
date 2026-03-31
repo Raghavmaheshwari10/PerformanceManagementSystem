@@ -25,6 +25,15 @@ export async function requestPasswordReset(_prev: ActionResult, formData: FormDa
     data: { reset_token: token, reset_token_expires_at: expires },
   })
 
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'password_reset_requested',
+      entity_type: 'user',
+      entity_id: user.id,
+    },
+  })
+
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.AUTH_URL ?? 'https://pms.emb.global'
   const resetUrl = `${baseUrl}/login/reset-password?token=${token}`
 

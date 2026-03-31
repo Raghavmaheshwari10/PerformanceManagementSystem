@@ -19,7 +19,7 @@ export async function saveEmailTemplate(
   if (!subject) return { data: null, error: 'Subject is required' }
   if (!htmlBody) return { data: null, error: 'HTML body is required' }
 
-  await prisma.emailTemplate.upsert({
+  const template = await prisma.emailTemplate.upsert({
     where: { notification_type: notificationType },
     create: {
       notification_type: notificationType,
@@ -35,6 +35,16 @@ export async function saveEmailTemplate(
     },
   })
 
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'email_template_saved',
+      entity_type: 'email_template',
+      entity_id: template.id,
+      new_value: { notification_type: notificationType, subject },
+    },
+  })
+
   revalidatePath('/admin/email-templates')
   return { data: null, error: null }
 }
@@ -42,11 +52,21 @@ export async function saveEmailTemplate(
 export async function deleteEmailTemplate(
   notificationType: string
 ): Promise<ActionResult> {
-  await requireRole(['admin'])
+  const user = await requireRole(['admin'])
 
   await prisma.emailTemplate.delete({
     where: { notification_type: notificationType },
   }).catch(() => {})
+
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'email_template_deleted',
+      entity_type: 'email_template',
+      entity_id: notificationType,
+      new_value: { notification_type: notificationType },
+    },
+  })
 
   revalidatePath('/admin/email-templates')
   return { data: null, error: null }

@@ -57,7 +57,7 @@ export async function updateCycleDepartments(
   _prev: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireRole(['admin'])
+  const user = await requireRole(['admin'])
   const departmentIds = formData.getAll('department_ids') as string[]
 
   try {
@@ -72,6 +72,16 @@ export async function updateCycleDepartments(
   } catch (e) {
     return { data: null, error: e instanceof Error ? e.message : 'Failed to update departments' }
   }
+
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'cycle_departments_updated',
+      entity_type: 'cycle',
+      entity_id: cycleId,
+      new_value: { department_ids: departmentIds },
+    },
+  })
 
   revalidatePath(`/admin/cycles/${cycleId}`)
   return { data: null, error: null }

@@ -12,15 +12,24 @@ export async function createReviewTemplate(_prev: ActionResult, formData: FormDa
   const description = (formData.get('description') as string)?.trim() || null
   if (!name) return { data: null, error: 'Name required' }
 
-  await prisma.reviewTemplate.create({
+  const template = await prisma.reviewTemplate.create({
     data: { name, description, created_by: user.id },
+  })
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'review_template_created',
+      entity_type: 'review_template',
+      entity_id: template.id,
+      new_value: { name, description },
+    },
   })
   revalidatePath('/admin/review-templates')
   return { data: null, error: null }
 }
 
 export async function addTemplateQuestion(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
-  await requireRole(['admin', 'hrbp'])
+  const user = await requireRole(['admin', 'hrbp'])
   const templateId = formData.get('template_id') as string
   const questionText = (formData.get('question_text') as string)?.trim()
   const answerType = (formData.get('answer_type') as AnswerType) || 'rating'
@@ -29,7 +38,7 @@ export async function addTemplateQuestion(_prev: ActionResult, formData: FormDat
   if (!questionText) return { data: null, error: 'Question text required' }
 
   const count = await prisma.reviewQuestion.count({ where: { template_id: templateId } })
-  await prisma.reviewQuestion.create({
+  const question = await prisma.reviewQuestion.create({
     data: {
       template_id: templateId,
       question_text: questionText,
@@ -38,12 +47,30 @@ export async function addTemplateQuestion(_prev: ActionResult, formData: FormDat
       order_index: count,
     },
   })
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'template_question_added',
+      entity_type: 'review_question',
+      entity_id: question.id,
+      new_value: { template_id: templateId, question_text: questionText, answer_type: answerType },
+    },
+  })
   revalidatePath('/admin/review-templates')
   return { data: null, error: null }
 }
 
 export async function deleteReviewTemplate(id: string): Promise<void> {
-  await requireRole(['admin'])
+  const user = await requireRole(['admin'])
   await prisma.reviewTemplate.delete({ where: { id } })
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'review_template_deleted',
+      entity_type: 'review_template',
+      entity_id: id,
+      new_value: {},
+    },
+  })
   revalidatePath('/admin/review-templates')
 }

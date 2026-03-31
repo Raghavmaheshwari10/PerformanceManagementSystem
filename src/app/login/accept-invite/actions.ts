@@ -44,5 +44,14 @@ export async function acceptInvite(token: string, password: string): Promise<Acc
     },
   })
 
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'invite_accepted',
+      entity_type: 'user',
+      entity_id: user.id,
+    },
+  })
+
   return { error: null }
 }

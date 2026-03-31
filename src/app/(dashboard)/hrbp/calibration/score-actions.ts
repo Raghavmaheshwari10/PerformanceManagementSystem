@@ -8,7 +8,7 @@ import { revalidatePath } from 'next/cache'
 const TIER_SCORES: Record<string, number> = { FEE: 95, EE: 80, ME: 60, SME: 40, BE: 15 }
 
 export async function calculateCycleScores(cycleId: string): Promise<{ error?: string; count?: number }> {
-  await requireRole(['hrbp', 'admin'])
+  const user = await requireRole(['hrbp', 'admin'])
 
   const appraisals = await prisma.appraisal.findMany({
     where: { cycle_id: cycleId },
@@ -62,6 +62,16 @@ export async function calculateCycleScores(cycleId: string): Promise<{ error?: s
     })
     count++
   }
+
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'scores_calculated',
+      entity_type: 'cycle',
+      entity_id: cycleId,
+      new_value: { appraisals_scored: count },
+    },
+  })
 
   revalidatePath(`/hrbp/calibration`)
   return { count }

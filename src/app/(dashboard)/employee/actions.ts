@@ -167,6 +167,16 @@ export async function saveDraftReview(_prev: ActionResult, formData: FormData): 
     })
   }
 
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'review_draft_saved',
+      entity_type: 'review',
+      entity_id: draftReview.id,
+      new_value: { cycle_id: cycleId, self_rating: selfRating },
+    },
+  })
+
   revalidatePath('/employee')
   return { data: null, error: null }
 }
