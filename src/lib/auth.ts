@@ -56,9 +56,17 @@ export function checkManagerOwnership(userId: string, managerId: string): boolea
 
 /**
  * DB-backed ownership check. Fetches the employee and verifies the given managerId
- * owns that record. Redirects to /unauthorized on failure.
+ * owns that record. Admins and HRBPs bypass the check (they can manage any employee).
+ * Redirects to /unauthorized on failure.
  */
 export async function requireManagerOwnership(employeeId: string, managerId: string): Promise<void> {
+  // Admins and HRBPs can access any employee's pages
+  const caller = await prisma.user.findUnique({
+    where: { id: managerId },
+    select: { role: true },
+  })
+  if (caller && (caller.role === 'admin' || caller.role === 'hrbp')) return
+
   const employee = await prisma.user.findUnique({
     where: { id: employeeId },
     select: { manager_id: true },
