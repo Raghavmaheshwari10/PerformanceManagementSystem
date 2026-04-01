@@ -83,6 +83,9 @@ enum NotificationType {
   peer_review_requested
   peer_review_submitted
   feedback_received
+  meeting_scheduled
+  meeting_reminder
+  meeting_mom_submitted
 
   @@map("notification_type")
 }
@@ -111,6 +114,14 @@ enum FeedbackVisibility {
   public_team
 
   @@map("feedback_visibility")
+}
+
+enum MeetingStatus {
+  scheduled
+  completed
+  cancelled
+
+  @@map("meeting_status")
 }
 
 enum PeerReviewStatus {
@@ -214,6 +225,11 @@ model User {
   aop_targets      AopTarget[]   @relation("AopTargetEmployee")
   mis_sync_logs    MisSyncLog[]  @relation("MisSyncTrigger")
   cycle_employees  CycleEmployee[] @relation("CycleEmployees")
+  meetings_as_employee ReviewMeeting[] @relation("MeetingEmployee")
+  meetings_as_manager  ReviewMeeting[] @relation("MeetingManager")
+  meetings_as_hrbp     ReviewMeeting[] @relation("MeetingHrbp")
+  meetings_scheduled   ReviewMeeting[] @relation("MeetingScheduler")
+  mom_submitted        MeetingMinutes[] @relation("MomSubmitter")
 
   @@index([manager_id], name: "idx_users_manager")
   @@index([role], name: "idx_users_role")
@@ -268,6 +284,7 @@ model Cycle {
   peer_review_requests PeerReviewRequest[]
   departments     CycleDepartment[]
   cycle_employees CycleEmployee[]
+  review_meetings ReviewMeeting[]
 
   @@map("cycles")
 }
@@ -659,6 +676,57 @@ model ReviewResponse {
 
   @@unique([review_id, question_id, respondent_id])
   @@map("review_responses")
+}
+
+model ReviewMeeting {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cycle_id        String        @db.Uuid
+  employee_id     String        @db.Uuid
+  manager_id      String        @db.Uuid
+  hrbp_id         String        @db.Uuid
+  status          MeetingStatus @default(scheduled)
+  scheduled_at    DateTime      @db.Timestamptz(6)
+  meet_link       String?
+  calendar_event_id String?
+  scheduled_by    String        @db.Uuid
+  completed_at    DateTime?     @db.Timestamptz(6)
+  cancelled_at    DateTime?     @db.Timestamptz(6)
+  cancel_reason   String?
+  created_at      DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime      @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  cycle    Cycle @relation(fields: [cycle_id], references: [id])
+  employee User  @relation("MeetingEmployee", fields: [employee_id], references: [id])
+  manager  User  @relation("MeetingManager", fields: [manager_id], references: [id])
+  hrbp     User  @relation("MeetingHrbp", fields: [hrbp_id], references: [id])
+  scheduler User @relation("MeetingScheduler", fields: [scheduled_by], references: [id])
+  minutes  MeetingMinutes?
+
+  @@unique([cycle_id, employee_id])
+  @@index([cycle_id, employee_id], name: "idx_review_meetings_cycle_employee")
+  @@index([hrbp_id], name: "idx_review_meetings_hrbp")
+  @@map("review_meetings")
+}
+
+model MeetingMinutes {
+  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  meeting_id             String   @unique @db.Uuid
+  key_discussion_points  String
+  strengths_highlighted  String
+  areas_for_improvement  String
+  action_items           Json     @default("[]") // [{description, owner, deadline}]
+  employee_agreement     Boolean  @default(false) // agree/disagree
+  concerns_raised        String?  // HRBP + Manager only (not visible to employee)
+  submitted_by           String   @db.Uuid
+  created_at             DateTime @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  meeting   ReviewMeeting @relation(fields: [meeting_id], references: [id], onDelete: Cascade)
+  submitter User          @relation("MomSubmitter", fields: [submitted_by], references: [id])
+
+  @@map("meeting_minutes")
 }
 
 model PayoutConfig {

@@ -4,7 +4,7 @@ export type UserRole = "employee" | "manager" | "hrbp" | "admin"
 export type CycleStatus = "draft" | "kpi_setting" | "self_review" | "manager_review" | "calibrating" | "locked" | "published"
 export type RatingTier = "FEE" | "EE" | "ME" | "SME" | "BE"
 export type ReviewStatus = "draft" | "submitted"
-export type NotificationType = "cycle_kpi_setting_open" | "cycle_self_review_open" | "cycle_manager_review_open" | "cycle_published" | "review_submitted" | "manager_review_submitted" | "admin_message" | "review_reminder"
+export type NotificationType = "cycle_kpi_setting_open" | "cycle_self_review_open" | "cycle_manager_review_open" | "cycle_published" | "review_submitted" | "manager_review_submitted" | "admin_message" | "review_reminder" | "meeting_scheduled" | "meeting_reminder" | "meeting_mom_submitted"
 export type NotificationStatus = "pending" | "sent" | "failed"
 
 export interface Department {
@@ -346,4 +346,48 @@ export interface ScoringConfig {
   rating_tier: string
   min_score: number
   is_active: boolean
+}
+
+// ─────────────────────────────────────────
+// Review Discussion Meeting Types
+// ─────────────────────────────────────────
+
+export type MeetingStatus = "scheduled" | "completed" | "cancelled"
+
+export interface ReviewMeeting {
+  id: string
+  cycle_id: string
+  employee_id: string
+  manager_id: string
+  hrbp_id: string
+  status: MeetingStatus
+  scheduled_at: string
+  meet_link: string | null
+  calendar_event_id: string | null
+  scheduled_by: string
+  completed_at: string | null
+  cancelled_at: string | null
+  cancel_reason: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ActionItem {
+  description: string
+  owner: string
+  deadline: string
+}
+
+export interface MeetingMinutes {
+  id: string
+  meeting_id: string
+  key_discussion_points: string
+  strengths_highlighted: string
+  areas_for_improvement: string
+  action_items: ActionItem[]
+  employee_agreement: boolean
+  concerns_raised: string | null
+  submitted_by: string
+  created_at: string
+  updated_at: string
 }

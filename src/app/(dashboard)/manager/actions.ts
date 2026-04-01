@@ -342,6 +342,18 @@ export async function submitManagerRating(_prev: ActionResult, formData: FormDat
     return { data: null, error: 'Cycle is not in manager review phase' }
   }
 
+  // Meeting gate: review discussion meeting must be completed before manager can submit
+  const meeting = await prisma.reviewMeeting.findUnique({
+    where: { cycle_id_employee_id: { cycle_id: cycleId, employee_id: employeeId } },
+    select: { status: true },
+  })
+  if (!meeting || meeting.status !== 'completed') {
+    return {
+      data: null,
+      error: 'A review discussion meeting must be completed before submitting the manager review. Contact your HRBP to schedule the meeting.',
+    }
+  }
+
   // Deadline check
   const cycle = await prisma.cycle.findUnique({
     where: { id: cycleId },

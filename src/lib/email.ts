@@ -62,6 +62,9 @@ const NOTIFICATION_SUBJECTS: Partial<Record<NotificationType, string>> = {
   peer_review_requested: 'Peer Review Requested',
   peer_review_submitted: 'A Peer Has Submitted Their Review',
   feedback_received: 'You Received New Feedback',
+  meeting_scheduled: 'Review Discussion Meeting Scheduled',
+  meeting_reminder: 'Reminder: Review Discussion Meeting Tomorrow',
+  meeting_mom_submitted: 'Review Discussion Meeting Completed — MOM Available',
 }
 
 /** Branded email wrapper with header and footer */
@@ -149,6 +152,32 @@ ${ctaButton('View Request', `${appUrl}/employee/peer-reviews`)}`
 ${ctaButton('View Feedback', `${appUrl}/employee/feedback`)}
 <p style="color:#94a3b8;font-size:13px">Feedback helps you grow. Check it out when you have a moment.</p>`
   ),
+  meeting_scheduled: (p) => wrapEmail(
+    `<h2 style="color:#1e293b;margin:0 0 16px">Review Discussion Meeting Scheduled</h2>
+<p style="color:#475569;line-height:1.6">A review discussion meeting has been scheduled${p.employee_name ? ` for <strong>${p.employee_name}</strong>` : ''}${p.cycle_name ? ` in <strong>${p.cycle_name}</strong>` : ''}.</p>
+<div style="background:#f1f5f9;border-radius:8px;padding:16px;margin:16px 0">
+<p style="color:#475569;margin:0 0 8px;font-size:14px"><strong>When:</strong> ${p.scheduled_at ? new Date(p.scheduled_at).toLocaleString('en-IN', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'TBD'}</p>
+<p style="color:#475569;margin:0 0 8px;font-size:14px"><strong>Organized by:</strong> ${p.hrbp_name ?? 'HRBP'}</p>
+<p style="color:#475569;margin:0;font-size:14px"><strong>Participants:</strong> Employee, Manager, and HRBP</p>
+</div>
+${p.meet_link ? ctaButton('Join Google Meet', p.meet_link, '#1a73e8') : ''}
+<p style="color:#94a3b8;font-size:13px">Please come prepared with your self-assessment and goals. This discussion is a mandatory step before the manager review.</p>`
+  ),
+  meeting_reminder: (p) => wrapEmail(
+    `<h2 style="color:#1e293b;margin:0 0 16px">Reminder: Review Discussion Tomorrow</h2>
+<p style="color:#475569;line-height:1.6">You have a review discussion meeting scheduled for tomorrow${p.employee_name ? ` regarding <strong>${p.employee_name}</strong>` : ''}.</p>
+${p.meet_link ? ctaButton('Join Google Meet', p.meet_link, '#1a73e8') : ''}
+<p style="color:#94a3b8;font-size:13px">Please be on time and come prepared.</p>`
+  ),
+  meeting_mom_submitted: (p) => wrapEmail(
+    `<h2 style="color:#1e293b;margin:0 0 16px">Discussion Meeting Completed</h2>
+<p style="color:#475569;line-height:1.6">The review discussion meeting${p.employee_name ? ` for <strong>${p.employee_name}</strong>` : ''}${p.cycle_name ? ` in <strong>${p.cycle_name}</strong>` : ''} has been completed and the Minutes of Meeting (MOM) have been submitted by ${p.hrbp_name ?? 'the HRBP'}.</p>
+<div style="background:#ecfdf5;border-radius:8px;padding:16px;margin:16px 0;border:1px solid #a7f3d0">
+<p style="color:#065f46;margin:0;font-size:14px;font-weight:600">✓ Manager review is now unlocked</p>
+</div>
+${ctaButton('View Details', `${appUrl}/employee`, '#059669')}
+<p style="color:#94a3b8;font-size:13px">The MOM captures the key discussion points and action items from the meeting.</p>`
+  ),
 }
 
 const NOTIFICATION_SLACK: Partial<Record<NotificationType, (payload: Record<string, string>) => { title: string; body: string; link?: string }>> = {
@@ -163,6 +192,9 @@ const NOTIFICATION_SLACK: Partial<Record<NotificationType, (payload: Record<stri
   peer_review_requested: (p) => ({ title: 'Peer Review Requested', body: `${p.requester_name ?? 'A colleague'} requested a peer review${p.reviewee_name ? ` for *${p.reviewee_name}*` : ''}.`, link: `${appUrl}/employee/peer-reviews` }),
   peer_review_submitted: (p) => ({ title: 'Peer Review Submitted', body: `${p.peer_name ?? 'A peer'} has submitted their peer review for you.`, link: `${appUrl}/employee/peer-reviews` }),
   feedback_received: (p) => ({ title: 'New Feedback Received', body: `A colleague shared *${p.category ?? ''}* feedback with you.`, link: `${appUrl}/employee/feedback` }),
+  meeting_scheduled: (p) => ({ title: 'Discussion Meeting Scheduled', body: `A review discussion meeting has been scheduled${p.employee_name ? ` for *${p.employee_name}*` : ''}${p.scheduled_at ? ` on ${new Date(p.scheduled_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}` : ''}.`, link: p.meet_link }),
+  meeting_reminder: (p) => ({ title: 'Meeting Tomorrow', body: `Reminder: You have a review discussion meeting tomorrow${p.employee_name ? ` regarding *${p.employee_name}*` : ''}.`, link: p.meet_link }),
+  meeting_mom_submitted: (p) => ({ title: 'Meeting MOM Submitted', body: `The review discussion${p.employee_name ? ` for *${p.employee_name}*` : ''} is complete. Manager review is now unlocked.`, link: `${appUrl}/employee` }),
 }
 
 // ─── Unified Notification Dispatcher ─────────────────────────────────

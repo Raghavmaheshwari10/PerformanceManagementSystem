@@ -254,6 +254,30 @@ export default async function EmployeeReviewPage() {
     learning:    { bg: 'bg-emerald-500/20', text: 'text-emerald-400' },
   }
 
+  // Fetch meeting info for employee (filtered view — no concerns_raised)
+  const meetingRecord = await prisma.reviewMeeting.findUnique({
+    where: { cycle_id_employee_id: { cycle_id: cycle.id, employee_id: user.id } },
+    select: {
+      status: true,
+      scheduled_at: true,
+      meet_link: true,
+      completed_at: true,
+      hrbp: { select: { full_name: true } },
+      manager: { select: { full_name: true } },
+      minutes: {
+        select: {
+          key_discussion_points: true,
+          strengths_highlighted: true,
+          areas_for_improvement: true,
+          action_items: true,
+          employee_agreement: true,
+          created_at: true,
+          // NOTE: concerns_raised intentionally excluded for employee view
+        },
+      },
+    },
+  })
+
   const isExitFrozen = !!(appraisal as any)?.is_exit_frozen
   const exitedAt = (appraisal as any)?.exited_at
   const prorationFactor = (appraisal as any)?.proration_factor != null ? Number((appraisal as any).proration_factor) : null
@@ -343,6 +367,90 @@ export default async function EmployeeReviewPage() {
           )}
         </div>
       </div>
+
+      {/* ── Meeting banner ── */}
+      {meetingRecord && (
+        <div className={`rounded-xl border p-4 ${
+          meetingRecord.status === 'scheduled'
+            ? 'border-blue-200 bg-blue-50'
+            : meetingRecord.status === 'completed'
+            ? 'border-emerald-200 bg-emerald-50'
+            : 'border-slate-200 bg-slate-50'
+        }`}>
+          <div className="flex items-start gap-3">
+            <div className={`flex h-8 w-8 items-center justify-center rounded-lg shrink-0 ${
+              meetingRecord.status === 'scheduled' ? 'bg-blue-100' : 'bg-emerald-100'
+            }`}>
+              <svg className={`h-4 w-4 ${meetingRecord.status === 'scheduled' ? 'text-blue-600' : 'text-emerald-600'}`} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              {meetingRecord.status === 'scheduled' ? (
+                <>
+                  <p className="text-sm font-semibold text-blue-800">Review Discussion Meeting Scheduled</p>
+                  <p className="text-xs text-blue-600 mt-0.5">
+                    {new Date(meetingRecord.scheduled_at).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' })} at{' '}
+                    {new Date(meetingRecord.scheduled_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                    {' '}with {meetingRecord.manager.full_name} &amp; {meetingRecord.hrbp.full_name}
+                  </p>
+                  {meetingRecord.meet_link && (
+                    <a
+                      href={meetingRecord.meet_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 mt-2 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 transition-colors"
+                    >
+                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>
+                      Join Google Meet
+                    </a>
+                  )}
+                </>
+              ) : meetingRecord.status === 'completed' ? (
+                <>
+                  <p className="text-sm font-semibold text-emerald-800">Review Discussion Completed</p>
+                  <p className="text-xs text-emerald-600 mt-0.5">
+                    Completed on {meetingRecord.completed_at ? new Date(meetingRecord.completed_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
+                  </p>
+                  {meetingRecord.minutes && (
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-xs font-medium text-emerald-700 hover:text-emerald-800">View Discussion Summary</summary>
+                      <div className="mt-2 space-y-2 rounded-lg border border-emerald-200 bg-white p-3 text-sm">
+                        <div>
+                          <p className="text-xs font-medium text-slate-500">Key Discussion Points</p>
+                          <p className="text-slate-700 whitespace-pre-wrap">{meetingRecord.minutes.key_discussion_points}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-slate-500">Strengths Highlighted</p>
+                          <p className="text-slate-700 whitespace-pre-wrap">{meetingRecord.minutes.strengths_highlighted}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-slate-500">Areas for Improvement</p>
+                          <p className="text-slate-700 whitespace-pre-wrap">{meetingRecord.minutes.areas_for_improvement}</p>
+                        </div>
+                        {(meetingRecord.minutes.action_items as Array<{ description: string; owner: string; deadline: string }>).length > 0 && (
+                          <div>
+                            <p className="text-xs font-medium text-slate-500">Action Items</p>
+                            {(meetingRecord.minutes.action_items as Array<{ description: string; owner: string; deadline: string }>).map((item, idx) => (
+                              <p key={idx} className="text-xs text-slate-600">• {item.description} (Owner: {item.owner}{item.deadline ? `, Due: ${item.deadline}` : ''})</p>
+                            ))}
+                          </div>
+                        )}
+                        <p className="text-xs">
+                          {meetingRecord.minutes.employee_agreement
+                            ? <span className="text-emerald-600 font-medium">✓ You agreed with the discussion points</span>
+                            : <span className="text-amber-600 font-medium">⚠ You disagreed with the discussion points</span>
+                          }
+                        </p>
+                      </div>
+                    </details>
+                  )}
+                </>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Gradient divider ── */}
       <div className="gradient-divider" />

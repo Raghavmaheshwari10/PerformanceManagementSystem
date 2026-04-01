@@ -772,8 +772,8 @@ payout_amount = snapshotted_variable_pay × rating_multiplier × proration_facto
             rows={[
               ['draft',           '—',                              '—',                                '—',                                     'Create cycle, set scope & deadlines'],
               ['kpi_setting',     'View KRAs & KPIs, create goals', 'Create KRAs → KPIs → Finalize, link MIS', '—',                              'Advance dept, send reminders'],
-              ['self_review',     'Submit self-review',             'View team status',                 '—',                                     'Advance dept, send reminders'],
-              ['manager_review',  'View own KPIs',                  'Rate KPIs + competencies, submit', '—',                                     'Advance dept, send reminders'],
+              ['self_review',     'Submit self-review',             'View team status',                 'Schedule discussion meetings',           'Advance dept, send reminders'],
+              ['manager_review',  'Attend discussion meeting, view MOM', 'Attend meeting, rate after MOM submitted', 'Schedule meeting, submit MOM',  'Advance dept, send reminders'],
               ['calibrating',     '—',                              '—',                                'Override ratings, view bell curve',      'Advance dept'],
               ['locked',          '—',                              '—',                                'Publish, export payroll',                '—'],
               ['published',       'See rating & payout',            'See team results',                 'Full access',                           'Full access'],

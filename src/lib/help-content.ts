@@ -109,6 +109,18 @@ export const HELP_CONTENT: Record<string, PageHelp> = {
     ],
     articles: [],
   },
+  '/hrbp/meetings': {
+    summary: [
+      'Schedule mandatory review discussion meetings between employees, managers, and HRBP.',
+      'A meeting must be completed and MOM submitted before the manager can submit their review.',
+      'Google Calendar events with Meet links are automatically created when you schedule a meeting.',
+      'Submit Minutes of Meeting (MOM) after each discussion. The employee sees a filtered view (no confidential concerns).',
+    ],
+    articles: [
+      { id: 'meeting-flow', title: 'How does the meeting flow work?', body: 'After an employee submits their self-review, the HRBP schedules a discussion meeting. Once the meeting happens, the HRBP submits the MOM, which unlocks the manager review form.', route: '/hrbp/meetings' },
+      { id: 'meeting-mom', title: 'What goes in the MOM?', body: 'The MOM captures key discussion points, strengths, areas for improvement, action items with owners and deadlines, employee agreement status, and any confidential concerns visible only to HRBP and manager.', route: '/hrbp/meetings' },
+    ],
+  },
   '/hrbp/calibration': {
     summary: [
       'The bell curve shows the distribution of manager ratings across the team.',

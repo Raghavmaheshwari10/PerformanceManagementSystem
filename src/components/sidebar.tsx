@@ -14,7 +14,7 @@ import {
   Building2, FileBarChart, Settings2, BarChart3, Scale,
   ScrollText, BookOpen, HelpCircle, LogOut,
   Wallet, Bell, FileSpreadsheet, Menu, X, ChevronRight,
-  Mail, BadgeCheck,
+  Mail, BadgeCheck, Video,
 } from 'lucide-react'
 
 interface NavItem {
@@ -47,6 +47,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
   ],
   hrbp: [
     { label: 'Cycles',       href: '/hrbp',              icon: CalendarClock },
+    { label: 'Meetings',     href: '/hrbp/meetings',     icon: Video },
     { label: 'Calibration',  href: '/hrbp/calibration',  icon: Scale },
     { label: 'Employees',    href: '/hrbp/employees',    icon: Users2 },
     { label: 'Payouts',      href: '/hrbp/payouts',      icon: Wallet },
