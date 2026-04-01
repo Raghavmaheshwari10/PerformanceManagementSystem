@@ -277,6 +277,11 @@ export default async function KpiSettingPage({
                 <div key={kpi.id} className="glass-interactive flex items-center justify-between rounded-lg p-3">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-medium">{kpi.title}</p>
+                    {kpi.target != null && (
+                      <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
+                        Target: {kpi.unit === 'percent' ? `${Number(kpi.target)}%` : String(Number(kpi.target))}
+                      </span>
+                    )}
                     {kpi.weight != null && (
                       <span className="rounded-full bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground">
                         {String(kpi.weight)}%
@@ -316,10 +321,14 @@ export default async function KpiSettingPage({
                     <input type="hidden" name="cycle_id" value={cycleId} />
                     <input type="hidden" name="employee_id" value={employeeId} />
                     <input type="hidden" name="kra_id" value={kra.id} />
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                       <div className="space-y-1 sm:col-span-2">
                         <Label htmlFor={`kpi-title-${kra.id}`}>Title</Label>
                         <Input id={`kpi-title-${kra.id}`} name="title" required placeholder="e.g. Deliver feature X by Q2" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor={`kpi-target-${kra.id}`}>Target</Label>
+                        <Input id={`kpi-target-${kra.id}`} name="target" type="number" step="any" placeholder="e.g. 95" />
                       </div>
                       <div className="space-y-1">
                         <Label htmlFor={`kpi-weight-${kra.id}`}>Weight (%)</Label>
@@ -357,6 +366,11 @@ export default async function KpiSettingPage({
               <div key={kpi.id} className="glass-interactive flex items-center justify-between rounded-lg p-3">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="font-medium">{kpi.title}</p>
+                  {kpi.target != null && (
+                    <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
+                      Target: {kpi.unit === 'percent' ? `${Number(kpi.target)}%` : String(Number(kpi.target))}
+                    </span>
+                  )}
                   {kpi.weight != null && (
                     <span className="rounded-full bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground">
                       {String(kpi.weight)}%

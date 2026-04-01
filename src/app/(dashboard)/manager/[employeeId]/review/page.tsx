@@ -58,6 +58,7 @@ export default async function ManagerReviewPage({
   const kpis = kpisRaw.map((k) => ({
     ...k,
     weight: k.weight !== null ? Number(k.weight) : null,
+    target: k.target != null ? Number(k.target) : null,
     kra: k.kra ? { ...k.kra, weight: k.kra.weight !== null ? Number(k.kra.weight) : null } : null,
   })) as unknown as (Kpi & { kra: Kra | null })[]
 
@@ -142,8 +143,13 @@ export default async function ManagerReviewPage({
               /* Flat list when no KRAs exist (backwards compatible) */
               kpis.map(kpi => (
                 <div key={kpi.id} className="rounded border bg-background p-3">
-                  <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-medium">{kpi.title}</p>
+                    {kpi.target != null && (
+                      <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
+                        Target: {kpi.unit === 'percent' ? `${kpi.target}%` : String(kpi.target)}
+                      </span>
+                    )}
                     <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs">{kpi.weight}%</span>
                   </div>
                   {kpi.description && (
@@ -181,8 +187,13 @@ export default async function ManagerReviewPage({
                       </div>
                       {kraKpis.map(kpi => (
                         <div key={kpi.id} className="rounded border bg-background p-2.5 ml-2">
-                          <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <p className="text-sm font-medium">{kpi.title}</p>
+                            {kpi.target != null && (
+                              <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
+                                Target: {kpi.unit === 'percent' ? `${kpi.target}%` : String(kpi.target)}
+                              </span>
+                            )}
                             <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs">{kpi.weight}%</span>
                           </div>
                           {kpi.description && (
@@ -204,8 +215,13 @@ export default async function ManagerReviewPage({
                     <p className="text-sm font-semibold text-muted-foreground">General</p>
                     {ungroupedKpis.map(kpi => (
                       <div key={kpi.id} className="rounded border bg-background p-2.5 ml-2">
-                        <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <p className="text-sm font-medium">{kpi.title}</p>
+                          {kpi.target != null && (
+                            <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
+                              Target: {kpi.unit === 'percent' ? `${kpi.target}%` : String(kpi.target)}
+                            </span>
+                          )}
                           <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs">{kpi.weight}%</span>
                         </div>
                         {kpi.description && (

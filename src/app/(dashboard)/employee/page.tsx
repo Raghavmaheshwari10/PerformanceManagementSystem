@@ -225,6 +225,7 @@ export default async function EmployeeReviewPage() {
   const serializedKpis: Kpi[] = kpis.map(k => ({
     ...k,
     weight: k.weight !== null ? Number(k.weight) : null,
+    target: k.target != null ? Number(k.target) : null,
     kra: k.kra ? { ...k.kra, weight: k.kra.weight !== null ? Number(k.kra.weight) : null } : undefined,
   })) as unknown as Kpi[]
 
@@ -342,10 +343,19 @@ export default async function EmployeeReviewPage() {
                 return (
                   <div key={kpi.id} className="glass-interactive p-4 space-y-3">
                     <div className="flex items-start justify-between gap-2">
-                      <p className="font-medium text-sm leading-snug">{kpi.title}</p>
-                      <span className="shrink-0 rounded-full bg-muted/50 px-2 py-0.5 text-xs font-semibold tabular-nums">
-                        {String(kpi.weight)}%
-                      </span>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm leading-snug">{kpi.title}</p>
+                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                          {kpi.target != null && (
+                            <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
+                              Target: {kpi.unit === 'percent' ? `${kpi.target}%` : String(kpi.target)}
+                            </span>
+                          )}
+                          <span className="rounded-full bg-muted/50 px-2 py-0.5 text-[10px] font-semibold tabular-nums">
+                            {String(kpi.weight)}%
+                          </span>
+                        </div>
+                      </div>
                     </div>
                     {kpi.description && (
                       <p className="text-xs text-muted-foreground line-clamp-2">{kpi.description}</p>
@@ -402,10 +412,19 @@ export default async function EmployeeReviewPage() {
                           return (
                             <div key={kpi.id} className="glass-interactive p-3 space-y-2">
                               <div className="flex items-start justify-between gap-2">
-                                <p className="font-medium text-sm leading-snug">{kpi.title}</p>
-                                <span className="shrink-0 rounded-full bg-muted/50 px-2 py-0.5 text-xs font-semibold tabular-nums">
-                                  {String(kpi.weight)}%
-                                </span>
+                                <div className="min-w-0">
+                                  <p className="font-medium text-sm leading-snug">{kpi.title}</p>
+                                  <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                    {kpi.target != null && (
+                                      <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
+                                        Target: {kpi.unit === 'percent' ? `${kpi.target}%` : String(kpi.target)}
+                                      </span>
+                                    )}
+                                    <span className="rounded-full bg-muted/50 px-2 py-0.5 text-[10px] font-semibold tabular-nums">
+                                      {String(kpi.weight)}%
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
                               {kpi.description && (
                                 <p className="text-xs text-muted-foreground line-clamp-2">{kpi.description}</p>
@@ -447,10 +466,19 @@ export default async function EmployeeReviewPage() {
                       return (
                         <div key={kpi.id} className="glass-interactive p-3 space-y-2">
                           <div className="flex items-start justify-between gap-2">
-                            <p className="font-medium text-sm leading-snug">{kpi.title}</p>
-                            <span className="shrink-0 rounded-full bg-muted/50 px-2 py-0.5 text-xs font-semibold tabular-nums">
-                              {String(kpi.weight)}%
-                            </span>
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm leading-snug">{kpi.title}</p>
+                              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                {kpi.target != null && (
+                                  <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
+                                    Target: {kpi.unit === 'percent' ? `${kpi.target}%` : String(kpi.target)}
+                                  </span>
+                                )}
+                                <span className="rounded-full bg-muted/50 px-2 py-0.5 text-[10px] font-semibold tabular-nums">
+                                  {String(kpi.weight)}%
+                                </span>
+                              </div>
+                            </div>
                           </div>
                           {kpi.description && (
                             <p className="text-xs text-muted-foreground line-clamp-2">{kpi.description}</p>

@@ -25,6 +25,9 @@ export async function addKpi(formData: FormData): Promise<ActionResult> {
   }
 
   const title = formData.get('title') as string
+  const unit = (formData.get('unit') as string) || 'percent'
+  const rawTarget = formData.get('target')
+  const target = rawTarget ? Number(rawTarget) : null
 
   const kraId = (formData.get('kra_id') as string) || null
 
@@ -51,6 +54,8 @@ export async function addKpi(formData: FormData): Promise<ActionResult> {
       manager_id: user.id,
       title,
       description: (formData.get('description') as string) || null,
+      unit,
+      target,
       weight,
       kra_id: kraId,
     },

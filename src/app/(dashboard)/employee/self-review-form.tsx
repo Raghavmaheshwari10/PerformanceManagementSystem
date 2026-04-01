@@ -310,6 +310,13 @@ export function SelfReviewForm({ cycleId, review, kpis, kras, questions = [], ex
 
 /* ── Per-KPI Rating Card ── */
 
+function formatTarget(kpi: Kpi) {
+  if (kpi.target == null) return null
+  if (kpi.unit === 'percent') return `${kpi.target}%`
+  if (kpi.unit === 'boolean') return kpi.target ? 'Yes' : 'No'
+  return String(kpi.target)
+}
+
 function KpiRatingCard({
   kpi,
   rating,
@@ -319,31 +326,43 @@ function KpiRatingCard({
   rating: string | null
   onRatingChange: (value: string) => void
 }) {
+  const target = formatTarget(kpi)
   return (
-    <div className="glass-interactive p-3 space-y-2">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="font-medium text-sm leading-snug">{kpi.title}</p>
+    <div className="glass-interactive p-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        {/* Left: KPI info */}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="font-medium text-sm leading-snug">{kpi.title}</p>
+            {target && (
+              <span className="shrink-0 rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
+                Target: {target}
+              </span>
+            )}
+            <span className="shrink-0 rounded-full bg-muted/50 px-2 py-0.5 text-[10px] font-semibold tabular-nums">
+              {String(kpi.weight)}%
+            </span>
+          </div>
           {kpi.description && (
             <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{kpi.description}</p>
           )}
         </div>
-        <span className="shrink-0 rounded-full bg-muted/50 px-2 py-0.5 text-xs font-semibold tabular-nums">
-          {String(kpi.weight)}%
-        </span>
+        {/* Right: Rating pills inline */}
+        <div className="shrink-0">
+          <RatingPillSelector
+            options={STANDARD_RATING_OPTIONS}
+            value={rating}
+            onChange={onRatingChange}
+            label=""
+          />
+        </div>
       </div>
-      <RatingPillSelector
-        options={STANDARD_RATING_OPTIONS}
-        value={rating}
-        onChange={onRatingChange}
-        label="Your rating"
-      />
       <Textarea
         name={`kpi_comments_${kpi.id}`}
         rows={2}
         defaultValue={kpi.self_comments ?? ''}
         placeholder="Comments on this KPI (optional)…"
-        className="text-xs"
+        className="text-xs mt-2"
       />
     </div>
   )

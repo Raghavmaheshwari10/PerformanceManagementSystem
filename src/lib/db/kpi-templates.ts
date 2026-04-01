@@ -82,6 +82,8 @@ export async function applyKpiTemplate(
           kra_id:      resolveKraId(t),
           title:       t.title,
           description: t.description,
+          unit:        t.unit,
+          target:      t.target,
           weight:      t.weight,
         })),
       })
