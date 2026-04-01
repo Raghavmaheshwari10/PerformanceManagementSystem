@@ -103,6 +103,70 @@ export async function deleteKpi(kpiId: string, employeeId: string): Promise<Acti
   return { data: null, error: null }
 }
 
+export async function updateKpi(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const user = await requireRole(['manager'])
+  const employeeId = formData.get('employee_id') as string
+  const kpiId = formData.get('kpi_id') as string
+
+  await requireManagerOwnership(employeeId, user.id)
+
+  const kpi = await prisma.kpi.findUnique({ where: { id: kpiId }, select: { cycle_id: true, kra_id: true, weight: true } })
+  if (!kpi) return { data: null, error: 'KPI not found' }
+
+  if (await areKpisFinalized(kpi.cycle_id, employeeId)) {
+    return { data: null, error: 'KPIs are finalized. Unlock first to make changes.' }
+  }
+
+  const title = (formData.get('title') as string)?.trim()
+  if (!title) return { data: null, error: 'Title is required' }
+
+  const rawWeight = formData.get('weight')
+  const weight = rawWeight ? Number(rawWeight) : null
+  if (weight !== null && !validateWeight(weight)) {
+    return { data: null, error: 'Weight must be between 1 and 100' }
+  }
+
+  const rawTarget = formData.get('target')
+  const target = rawTarget ? Number(rawTarget) : null
+
+  // Enforce 100% KPI weight cap per KRA when weight changes
+  if (kpi.kra_id && weight !== null) {
+    const existingKpis = await prisma.kpi.findMany({
+      where: { kra_id: kpi.kra_id, id: { not: kpiId } },
+      select: { weight: true },
+    })
+    const currentTotal = existingKpis.reduce((sum, k) => sum + (k.weight ? Number(k.weight) : 0), 0)
+    if (currentTotal + weight > 100) {
+      const remaining = 100 - currentTotal
+      return { data: null, error: `Only ${remaining}% weight remaining under this KRA.` }
+    }
+  }
+
+  await prisma.kpi.update({
+    where: { id: kpiId },
+    data: {
+      title,
+      description: (formData.get('description') as string) || null,
+      target,
+      weight,
+      updated_at: new Date(),
+    },
+  })
+
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'kpi_updated',
+      entity_type: 'kpi',
+      entity_id: kpiId,
+      new_value: { title, target, weight, employee_id: employeeId },
+    },
+  })
+
+  revalidatePath(`/manager/${employeeId}/kpis`)
+  return { data: null, error: null }
+}
+
 export async function addKra(formData: FormData): Promise<ActionResult> {
   const user = await requireRole(['manager'])
   const employeeId = formData.get('employee_id') as string

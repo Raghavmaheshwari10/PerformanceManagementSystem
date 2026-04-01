@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { KpiTemplatePicker } from '@/components/kpi-template-picker'
 import { KraTemplatePicker } from '@/components/kra-template-picker'
+import { KpiRow } from './kpi-row'
 
 const CATEGORY_STYLES: Record<string, string> = {
   performance: 'bg-primary/15 text-primary',
@@ -274,26 +275,16 @@ export default async function KpiSettingPage({
                 </p>
               )}
               {kraKpis.map(kpi => (
-                <div key={kpi.id} className="glass-interactive flex items-center justify-between rounded-lg p-3">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-medium">{kpi.title}</p>
-                    {kpi.target != null && (
-                      <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
-                        Target: {kpi.unit === 'percent' ? `${Number(kpi.target)}%` : String(Number(kpi.target))}
-                      </span>
-                    )}
-                    {kpi.weight != null && (
-                      <span className="rounded-full bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground">
-                        {String(kpi.weight)}%
-                      </span>
-                    )}
-                  </div>
-                  {!isFinalized && (
-                    <form action={deleteKpi.bind(null, kpi.id, employeeId) as unknown as (fd: FormData) => Promise<void>}>
-                      <Button variant="ghost" size="sm" type="submit">Remove</Button>
-                    </form>
-                  )}
-                </div>
+                <KpiRow
+                  key={kpi.id}
+                  kpiId={kpi.id}
+                  employeeId={employeeId}
+                  title={kpi.title}
+                  target={kpi.target != null ? Number(kpi.target) : null}
+                  weight={kpi.weight != null ? Number(kpi.weight) : null}
+                  unit={kpi.unit}
+                  isFinalized={isFinalized}
+                />
               ))}
             </div>
 
@@ -363,26 +354,16 @@ export default async function KpiSettingPage({
           </p>
           <div className="space-y-2">
             {ungroupedKpis.map(kpi => (
-              <div key={kpi.id} className="glass-interactive flex items-center justify-between rounded-lg p-3">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-medium">{kpi.title}</p>
-                  {kpi.target != null && (
-                    <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
-                      Target: {kpi.unit === 'percent' ? `${Number(kpi.target)}%` : String(Number(kpi.target))}
-                    </span>
-                  )}
-                  {kpi.weight != null && (
-                    <span className="rounded-full bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground">
-                      {String(kpi.weight)}%
-                    </span>
-                  )}
-                </div>
-                {!isFinalized && (
-                  <form action={deleteKpi.bind(null, kpi.id, employeeId) as unknown as (fd: FormData) => Promise<void>}>
-                    <Button variant="ghost" size="sm" type="submit">Remove</Button>
-                  </form>
-                )}
-              </div>
+              <KpiRow
+                key={kpi.id}
+                kpiId={kpi.id}
+                employeeId={employeeId}
+                title={kpi.title}
+                target={kpi.target != null ? Number(kpi.target) : null}
+                weight={kpi.weight != null ? Number(kpi.weight) : null}
+                unit={kpi.unit}
+                isFinalized={isFinalized}
+              />
             ))}
           </div>
         </section>
