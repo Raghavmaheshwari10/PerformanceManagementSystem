@@ -133,6 +133,17 @@ enum AnswerType {
 // Models
 // ─────────────────────────────────────────
 
+model RoleSlug {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug       String   @unique
+  label      String
+  sort_order Int      @default(0)
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("role_slugs")
+}
+
 model Department {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name       String   @unique
@@ -188,7 +199,6 @@ model User {
   notification_preferences NotificationPreference[]
   drafts           Draft[]
   payout_configs_updated PayoutConfig[]
-  feature_flag_overrides_updated FeatureFlagOverride[]
   goals_as_employee Goal[] @relation("GoalEmployee")
   goals_approved    Goal[] @relation("GoalApprover")
   goal_updates      GoalUpdate[] @relation("GoalUpdater")
@@ -240,11 +250,14 @@ model Cycle {
   ee_multiplier           Decimal?    @db.Decimal
   me_multiplier           Decimal?    @db.Decimal
   created_by              String?     @db.Uuid
+  review_template_id      String?     @db.Uuid
+  competency_weight       Decimal     @default(0) @db.Decimal(5, 2) // 0-100, remainder is KPI weight
   created_at              DateTime    @default(now()) @db.Timestamptz(6)
   updated_at              DateTime    @default(now()) @db.Timestamptz(6)
 
   // Relations
-  creator     User?      @relation("CycleCreatedBy", fields: [created_by], references: [id])
+  creator         User?           @relation("CycleCreatedBy", fields: [created_by], references: [id])
+  review_template ReviewTemplate? @relation(fields: [review_template_id], references: [id], onDelete: SetNull)
   kpis        Kpi[]
   reviews     Review[]
   appraisals  Appraisal[]
@@ -412,6 +425,7 @@ model Appraisal {
   payout_multiplier      Decimal?   @db.Decimal(5, 4)
   payout_amount          Decimal?   @db.Decimal(12, 2)
   mis_score              Decimal?   @db.Decimal(5, 2)
+  competency_score       Decimal?   @db.Decimal(5, 2)
   suggested_rating       RatingTier?
   override_reason        String?
   snapshotted_variable_pay Decimal? @db.Decimal
@@ -608,6 +622,7 @@ model ReviewTemplate {
 
   creator   User             @relation("ReviewTemplateCreator", fields: [created_by], references: [id])
   questions ReviewQuestion[]
+  cycles    Cycle[]
 
   @@map("review_templates")
 }
@@ -655,37 +670,6 @@ model PayoutConfig {
   updated_by_user User? @relation(fields: [updated_by], references: [id])
 
   @@map("payout_config")
-}
-
-model FeatureFlag {
-  key           String   @id
-  name          String
-  category      String   @default("module")
-  default_value Boolean  @default(false)
-  description   String?
-  created_at    DateTime @default(now()) @db.Timestamptz(6)
-
-  // Relations
-  overrides FeatureFlagOverride[]
-
-  @@map("feature_flags")
-}
-
-model FeatureFlagOverride {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  flag_key   String
-  scope      String
-  scope_id   String?
-  value      Boolean
-  updated_by String?  @db.Uuid
-  updated_at DateTime @default(now()) @db.Timestamptz(6)
-
-  // Relations
-  feature_flag   FeatureFlag @relation(fields: [flag_key], references: [key], onDelete: Cascade)
-  updated_by_user User?      @relation(fields: [updated_by], references: [id])
-
-  @@unique([flag_key, scope, scope_id])
-  @@map("feature_flag_overrides")
 }
 
 // ─────────────────────────────────────────

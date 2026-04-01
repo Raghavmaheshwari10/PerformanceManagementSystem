@@ -21,10 +21,17 @@ export default async function KpiTemplatesPage({
   await requireRole(['admin'])
   const { category } = await searchParams
 
-  const templates = await prisma.kpiTemplate.findMany({
-    where: category ? { category } : undefined,
-    orderBy: [{ role_slug: 'asc' }, { sort_order: 'asc' }],
-  })
+  const [templates, roleSlugs] = await Promise.all([
+    prisma.kpiTemplate.findMany({
+      where: category ? { category } : undefined,
+      orderBy: [{ role_slug: 'asc' }, { sort_order: 'asc' }],
+    }),
+    prisma.roleSlug.findMany({
+      select: { slug: true, label: true },
+    }),
+  ])
+
+  const roleLabels = Object.fromEntries(roleSlugs.map(r => [r.slug, r.label]))
 
   const grouped = (templates as unknown as KpiTemplate[]).reduce<Record<string, KpiTemplate[]>>((acc, t) => {
     acc[t.role_slug] = [...(acc[t.role_slug] ?? []), t]
@@ -57,7 +64,7 @@ export default async function KpiTemplatesPage({
       {Object.entries(grouped).map(([slug, items]) => (
         <div key={slug} className="rounded-lg border">
           <div className="px-4 py-2 bg-muted/50 border-b">
-            <h2 className="font-semibold text-sm">{toTitleCase(slug)}</h2>
+            <h2 className="font-semibold text-sm">{roleLabels[slug] ?? toTitleCase(slug)}</h2>
           </div>
           <table className="w-full text-sm">
             <thead>

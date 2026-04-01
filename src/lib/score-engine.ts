@@ -7,15 +7,27 @@ interface ScoreInputs {
   competencyScore: number
 }
 
+interface ScoreWeights {
+  competencyWeight?: number // 0-100 percentage for competency; remainder split between goals and manager
+}
+
 /**
  * Calculates weighted final score (0–100).
- * Weights: goal 60%, competency 20%, manager 20%.
+ * Default weights: goal 60%, competency 20%, manager 20%.
+ * When competencyWeight is provided (from cycle config), the non-competency portion
+ * is split: 75% goals / 25% manager review.
  * Peer review score is disabled — weight redistributed to goals.
  */
-export function calculateFinalScore(inputs: ScoreInputs): number {
+export function calculateFinalScore(inputs: ScoreInputs, weights?: ScoreWeights): number {
   const { goalScore, managerScore, competencyScore } = inputs
 
-  const score = goalScore * 0.60 + competencyScore * 0.20 + managerScore * 0.20
+  const compPct = (weights?.competencyWeight ?? 20) / 100
+  const nonCompPct = 1 - compPct
+  // Split non-competency portion: 75% goals, 25% manager
+  const goalPct = nonCompPct * 0.75
+  const managerPct = nonCompPct * 0.25
+
+  const score = goalScore * goalPct + competencyScore * compPct + managerScore * managerPct
 
   return Math.min(100, Math.max(0, Math.round(score * 100) / 100))
 }

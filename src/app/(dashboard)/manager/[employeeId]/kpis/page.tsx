@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { KpiTemplatePicker } from '@/components/kpi-template-picker'
 import { KraTemplatePicker } from '@/components/kra-template-picker'
+import { fetchRoleOptions } from '@/lib/db/role-slugs'
 import { KpiRow } from './kpi-row'
 
 const CATEGORY_STYLES: Record<string, string> = {
@@ -27,7 +28,7 @@ export default async function KpiSettingPage({
 
   await requireManagerOwnership(employeeId, user.id)
 
-  const [employee, rawKpis, rawKras] = await Promise.all([
+  const [employee, rawKpis, rawKras, roleOptions] = await Promise.all([
     prisma.user.findUnique({ where: { id: employeeId } }),
     cycleId
       ? prisma.kpi.findMany({ where: { cycle_id: cycleId, employee_id: employeeId }, include: { kra: true } })
@@ -35,6 +36,7 @@ export default async function KpiSettingPage({
     cycleId
       ? prisma.kra.findMany({ where: { cycle_id: cycleId, employee_id: employeeId }, orderBy: { sort_order: 'asc' } })
       : [],
+    fetchRoleOptions(),
   ])
 
   // Serialize Prisma Decimal to plain numbers for rendering
@@ -113,8 +115,8 @@ export default async function KpiSettingPage({
         </div>
         {cycleId && !isFinalized && (
           <div className="flex items-center gap-2" data-tour="template-picker">
-            <KraTemplatePicker cycleId={cycleId} employeeId={employeeId} />
-            <KpiTemplatePicker cycleId={cycleId} employeeId={employeeId} />
+            <KraTemplatePicker cycleId={cycleId} employeeId={employeeId} roleOptions={roleOptions} />
+            <KpiTemplatePicker cycleId={cycleId} employeeId={employeeId} roleOptions={roleOptions} />
           </div>
         )}
       </div>

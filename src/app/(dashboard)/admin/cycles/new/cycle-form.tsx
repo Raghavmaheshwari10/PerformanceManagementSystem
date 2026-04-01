@@ -7,15 +7,23 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import type { ActionResult } from '@/lib/types'
 
+interface ReviewTemplateOption {
+  id: string
+  name: string
+  description: string | null
+  questionCount: number
+}
+
 interface Props {
   departments: { id: string; name: string }[]
   employeesByDept: Record<string, { id: string; full_name: string }[]>
   unassignedEmployees: { id: string; full_name: string }[]
+  reviewTemplates: ReviewTemplateOption[]
 }
 
 const INITIAL: ActionResult = { data: null, error: null }
 
-export function CycleForm({ departments, employeesByDept, unassignedEmployees }: Props) {
+export function CycleForm({ departments, employeesByDept, unassignedEmployees, reviewTemplates }: Props) {
   const [state, action] = useActionState(createCycle, INITIAL)
   const [scopeType, setScopeType] = useState<'org' | 'dept'>('org')
   const [selectedDepts, setSelectedDepts] = useState<Set<string>>(new Set())
@@ -249,7 +257,56 @@ export function CycleForm({ departments, employeesByDept, unassignedEmployees }:
         )}
       </section>
 
-      {/* ── Section 3: Deadlines ── */}
+      {/* ── Section 3: Competency Assessment ── */}
+      <section className="glass rounded-xl p-5 space-y-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Competency Assessment</h2>
+        <p className="text-xs text-muted-foreground">
+          Optionally link a review template to this cycle. Managers will rate employees on competency questions alongside KPIs.
+        </p>
+
+        {reviewTemplates.length === 0 ? (
+          <p className="text-xs text-muted-foreground italic">
+            No review templates created yet. Create one in Admin → Review Templates first.
+          </p>
+        ) : (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="review_template_id">Review Template</Label>
+              <select
+                id="review_template_id"
+                name="review_template_id"
+                className="w-full appearance-none rounded-lg border border-border bg-muted/30 px-3 py-2 pr-8 text-sm focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
+              >
+                <option value="">— None (KPI-only cycle) —</option>
+                {reviewTemplates.map(t => (
+                  <option key={t.id} value={t.id}>
+                    {t.name} ({t.questionCount} question{t.questionCount !== 1 ? 's' : ''})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="competency_weight">Competency Weight (%)</Label>
+              <p className="text-xs text-muted-foreground">
+                How much of the final score comes from competency assessment. Rest comes from KPI performance. Default: 30%.
+              </p>
+              <Input
+                id="competency_weight"
+                name="competency_weight"
+                type="number"
+                min={0}
+                max={100}
+                step={5}
+                defaultValue={30}
+                className="w-32"
+              />
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* ── Section 4: Deadlines ── */}
       <section className="glass rounded-xl p-5 space-y-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Deadlines</h2>
         <div className="grid grid-cols-2 gap-4">

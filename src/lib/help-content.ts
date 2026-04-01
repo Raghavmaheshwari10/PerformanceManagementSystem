@@ -101,14 +101,6 @@ export const HELP_CONTENT: Record<string, PageHelp> = {
     ],
     articles: [],
   },
-  '/admin/feature-flags': {
-    summary: [
-      'Feature flags toggle functionality on or off globally for all users.',
-      'Changes take effect immediately — no redeploy needed.',
-      'Use with care: disabling a module hides it from all users.',
-    ],
-    articles: [],
-  },
   '/hrbp': {
     summary: [
       'This shows all active and published cycles.',

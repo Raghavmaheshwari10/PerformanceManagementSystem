@@ -3,7 +3,7 @@ import { requireRole, requireManagerOwnership } from '@/lib/auth'
 import { toTitleCase } from '@/lib/constants'
 import { calculateEmployeeScore } from '@/lib/mis-scoring'
 import { ReviewForm } from './review-form'
-import type { User, Kpi, Kra, Review, Appraisal } from '@/lib/types'
+import type { User, Kpi, Kra, Review, Appraisal, ReviewQuestionWithCompetency } from '@/lib/types'
 
 export default async function ManagerReviewPage({
   params, searchParams,
@@ -22,7 +22,7 @@ export default async function ManagerReviewPage({
     if (!cycle) return <p className="text-muted-foreground">Cycle not found.</p>
   }
 
-  const [employee, kpisRaw, krasRaw, review, appraisal, misScore, peerReviews] = await Promise.all([
+  const [employee, kpisRaw, krasRaw, review, appraisal, misScore, peerReviews, cycleData] = await Promise.all([
     prisma.user.findUnique({ where: { id: employeeId } }),
     cycleId
       ? prisma.kpi.findMany({
@@ -52,6 +52,23 @@ export default async function ManagerReviewPage({
           orderBy: { updated_at: 'desc' },
         })
       : Promise.resolve([]),
+    cycleId
+      ? prisma.cycle.findUnique({
+          where: { id: cycleId },
+          select: {
+            competency_weight: true,
+            review_template_id: true,
+            review_template: {
+              include: {
+                questions: {
+                  orderBy: { order_index: 'asc' },
+                  include: { competency: true },
+                },
+              },
+            },
+          },
+        })
+      : Promise.resolve(null),
   ])
 
   // Serialize Prisma Decimals to plain numbers
@@ -77,6 +94,38 @@ export default async function ManagerReviewPage({
     kpisByKra.get(key)!.push(kpi)
   }
   const ungroupedKpis = kpisByKra.get(null) ?? []
+
+  // Serialize competency questions for the form
+  const competencyWeight = cycleData ? Number(cycleData.competency_weight) : 0
+  const competencyQuestions: ReviewQuestionWithCompetency[] = cycleData?.review_template?.questions
+    ? cycleData.review_template.questions.map(q => ({
+        id: q.id,
+        template_id: q.template_id,
+        competency_id: q.competency_id,
+        question_text: q.question_text,
+        answer_type: q.answer_type as ReviewQuestionWithCompetency['answer_type'],
+        is_required: q.is_required,
+        order_index: q.order_index,
+        competency: q.competency ? {
+          id: q.competency.id,
+          name: q.competency.name,
+          description: q.competency.description,
+          created_at: q.competency.created_at.toISOString(),
+        } : null,
+      }))
+    : []
+
+  // Fetch existing manager competency responses
+  const existingCompetencyResponses: Record<string, { rating_value: number | null; text_value: string | null }> = {}
+  if (review && competencyQuestions.length > 0) {
+    const responses = await prisma.reviewResponse.findMany({
+      where: { review_id: review.id, respondent_id: user.id },
+      select: { question_id: true, rating_value: true, text_value: true },
+    })
+    for (const r of responses) {
+      existingCompetencyResponses[r.question_id] = { rating_value: r.rating_value, text_value: r.text_value }
+    }
+  }
 
   const submitted = !!(appraisal as Appraisal | null)?.manager_submitted_at
   const isExitFrozen = !!(appraisal as any)?.is_exit_frozen
@@ -325,6 +374,9 @@ export default async function ManagerReviewPage({
               kras={kras}
               defaultRating={(appraisal as Appraisal | null)?.manager_rating ?? misScore?.suggested_rating ?? undefined}
               defaultComments={(appraisal as Appraisal | null)?.manager_comments ?? undefined}
+              competencyQuestions={competencyQuestions}
+              existingCompetencyResponses={existingCompetencyResponses}
+              competencyWeight={competencyWeight}
             />
           ) : (
             <p className="text-sm text-muted-foreground">No active cycle selected.</p>

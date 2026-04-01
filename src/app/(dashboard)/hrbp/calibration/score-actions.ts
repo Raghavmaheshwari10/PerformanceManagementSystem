@@ -10,6 +10,13 @@ const TIER_SCORES: Record<string, number> = { FEE: 95, EE: 80, ME: 60, SME: 40, 
 export async function calculateCycleScores(cycleId: string): Promise<{ error?: string; count?: number }> {
   const user = await requireRole(['hrbp', 'admin'])
 
+  // Fetch cycle to get competency weight config
+  const cycle = await prisma.cycle.findUnique({
+    where: { id: cycleId },
+    select: { competency_weight: true },
+  })
+  const competencyWeight = cycle ? Number(cycle.competency_weight) : 20
+
   const appraisals = await prisma.appraisal.findMany({
     where: { cycle_id: cycleId },
     select: { id: true, employee_id: true, manager_rating: true },
@@ -53,7 +60,7 @@ export async function calculateCycleScores(cycleId: string): Promise<{ error?: s
       ? peerReviews.reduce((s, r) => s + (r.peer_rating ? (TIER_SCORES[r.peer_rating] ?? 60) : 60), 0) / peerReviews.length
       : null
 
-    const finalScore = calculateFinalScore({ goalScore, managerScore, peerScore, competencyScore })
+    const finalScore = calculateFinalScore({ goalScore, managerScore, peerScore, competencyScore }, { competencyWeight })
     const finalRating = scoreToRatingTier(finalScore)
 
     await prisma.appraisal.update({

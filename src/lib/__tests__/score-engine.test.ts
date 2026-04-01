@@ -2,16 +2,31 @@ import { describe, it, expect } from 'vitest'
 import { calculateFinalScore, scoreToRatingTier, calculateGoalScore } from '../score-engine'
 
 describe('calculateFinalScore', () => {
-  it('applies default weights: goal 50%, competency 20%, manager 20%, peer 10%', () => {
-    const result = calculateFinalScore({ goalScore: 80, managerScore: 70, peerScore: 60, competencyScore: 75 })
-    // 80*0.50 + 75*0.20 + 70*0.20 + 60*0.10 = 40 + 15 + 14 + 6 = 75
-    expect(result).toBeCloseTo(75, 1)
+  it('applies default weights: goal 60%, competency 20%, manager 20%', () => {
+    // Default: competencyWeight=20 → goal=0.80*0.75=60%, manager=0.80*0.25=20%, competency=20%
+    const result = calculateFinalScore({ goalScore: 80, managerScore: 70, peerScore: null, competencyScore: 75 })
+    // 80*0.60 + 75*0.20 + 70*0.20 = 48 + 15 + 14 = 77
+    expect(result).toBeCloseTo(77, 1)
   })
 
-  it('redistributes peer weight to goal when peer score is null', () => {
-    // goal 60%, competency 20%, manager 20%
-    const result = calculateFinalScore({ goalScore: 100, managerScore: 100, peerScore: null, competencyScore: 100 })
-    expect(result).toBeCloseTo(100, 1)
+  it('uses configurable competency weight', () => {
+    // competencyWeight=30 → goal=0.70*0.75=52.5%, manager=0.70*0.25=17.5%, competency=30%
+    const result = calculateFinalScore(
+      { goalScore: 80, managerScore: 70, peerScore: null, competencyScore: 90 },
+      { competencyWeight: 30 }
+    )
+    // 80*0.525 + 90*0.30 + 70*0.175 = 42 + 27 + 12.25 = 81.25
+    expect(result).toBeCloseTo(81.25, 1)
+  })
+
+  it('handles zero competency weight (KPI-only cycle)', () => {
+    // competencyWeight=0 → goal=1.0*0.75=75%, manager=1.0*0.25=25%
+    const result = calculateFinalScore(
+      { goalScore: 80, managerScore: 60, peerScore: null, competencyScore: 0 },
+      { competencyWeight: 0 }
+    )
+    // 80*0.75 + 0*0 + 60*0.25 = 60 + 0 + 15 = 75
+    expect(result).toBeCloseTo(75, 1)
   })
 
   it('clamps score to maximum of 100', () => {

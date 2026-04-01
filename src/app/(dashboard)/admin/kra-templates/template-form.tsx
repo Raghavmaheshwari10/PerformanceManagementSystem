@@ -10,26 +10,19 @@ import type { ActionResult, KraTemplate } from '@/lib/types'
 
 const INITIAL: ActionResult = { data: null, error: null }
 
-const ROLE_OPTIONS = [
-  { value: 'software_engineer', label: 'Software Engineer' },
-  { value: 'senior_engineer', label: 'Senior Engineer' },
-  { value: 'engineering_manager', label: 'Engineering Manager' },
-  { value: 'product_manager', label: 'Product Manager' },
-  { value: 'qa_sdet', label: 'QA / SDET' },
-  { value: 'devops_sre', label: 'DevOps / SRE' },
-  { value: 'sales_bizdev', label: 'Sales / BizDev' },
-  { value: 'hr_people_ops', label: 'HR / People Ops' },
-  { value: 'finance', label: 'Finance' },
-  { value: 'operations_pm', label: 'Operations / PM' },
-]
+interface RoleOption {
+  value: string
+  label: string
+}
 
 interface Props {
   action: (prev: ActionResult, formData: FormData) => Promise<ActionResult>
   defaultValues?: Partial<KraTemplate>
   departments: { id: string; name: string }[]
+  roleOptions?: RoleOption[]
 }
 
-export function KraTemplateForm({ action, defaultValues = {}, departments }: Props) {
+export function KraTemplateForm({ action, defaultValues = {}, departments, roleOptions = [] }: Props) {
   const [state, formAction] = useActionState(action, INITIAL)
 
   return (
@@ -48,7 +41,7 @@ export function KraTemplateForm({ action, defaultValues = {}, departments }: Pro
           <select id="role_slug" name="role_slug" defaultValue={defaultValues.role_slug ?? ''}
             className="w-full rounded-md border bg-background px-3 py-1.5 text-sm">
             <option value="">— No role —</option>
-            {ROLE_OPTIONS.map(r => (
+            {roleOptions.map(r => (
               <option key={r.value} value={r.value}>{r.label}</option>
             ))}
           </select>

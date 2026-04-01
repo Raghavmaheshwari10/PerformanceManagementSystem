@@ -26,12 +26,18 @@ export async function createCycle(_prev: ActionResult, formData: FormData): Prom
   const excludedEmployeeIds = formData.getAll('excluded_employee_ids') as string[]
   const includedEmployeeIds = formData.getAll('included_employee_ids') as string[]
 
+  // Competency assessment config
+  const reviewTemplateId = (formData.get('review_template_id') as string) || null
+  const competencyWeight = reviewTemplateId ? Number(formData.get('competency_weight') ?? 30) : 0
+
   try {
     const cycle = await prisma.cycle.create({
       data: {
         name,
         quarter,
         year,
+        review_template_id: reviewTemplateId,
+        competency_weight: competencyWeight,
         kpi_setting_deadline: formData.get('kpi_setting_deadline') ? new Date(formData.get('kpi_setting_deadline') as string) : null,
         self_review_deadline: formData.get('self_review_deadline') ? new Date(formData.get('self_review_deadline') as string) : null,
         manager_review_deadline: formData.get('manager_review_deadline') ? new Date(formData.get('manager_review_deadline') as string) : null,

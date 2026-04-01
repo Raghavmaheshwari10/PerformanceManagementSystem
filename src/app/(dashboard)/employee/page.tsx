@@ -181,15 +181,17 @@ export default async function EmployeeReviewPage() {
       take: 3,
       orderBy: { metric_name: 'asc' },
     }),
-    prisma.reviewTemplate.findFirst({
-      orderBy: { created_at: 'desc' },
-      include: {
-        questions: {
-          orderBy: { order_index: 'asc' },
-          include: { competency: true },
-        },
-      },
-    }),
+    cycle.review_template_id
+      ? prisma.reviewTemplate.findUnique({
+          where: { id: cycle.review_template_id },
+          include: {
+            questions: {
+              orderBy: { order_index: 'asc' },
+              include: { competency: true },
+            },
+          },
+        })
+      : Promise.resolve(null),
   ])
 
   // Fetch existing responses if user has a review

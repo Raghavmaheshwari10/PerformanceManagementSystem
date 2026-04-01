@@ -12,9 +12,9 @@ import {
   ClipboardCheck, History, Target, MessageSquare, Users2,
   UserCircle, LayoutDashboard, CalendarClock, UserCog,
   Building2, FileBarChart, Settings2, BarChart3, Scale,
-  ScrollText, BookOpen, HelpCircle, LogOut, Flag,
+  ScrollText, BookOpen, HelpCircle, LogOut,
   Wallet, Bell, FileSpreadsheet, Menu, X, ChevronRight,
-  Mail,
+  Mail, BadgeCheck,
 } from 'lucide-react'
 
 interface NavItem {
@@ -62,6 +62,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Cycles',           href: '/admin/cycles',           icon: CalendarClock },
     { label: 'Users',            href: '/admin/users',            icon: UserCog },
     { label: 'Departments',      href: '/admin/departments',      icon: Building2 },
+    { label: 'Roles',            href: '/admin/roles',            icon: BadgeCheck },
     { label: 'KPI Templates',    href: '/admin/kpi-templates',    icon: FileBarChart },
     { label: 'KRA Templates',    href: '/admin/kra-templates',    icon: Target },
     { label: 'MIS Integration',  href: '/admin/mis',              icon: FileSpreadsheet },
@@ -69,7 +70,6 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Review Templates', href: '/admin/review-templates', icon: FileSpreadsheet },
     { label: 'Email Templates',  href: '/admin/email-templates',  icon: Mail },
     { label: 'Notifications',    href: '/admin/notifications',    icon: Bell },
-    { label: 'Feature Flags',    href: '/admin/feature-flags',    icon: Flag },
     { label: 'Payout Config',    href: '/admin/payout-config',    icon: Wallet },
     { label: 'Payouts',          href: '/admin/payouts',          icon: Settings2 },
     { label: 'Reports',          href: '/admin/reports',          icon: FileBarChart },

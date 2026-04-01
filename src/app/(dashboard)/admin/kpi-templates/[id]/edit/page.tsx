@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
+import { fetchRoleOptions } from '@/lib/db/role-slugs'
 import { notFound } from 'next/navigation'
 import { TemplateForm } from '../../template-form'
 import { updateKpiTemplate } from '../../actions'
@@ -9,13 +10,14 @@ export default async function EditKpiTemplatePage({ params }: { params: Promise<
   await requireRole(['admin'])
   const { id } = await params
 
-  const [template, kraTemplates] = await Promise.all([
+  const [template, kraTemplates, roleOptions] = await Promise.all([
     prisma.kpiTemplate.findUnique({ where: { id } }),
     prisma.kraTemplate.findMany({
       where: { is_active: true },
       select: { id: true, title: true, role_slug: true, category: true },
       orderBy: { title: 'asc' },
     }),
+    fetchRoleOptions(),
   ])
   if (!template) notFound()
 
@@ -23,7 +25,7 @@ export default async function EditKpiTemplatePage({ params }: { params: Promise<
   return (
     <div className="max-w-2xl space-y-6">
       <h1 className="text-2xl font-bold">Edit KPI Template</h1>
-      <TemplateForm action={boundAction} defaultValues={template as unknown as KpiTemplate} kraTemplates={kraTemplates} />
+      <TemplateForm action={boundAction} defaultValues={template as unknown as KpiTemplate} kraTemplates={kraTemplates} roleOptions={roleOptions} />
     </div>
   )
 }

@@ -27,11 +27,18 @@ export default async function KraTemplatesPage({
   await requireRole(['admin'])
   const { category } = await searchParams
 
-  const templates = await prisma.kraTemplate.findMany({
-    where: category ? { category } : undefined,
-    include: { department: true },
-    orderBy: [{ role_slug: 'asc' }, { sort_order: 'asc' }],
-  })
+  const [templates, roleSlugs] = await Promise.all([
+    prisma.kraTemplate.findMany({
+      where: category ? { category } : undefined,
+      include: { department: true },
+      orderBy: [{ role_slug: 'asc' }, { sort_order: 'asc' }],
+    }),
+    prisma.roleSlug.findMany({
+      select: { slug: true, label: true },
+    }),
+  ])
+
+  const roleLabels = Object.fromEntries(roleSlugs.map(r => [r.slug, r.label]))
 
   const grouped = (templates as unknown as (KraTemplate & { department?: { name: string } | null })[]).reduce<
     Record<string, (KraTemplate & { department?: { name: string } | null })[]>
@@ -72,7 +79,7 @@ export default async function KraTemplatesPage({
       {Object.entries(grouped).map(([slug, items]) => (
         <div key={slug} className="glass rounded-lg border">
           <div className="px-4 py-2 bg-muted/50 border-b">
-            <h2 className="font-semibold text-sm">{toTitleCase(slug)}</h2>
+            <h2 className="font-semibold text-sm">{roleLabels[slug] ?? toTitleCase(slug)}</h2>
           </div>
           <table className="w-full text-sm">
             <thead>

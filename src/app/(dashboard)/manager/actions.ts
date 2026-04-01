@@ -407,6 +407,92 @@ export async function submitManagerRating(_prev: ActionResult, formData: FormDat
   }
   if (kpiUpdates.length > 0) await Promise.all(kpiUpdates)
 
+  // Save competency responses (manager rating on competency questions)
+  const review = await prisma.review.findFirst({
+    where: { cycle_id: cycleId, employee_id: employeeId },
+    select: { id: true },
+  })
+  if (review) {
+    const competencyUpserts: Array<Promise<unknown>> = []
+    for (const [key, value] of formData.entries()) {
+      if (key.startsWith('competency_rating_')) {
+        const questionId = key.replace('competency_rating_', '')
+        const textValue = (formData.get(`competency_text_${questionId}`) as string)?.trim() || null
+        competencyUpserts.push(
+          prisma.reviewResponse.upsert({
+            where: {
+              review_id_question_id_respondent_id: {
+                review_id: review.id,
+                question_id: questionId,
+                respondent_id: user.id,
+              },
+            },
+            update: {
+              rating_value: Number(value) || null,
+              text_value: textValue,
+            },
+            create: {
+              review_id: review.id,
+              question_id: questionId,
+              respondent_id: user.id,
+              rating_value: Number(value) || null,
+              text_value: textValue,
+            },
+          })
+        )
+      }
+    }
+    // Also handle text-only competency responses
+    for (const [key, value] of formData.entries()) {
+      if (key.startsWith('competency_text_') && !formData.has(`competency_rating_${key.replace('competency_text_', '')}`)) {
+        const questionId = key.replace('competency_text_', '')
+        const textValue = String(value)?.trim() || null
+        if (textValue) {
+          competencyUpserts.push(
+            prisma.reviewResponse.upsert({
+              where: {
+                review_id_question_id_respondent_id: {
+                  review_id: review.id,
+                  question_id: questionId,
+                  respondent_id: user.id,
+                },
+              },
+              update: { text_value: textValue },
+              create: {
+                review_id: review.id,
+                question_id: questionId,
+                respondent_id: user.id,
+                text_value: textValue,
+              },
+            })
+          )
+        }
+      }
+    }
+    if (competencyUpserts.length > 0) await Promise.all(competencyUpserts)
+
+    // Calculate and store competency score on the appraisal
+    const cycleData = await prisma.cycle.findUnique({
+      where: { id: cycleId },
+      select: { competency_weight: true, review_template_id: true },
+    })
+    if (cycleData?.review_template_id && Number(cycleData.competency_weight) > 0) {
+      const allManagerResponses = await prisma.reviewResponse.findMany({
+        where: { review_id: review.id, respondent_id: user.id, rating_value: { not: null } },
+        select: { rating_value: true },
+      })
+      if (allManagerResponses.length > 0) {
+        const avgRating = allManagerResponses.reduce((sum, r) => sum + (r.rating_value ?? 0), 0) / allManagerResponses.length
+        // Normalize 1-5 scale to 0-100 percentage
+        const competencyScore = ((avgRating - 1) / 4) * 100
+        await prisma.appraisal.updateMany({
+          where: { cycle_id: cycleId, employee_id: employeeId },
+          data: { competency_score: Math.round(competencyScore * 100) / 100, updated_at: new Date() },
+        })
+      }
+    }
+  }
+
   // Notify all HRBPs that manager has submitted a rating
   const hrbps = await prisma.user.findMany({
     where: { role: 'hrbp', is_active: true },

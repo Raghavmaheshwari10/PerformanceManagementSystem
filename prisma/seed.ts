@@ -127,26 +127,6 @@ async function main() {
   }
 
   // Feature flags
-  const flags = [
-    { key: 'module.kpi_copy_forward',    name: 'KPI Copy-Forward',      category: 'module', default_value: true,  description: 'Suggest previous cycle KPIs' },
-    { key: 'module.gamification',        name: 'Gamification',          category: 'module', default_value: false, description: 'Streak counters, leaderboards' },
-    { key: 'module.360_feedback',        name: '360 Feedback',          category: 'module', default_value: false, description: 'Peer nomination and feedback' },
-    { key: 'module.continuous_feedback', name: 'Continuous Feedback',   category: 'module', default_value: false, description: 'Weekly pulse check-ins' },
-    { key: 'module.ai_assist',           name: 'AI Review Assistant',   category: 'module', default_value: false, description: 'Claude-powered draft suggestions' },
-    { key: 'ui.compact_mode',            name: 'Compact Mode',          category: 'ui',     default_value: false, description: 'Denser layout' },
-    { key: 'ui.density_toggle',          name: 'Density Toggle Button', category: 'ui',     default_value: true,  description: 'Show toggle in sidebar' },
-    { key: 'ui.keyboard_shortcuts',      name: 'Keyboard Shortcuts',    category: 'ui',     default_value: true,  description: 'Command palette' },
-    { key: 'notify.email',               name: 'Email Notifications',   category: 'notify', default_value: true,  description: 'Send email reminders' },
-    { key: 'notify.in_app',              name: 'In-App Notifications',  category: 'notify', default_value: true,  description: 'Show notification bell' },
-  ]
-  for (const f of flags) {
-    await prisma.featureFlag.upsert({
-      where:  { key: f.key },
-      update: {},
-      create: f,
-    })
-  }
-
   console.log('Seed complete')
   console.log('   admin@test.com / admin123')
   console.log('   manager@test.com / manager123')

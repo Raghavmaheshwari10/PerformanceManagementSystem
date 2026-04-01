@@ -5,7 +5,7 @@ import { CycleForm } from './cycle-form'
 export default async function NewCyclePage() {
   await requireRole(['admin', 'hrbp'])
 
-  const [departments, employees] = await Promise.all([
+  const [departments, employees, reviewTemplates] = await Promise.all([
     prisma.department.findMany({
       orderBy: { name: 'asc' },
       select: { id: true, name: true },
@@ -14,6 +14,10 @@ export default async function NewCyclePage() {
       where: { is_active: true, role: { notIn: ['admin', 'hrbp'] } },
       orderBy: { full_name: 'asc' },
       select: { id: true, full_name: true, department_id: true },
+    }),
+    prisma.reviewTemplate.findMany({
+      orderBy: { created_at: 'desc' },
+      select: { id: true, name: true, description: true, _count: { select: { questions: true } } },
     }),
   ])
 
@@ -40,6 +44,12 @@ export default async function NewCyclePage() {
         departments={departments}
         employeesByDept={employeesByDept}
         unassignedEmployees={unassignedEmployees}
+        reviewTemplates={reviewTemplates.map(t => ({
+          id: t.id,
+          name: t.name,
+          description: t.description,
+          questionCount: t._count.questions,
+        }))}
       />
     </div>
   )
