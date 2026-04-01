@@ -227,6 +227,7 @@ export default async function EmployeeReviewPage() {
     ...k,
     weight: k.weight !== null ? Number(k.weight) : null,
     target: k.target != null ? Number(k.target) : null,
+    achievement: k.achievement != null ? Number(k.achievement) : null,
     kra: k.kra ? { ...k.kra, weight: k.kra.weight !== null ? Number(k.kra.weight) : null } : undefined,
   })) as unknown as Kpi[]
 
@@ -353,6 +354,11 @@ export default async function EmployeeReviewPage() {
                               Target: {kpi.unit === 'percent' ? `${kpi.target}%` : String(kpi.target)}
                             </span>
                           )}
+                          {kpi.achievement != null && (
+                            <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+                              Achievement: {kpi.unit === 'percent' ? `${kpi.achievement}%` : String(kpi.achievement)}
+                            </span>
+                          )}
                           <span className="rounded-full bg-muted/50 px-2 py-0.5 text-[10px] font-semibold tabular-nums">
                             {String(kpi.weight)}%
                           </span>
@@ -422,6 +428,11 @@ export default async function EmployeeReviewPage() {
                                         Target: {kpi.unit === 'percent' ? `${kpi.target}%` : String(kpi.target)}
                                       </span>
                                     )}
+                                    {kpi.achievement != null && (
+                                      <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+                                        Achievement: {kpi.unit === 'percent' ? `${kpi.achievement}%` : String(kpi.achievement)}
+                                      </span>
+                                    )}
                                     <span className="rounded-full bg-muted/50 px-2 py-0.5 text-[10px] font-semibold tabular-nums">
                                       {String(kpi.weight)}%
                                     </span>
@@ -474,6 +485,11 @@ export default async function EmployeeReviewPage() {
                                 {kpi.target != null && (
                                   <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
                                     Target: {kpi.unit === 'percent' ? `${kpi.target}%` : String(kpi.target)}
+                                  </span>
+                                )}
+                                {kpi.achievement != null && (
+                                  <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+                                    Achievement: {kpi.unit === 'percent' ? `${kpi.achievement}%` : String(kpi.achievement)}
                                   </span>
                                 )}
                                 <span className="rounded-full bg-muted/50 px-2 py-0.5 text-[10px] font-semibold tabular-nums">
@@ -645,6 +661,16 @@ export default async function EmployeeReviewPage() {
                         {RATING_TIERS.find(t => t.code === kpi.self_rating)?.name ?? kpi.self_rating}
                       </span>
                     </div>
+                    {(kpi.target != null || kpi.achievement != null) && (
+                      <div className="flex items-center gap-3 text-xs">
+                        {kpi.target != null && (
+                          <span className="text-muted-foreground">Target: <span className="font-semibold text-blue-400">{kpi.unit === 'percent' ? `${kpi.target}%` : String(kpi.target)}</span></span>
+                        )}
+                        {kpi.achievement != null && (
+                          <span className="text-muted-foreground">Achievement: <span className="font-semibold text-emerald-400">{kpi.unit === 'percent' ? `${kpi.achievement}%` : String(kpi.achievement)}</span></span>
+                        )}
+                      </div>
+                    )}
                     {kpi.self_comments && (
                       <p className="text-xs text-muted-foreground">{kpi.self_comments}</p>
                     )}

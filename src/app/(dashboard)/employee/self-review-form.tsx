@@ -337,17 +337,12 @@ function KpiRatingCard({
 }) {
   const target = formatTarget(kpi)
   return (
-    <div className="glass-interactive p-3">
+    <div className="glass-interactive p-3 space-y-2">
+      {/* Row 1: Title + Weight + Rating */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        {/* Left: KPI info */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="font-medium text-sm leading-snug">{kpi.title}</p>
-            {target && (
-              <span className="shrink-0 rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
-                Target: {target}
-              </span>
-            )}
             <span className="shrink-0 rounded-full bg-muted/50 px-2 py-0.5 text-[10px] font-semibold tabular-nums">
               {String(kpi.weight)}%
             </span>
@@ -356,7 +351,6 @@ function KpiRatingCard({
             <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{kpi.description}</p>
           )}
         </div>
-        {/* Right: Rating pills inline */}
         <div className="shrink-0">
           <RatingPillSelector
             options={STANDARD_RATING_OPTIONS}
@@ -366,12 +360,35 @@ function KpiRatingCard({
           />
         </div>
       </div>
+
+      {/* Row 2: Target + Achievement side by side */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Target</p>
+          <div className="rounded-md border border-border/50 bg-muted/20 px-2.5 py-1.5 text-sm tabular-nums">
+            {target ?? <span className="text-muted-foreground italic">Not set</span>}
+          </div>
+        </div>
+        <div className="space-y-1">
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Achievement</p>
+          <input
+            type="number"
+            step="any"
+            name={`kpi_achievement_${kpi.id}`}
+            defaultValue={kpi.achievement != null ? String(kpi.achievement) : ''}
+            placeholder="Enter achievement"
+            className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm tabular-nums focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+        </div>
+      </div>
+
+      {/* Row 3: Comments */}
       <Textarea
         name={`kpi_comments_${kpi.id}`}
         rows={2}
         defaultValue={kpi.self_comments ?? ''}
         placeholder="Comments on this KPI (optional)…"
-        className="text-xs mt-2"
+        className="text-xs"
       />
     </div>
   )

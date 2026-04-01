@@ -83,6 +83,7 @@ export interface Kpi {
   description: string | null
   unit: string
   target: number | null
+  achievement: number | null
   weight: number | null
   self_rating: RatingTier | null
   self_comments: string | null

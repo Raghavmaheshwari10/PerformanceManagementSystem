@@ -8,8 +8,8 @@ import type { ActionResult } from '@/lib/types'
 import type { RatingTier } from '@prisma/client'
 
 /** Extract per-KPI ratings and comments from form data */
-function extractKpiRatings(formData: FormData): Array<{ kpiId: string; rating: string | null; comments: string | null }> {
-  const entries: Array<{ kpiId: string; rating: string | null; comments: string | null }> = []
+function extractKpiRatings(formData: FormData): Array<{ kpiId: string; rating: string | null; comments: string | null; achievement: number | null }> {
+  const entries: Array<{ kpiId: string; rating: string | null; comments: string | null; achievement: number | null }> = []
   const seenKpiIds = new Set<string>()
 
   for (const [key, value] of formData.entries()) {
@@ -17,16 +17,31 @@ function extractKpiRatings(formData: FormData): Array<{ kpiId: string; rating: s
       const kpiId = key.replace('kpi_rating_', '')
       seenKpiIds.add(kpiId)
       const comments = (formData.get(`kpi_comments_${kpiId}`) as string)?.trim() || null
-      entries.push({ kpiId, rating: String(value) || null, comments })
+      const rawAchievement = formData.get(`kpi_achievement_${kpiId}`) as string
+      const achievement = rawAchievement ? Number(rawAchievement) : null
+      entries.push({ kpiId, rating: String(value) || null, comments, achievement })
     }
   }
 
-  // Also pick up kpi_comments for KPIs that don't have a rating yet
+  // Also pick up kpi_comments/achievement for KPIs that don't have a rating yet
   for (const [key, value] of formData.entries()) {
     if (key.startsWith('kpi_comments_') && !key.startsWith('kpi_comments_undefined')) {
       const kpiId = key.replace('kpi_comments_', '')
       if (!seenKpiIds.has(kpiId)) {
-        entries.push({ kpiId, rating: null, comments: String(value)?.trim() || null })
+        const rawAchievement = formData.get(`kpi_achievement_${kpiId}`) as string
+        const achievement = rawAchievement ? Number(rawAchievement) : null
+        entries.push({ kpiId, rating: null, comments: String(value)?.trim() || null, achievement })
+      }
+    }
+    // Pick up achievement-only entries (no rating, no comments)
+    if (key.startsWith('kpi_achievement_') && !seenKpiIds.has(key.replace('kpi_achievement_', ''))) {
+      const kpiId = key.replace('kpi_achievement_', '')
+      if (!seenKpiIds.has(kpiId)) {
+        seenKpiIds.add(kpiId)
+        const rawAchievement = String(value)
+        const achievement = rawAchievement ? Number(rawAchievement) : null
+        const comments = (formData.get(`kpi_comments_${kpiId}`) as string)?.trim() || null
+        entries.push({ kpiId, rating: null, comments, achievement })
       }
     }
   }
@@ -34,18 +49,19 @@ function extractKpiRatings(formData: FormData): Array<{ kpiId: string; rating: s
   return entries
 }
 
-/** Save per-KPI self-ratings to the kpis table */
+/** Save per-KPI self-ratings and achievement to the kpis table */
 async function saveKpiRatings(formData: FormData, cycleId: string, employeeId: string) {
   const kpiRatings = extractKpiRatings(formData)
   if (kpiRatings.length === 0) return
 
   await Promise.all(
-    kpiRatings.map(({ kpiId, rating, comments }) =>
+    kpiRatings.map(({ kpiId, rating, comments, achievement }) =>
       prisma.kpi.updateMany({
         where: { id: kpiId, cycle_id: cycleId, employee_id: employeeId },
         data: {
           self_rating: (rating as RatingTier) || null,
           self_comments: comments,
+          achievement,
           updated_at: new Date(),
         },
       })

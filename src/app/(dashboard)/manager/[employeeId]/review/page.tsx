@@ -59,6 +59,7 @@ export default async function ManagerReviewPage({
     ...k,
     weight: k.weight !== null ? Number(k.weight) : null,
     target: k.target != null ? Number(k.target) : null,
+    achievement: k.achievement != null ? Number(k.achievement) : null,
     kra: k.kra ? { ...k.kra, weight: k.kra.weight !== null ? Number(k.kra.weight) : null } : null,
   })) as unknown as (Kpi & { kra: Kra | null })[]
 
@@ -150,6 +151,11 @@ export default async function ManagerReviewPage({
                         Target: {kpi.unit === 'percent' ? `${kpi.target}%` : String(kpi.target)}
                       </span>
                     )}
+                    {kpi.achievement != null && (
+                      <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+                        Achievement: {kpi.unit === 'percent' ? `${kpi.achievement}%` : String(kpi.achievement)}
+                      </span>
+                    )}
                     <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs">{kpi.weight}%</span>
                   </div>
                   {kpi.description && (
@@ -194,6 +200,11 @@ export default async function ManagerReviewPage({
                                 Target: {kpi.unit === 'percent' ? `${kpi.target}%` : String(kpi.target)}
                               </span>
                             )}
+                            {kpi.achievement != null && (
+                              <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+                                Achievement: {kpi.unit === 'percent' ? `${kpi.achievement}%` : String(kpi.achievement)}
+                              </span>
+                            )}
                             <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs">{kpi.weight}%</span>
                           </div>
                           {kpi.description && (
@@ -220,6 +231,11 @@ export default async function ManagerReviewPage({
                           {kpi.target != null && (
                             <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
                               Target: {kpi.unit === 'percent' ? `${kpi.target}%` : String(kpi.target)}
+                            </span>
+                          )}
+                          {kpi.achievement != null && (
+                            <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+                              Achievement: {kpi.unit === 'percent' ? `${kpi.achievement}%` : String(kpi.achievement)}
                             </span>
                           )}
                           <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs">{kpi.weight}%</span>

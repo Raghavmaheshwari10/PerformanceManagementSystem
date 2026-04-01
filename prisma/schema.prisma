@@ -296,6 +296,7 @@ model Kpi {
   description String?
   unit        String     @default("percent")
   target      Decimal?   @db.Decimal(12, 2)
+  achievement Decimal?   @db.Decimal(12, 2)
   weight      Decimal?   @db.Decimal(5, 2)
   self_rating       RatingTier?
   self_comments     String?
