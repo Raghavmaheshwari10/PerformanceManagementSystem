@@ -183,8 +183,9 @@ export async function areKpisFinalized(cycleId: string, employeeId: string): Pro
   const entry = await prisma.auditLog.findFirst({
     where: {
       entity_type: 'kpi_finalization',
-      entity_id: `${cycleId}:${employeeId}`,
+      entity_id: cycleId,
       action: { in: ['kpis_finalized', 'kpis_unfinalized'] },
+      new_value: { path: ['employee_id'], equals: employeeId },
     },
     orderBy: { created_at: 'desc' },
     select: { action: true },
@@ -227,7 +228,7 @@ export async function finalizeKpis(formData: FormData): Promise<ActionResult> {
       changed_by: user.id,
       action: 'kpis_finalized',
       entity_type: 'kpi_finalization',
-      entity_id: `${cycleId}:${employeeId}`,
+      entity_id: cycleId,
       new_value: { cycle_id: cycleId, employee_id: employeeId },
     },
   })
@@ -248,7 +249,7 @@ export async function unfinalizeKpis(formData: FormData): Promise<ActionResult> 
       changed_by: user.id,
       action: 'kpis_unfinalized',
       entity_type: 'kpi_finalization',
-      entity_id: `${cycleId}:${employeeId}`,
+      entity_id: cycleId,
       new_value: { cycle_id: cycleId, employee_id: employeeId },
     },
   })
