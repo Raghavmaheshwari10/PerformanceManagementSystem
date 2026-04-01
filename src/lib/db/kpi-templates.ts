@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 
 /**
  * Creates KPIs for an employee from a role template.
- * Replaces the apply_kpi_template() PL/pgSQL RPC.
+ * Automatically assigns KPIs to matching KRAs by category.
  * Atomic: batches existence check and createMany inside a transaction.
  */
 export async function applyKpiTemplate(
@@ -23,6 +23,13 @@ export async function applyKpiTemplate(
   if (templates.length === 0) return
 
   await prisma.$transaction(async (tx) => {
+    // Fetch existing KRAs to auto-assign KPIs by category
+    const kras = await tx.kra.findMany({
+      where: { cycle_id: cycleId, employee_id: employeeId },
+      select: { id: true, category: true },
+    })
+    const kraByCategory = new Map(kras.map(k => [k.category, k.id]))
+
     const existingKpis = await tx.kpi.findMany({
       where: {
         cycle_id:    cycleId,
@@ -40,6 +47,7 @@ export async function applyKpiTemplate(
           cycle_id:    cycleId,
           employee_id: employeeId,
           manager_id:  employee.manager_id!,
+          kra_id:      kraByCategory.get(t.category) ?? null,
           title:       t.title,
           description: t.description,
           weight:      t.weight,
