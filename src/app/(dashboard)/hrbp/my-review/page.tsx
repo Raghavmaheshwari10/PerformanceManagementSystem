@@ -143,7 +143,6 @@ export default async function HrbpMyReviewPage() {
               snapshottedVariablePay={Number(typedAppraisal.snapshotted_variable_pay ?? 0)}
               rating={typedAppraisal.final_rating ?? ''}
               individualMultiplier={Number(typedAppraisal.payout_multiplier ?? 0)}
-              businessMultiplier={Number(typedCycle.business_multiplier ?? 1)}
               payoutAmount={Number(typedAppraisal.payout_amount)}
             />
           )}

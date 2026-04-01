@@ -716,19 +716,40 @@ export default async function EmployeeReviewPage() {
       {isPublished && appraisal && (() => {
         const ratingKey = appraisal.final_rating ?? ''
         const ratingInfo = RATING_LABELS[ratingKey]
+        const managerRatingKey = appraisal.manager_rating ?? ''
+        const managerRatingInfo = RATING_LABELS[managerRatingKey]
         return (
           <section className="glass glass-glow p-6 space-y-4">
             <h2 className="text-lg font-semibold">Final Result</h2>
 
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              {/* Large rating display */}
-              <div className="flex items-center gap-3">
-                <span className={`text-4xl font-black tracking-tight ${ratingInfo?.color ?? 'text-foreground'}`}>
-                  {ratingKey || '—'}
-                </span>
-                {ratingInfo && (
-                  <span className="text-sm text-muted-foreground">{ratingInfo.label}</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Manager Rating */}
+              <div className="rounded-lg border bg-muted/20 p-4">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Manager Rating</p>
+                <div className="flex items-center gap-2">
+                  <span className={`text-2xl font-bold ${managerRatingInfo?.color ?? 'text-foreground'}`}>
+                    {managerRatingKey || '—'}
+                  </span>
+                  {managerRatingInfo && (
+                    <span className="text-xs text-muted-foreground">{managerRatingInfo.label}</span>
+                  )}
+                </div>
+                {appraisal.manager_comments && (
+                  <p className="mt-2 text-sm text-muted-foreground whitespace-pre-wrap">{appraisal.manager_comments}</p>
                 )}
+              </div>
+
+              {/* Final Rating */}
+              <div className="rounded-lg border bg-muted/20 p-4">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Final Rating</p>
+                <div className="flex items-center gap-2">
+                  <span className={`text-2xl font-bold ${ratingInfo?.color ?? 'text-foreground'}`}>
+                    {ratingKey || '—'}
+                  </span>
+                  {ratingInfo && (
+                    <span className="text-xs text-muted-foreground">{ratingInfo.label}</span>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -739,7 +760,6 @@ export default async function EmployeeReviewPage() {
                   snapshottedVariablePay={Number(appraisal.snapshotted_variable_pay ?? 0)}
                   rating={appraisal.final_rating ?? ''}
                   individualMultiplier={Number(appraisal.payout_multiplier ?? 0)}
-                  businessMultiplier={Number(cycle.business_multiplier ?? 1)}
                   payoutAmount={Number(appraisal.payout_amount)}
                 />
               </div>

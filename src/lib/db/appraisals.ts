@@ -7,7 +7,6 @@ import type { RatingTier } from '@prisma/client'
  */
 export async function bulkLockAppraisals(cycleId: string): Promise<void> {
   await prisma.$transaction(async (tx) => {
-    const cycle = await tx.cycle.findUniqueOrThrow({ where: { id: cycleId } })
     const configs = await tx.payoutConfig.findMany()
     const configMap = Object.fromEntries(
       configs.map(c => [c.rating_tier, Number(c.multiplier)])
@@ -18,7 +17,6 @@ export async function bulkLockAppraisals(cycleId: string): Promise<void> {
     const eeMultiplier  = Number(configMap['EE']  ?? 1.10)
     const meMultiplier  = Number(configMap['ME']  ?? 1.00)
     const smeBase       = Number(configMap['SME'] ?? 1.00)
-    const bizMultiplier = Number(cycle.business_multiplier ?? 1.0)
 
     const appraisals = await tx.appraisal.findMany({
       where: {
@@ -42,8 +40,7 @@ export async function bulkLockAppraisals(cycleId: string): Promise<void> {
         SME: smeBase,
         BE:  0,
       }
-      const ratio = ratioMap[effectiveRating] ?? 0
-      const payoutMultiplier = ratio * bizMultiplier
+      const payoutMultiplier = ratioMap[effectiveRating] ?? 0
       const varPay = Number(a.snapshotted_variable_pay ?? 0)
 
       await tx.appraisal.update({

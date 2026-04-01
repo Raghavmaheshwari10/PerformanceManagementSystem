@@ -27,7 +27,7 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
 
   if (!cycleId) return <p>Select a cycle from the overview page.</p>
 
-  const [cycle, allAppraisals, departments] = await Promise.all([
+  const [cycle, allAppraisals, cycleDepts, allDepartments] = await Promise.all([
     prisma.cycle.findUnique({ where: { id: cycleId } }),
     prisma.appraisal.findMany({
       where: { cycle_id: cycleId },
@@ -49,8 +49,19 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
         },
       },
     }),
+    prisma.cycleDepartment.findMany({
+      where: { cycle_id: cycleId },
+      select: { department_id: true, department: { select: { id: true, name: true } } },
+    }),
     prisma.department.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true } }),
   ])
+
+  // For dept-scoped cycles, only show tagged departments; for org-wide, show all
+  const isDeptScoped = cycleDepts.length > 0
+  const departments = isDeptScoped
+    ? cycleDepts.map(cd => cd.department).sort((a, b) => a.name.localeCompare(b.name))
+    : allDepartments
+  const showDeptFilter = departments.length > 1
 
   const allRows = allAppraisals as unknown as AppraisalRow[]
 
@@ -76,51 +87,61 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
         {isCalibrating && <CalculateScoresButton cycleId={cycleId} />}
       </div>
 
-      {/* Department filter */}
-      <div className="flex items-center gap-3">
-        <label htmlFor="dept-filter" className="text-sm text-muted-foreground">Filter by department:</label>
-        <div className="relative">
-          <select
-            id="dept-filter"
-            className="glass appearance-none rounded-lg border border-border bg-muted/30 px-3 py-1.5 pr-8 text-sm text-foreground backdrop-blur focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
-            defaultValue={selectedDept ?? ''}
-            // Client-side navigation via inline script below
-            data-cycle-id={cycleId}
-          >
-            <option value="">All Departments</option>
-            {departments.map(d => (
-              <option key={d.id} value={d.id}>{d.name}</option>
-            ))}
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-muted-foreground">
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+      {/* Department filter — only shown when multiple departments are in scope */}
+      {showDeptFilter ? (
+        <>
+          <div className="flex items-center gap-3">
+            <label htmlFor="dept-filter" className="text-sm text-muted-foreground">Filter by department:</label>
+            <div className="relative">
+              <select
+                id="dept-filter"
+                className="glass appearance-none rounded-lg border border-border bg-muted/30 px-3 py-1.5 pr-8 text-sm text-foreground backdrop-blur focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                defaultValue={selectedDept ?? ''}
+                data-cycle-id={cycleId}
+              >
+                <option value="">All Departments</option>
+                {departments.map(d => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-muted-foreground">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </div>
+            </div>
+            {selectedDept && (
+              <Link
+                href={`/hrbp/calibration?cycle=${cycleId}`}
+                className="text-xs text-primary hover:text-primary/80"
+              >
+                Clear filter
+              </Link>
+            )}
+            <span className="text-xs text-muted-foreground ml-auto">
+              Showing {rows.length} of {allRows.length} appraisals
+            </span>
           </div>
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `document.getElementById('dept-filter')?.addEventListener('change', function(e) {
+                var val = e.target.value;
+                var cycleId = e.target.getAttribute('data-cycle-id');
+                var url = '/hrbp/calibration?cycle=' + encodeURIComponent(cycleId);
+                if (val) url += '&dept=' + encodeURIComponent(val);
+                window.location.href = url;
+              });`,
+            }}
+          />
+        </>
+      ) : (
+        <div className="flex items-center gap-3">
+          {isDeptScoped && departments.length === 1 && (
+            <span className="text-sm text-muted-foreground">Department: <span className="font-medium text-foreground">{departments[0].name}</span></span>
+          )}
+          <span className="text-xs text-muted-foreground ml-auto">
+            Showing {rows.length} appraisals
+          </span>
         </div>
-        {selectedDept && (
-          <Link
-            href={`/hrbp/calibration?cycle=${cycleId}`}
-            className="text-xs text-primary hover:text-primary/80"
-          >
-            Clear filter
-          </Link>
-        )}
-        <span className="text-xs text-muted-foreground ml-auto">
-          Showing {rows.length} of {allRows.length} appraisals
-        </span>
-      </div>
-
-      {/* Inline script for select navigation */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `document.getElementById('dept-filter')?.addEventListener('change', function(e) {
-            var val = e.target.value;
-            var cycleId = e.target.getAttribute('data-cycle-id');
-            var url = '/hrbp/calibration?cycle=' + encodeURIComponent(cycleId);
-            if (val) url += '&dept=' + encodeURIComponent(val);
-            window.location.href = url;
-          });`,
-        }}
-      />
+      )}
 
       <div data-tour="bell-curve">
         <BellCurveChart distribution={distribution} total={rows.length} />

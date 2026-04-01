@@ -62,14 +62,11 @@ export interface Cycle {
   calibration_deadline: string | null
   published_at: string | null
   sme_multiplier: number | null
-  business_multiplier: number
   total_budget: number | null
   budget_currency: string
   created_by: string | null
   created_at: string
   updated_at: string
-  fee_multiplier?: number | null
-  ee_multiplier?:  number | null
   me_multiplier?:  number | null
 }
 

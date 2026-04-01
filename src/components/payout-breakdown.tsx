@@ -2,7 +2,6 @@ interface PayoutBreakdownProps {
   snapshottedVariablePay: number
   rating: string
   individualMultiplier: number
-  businessMultiplier: number
   payoutAmount: number
   currency?: string
 }
@@ -19,7 +18,6 @@ export function PayoutBreakdown({
   snapshottedVariablePay,
   rating,
   individualMultiplier,
-  businessMultiplier,
   payoutAmount,
   currency = 'INR',
 }: PayoutBreakdownProps) {
@@ -37,22 +35,13 @@ export function PayoutBreakdown({
 
         <div className="flex items-center justify-between px-4 py-3">
           <dt className="text-sm text-muted-foreground">
-            &times; Individual multiplier&nbsp;
+            &times; Rating multiplier&nbsp;
             <span className="font-medium text-foreground">
               ({rating}: {individualMultiplier}&times;)
             </span>
           </dt>
           <dd className="text-sm font-medium tabular-nums">
             {individualMultiplier}&times;
-          </dd>
-        </div>
-
-        <div className="flex items-center justify-between px-4 py-3">
-          <dt className="text-sm text-muted-foreground">
-            &times; Business multiplier
-          </dt>
-          <dd className="text-sm font-medium tabular-nums">
-            {businessMultiplier}&times;
           </dd>
         </div>
 

@@ -446,9 +446,7 @@ export default function DocsPage() {
           </p>
 
           <SubHeading>The formula</SubHeading>
-          <CodeBlock>{`payout_amount = snapshotted_variable_pay
-              × rating_multiplier
-              × business_multiplier`}</CodeBlock>
+          <CodeBlock>{`payout_amount = snapshotted_variable_pay × rating_multiplier`}</CodeBlock>
 
           <Table
             headers={['Rating', 'Label', 'Multiplier', 'Notes']}
@@ -456,7 +454,7 @@ export default function DocsPage() {
               [<Tag key="fee" color="green">FEE</Tag>,  'Far Exceeded Expectations',      '× 1.25', 'Highest fixed band'],
               [<Tag key="ee"  color="blue">EE</Tag>,   'Exceeded Expectations',           '× 1.10', ''],
               [<Tag key="me"  color="default">ME</Tag>, 'Met Expectations',               '× 1.00', 'Target band'],
-              [<Tag key="sme" color="amber">SME</Tag>, 'Significantly Met Expectations',  '× (1.00 + sme_multiplier)', 'Dynamic — set per cycle'],
+              [<Tag key="sme" color="amber">SME</Tag>, 'Significantly Met Expectations',  '× 1.00', 'Configurable at Admin → Payout Multipliers'],
               [<Tag key="be"  color="red">BE</Tag>,    'Below Expectations',              '× 0.00', 'No variable payout'],
             ]}
           />
@@ -464,8 +462,7 @@ export default function DocsPage() {
           <SubHeading>Where values are configured</SubHeading>
           <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 ml-2">
             <li><strong>variable_pay</strong> — Set per user at <Code>/admin/users</Code>. Can be zero. Snapshotted at appraisal creation so mid-cycle changes don&apos;t affect payouts</li>
-            <li><strong>business_multiplier</strong> — Configured on the cycle after ratings are locked. Applies uniformly to all payouts</li>
-            <li><strong>sme_multiplier</strong> — Also set per cycle after lock. Only affects employees rated SME</li>
+            <li><strong>rating_multiplier</strong> — Configured globally at <Code>/admin/payout-config</Code>. Applies to all cycles uniformly</li>
           </ul>
         </section>
 
