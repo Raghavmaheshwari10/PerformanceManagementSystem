@@ -275,6 +275,98 @@ export async function getActiveCyclesForManager(managerId: string): Promise<{
   return { deptCycles, orgCycle };
 }
 
+// ─── Exit / Proration Helpers ────────────────────────────────────────
+
+/**
+ * Derive cycle start and end dates from quarter + year.
+ * Quarters: Q1 = Apr-Jun, Q2 = Jul-Sep, Q3 = Oct-Dec, Q4 = Jan-Mar
+ * Also supports "annual" / "H1" / "H2" quarter values.
+ */
+export function getCycleDateRange(quarter: string, year: number): { start: Date; end: Date } {
+  const q = quarter.toUpperCase()
+  if (q === 'Q1')     return { start: new Date(year, 3, 1), end: new Date(year, 5, 30) }
+  if (q === 'Q2')     return { start: new Date(year, 6, 1), end: new Date(year, 8, 30) }
+  if (q === 'Q3')     return { start: new Date(year, 9, 1), end: new Date(year, 11, 31) }
+  if (q === 'Q4')     return { start: new Date(year + 1, 0, 1), end: new Date(year + 1, 2, 31) }
+  if (q === 'H1')     return { start: new Date(year, 3, 1), end: new Date(year, 8, 30) }
+  if (q === 'H2')     return { start: new Date(year, 9, 1), end: new Date(year + 1, 2, 31) }
+  // Annual / fallback: full financial year Apr–Mar
+  return { start: new Date(year, 3, 1), end: new Date(year + 1, 2, 31) }
+}
+
+/**
+ * Calculate proration factor: days_worked / total_cycle_days.
+ * Returns a number between 0 and 1 (capped).
+ */
+export function calculateProration(exitDate: Date, cycleStart: Date, cycleEnd: Date): number {
+  const totalDays = Math.max(1, Math.ceil((cycleEnd.getTime() - cycleStart.getTime()) / (1000 * 60 * 60 * 24)))
+  const daysWorked = Math.max(0, Math.ceil((exitDate.getTime() - cycleStart.getTime()) / (1000 * 60 * 60 * 24)))
+  return Math.min(1, Math.max(0, daysWorked / totalDays))
+}
+
+/**
+ * Freeze all active cycle participations for an employee on exit.
+ * Called when admin deactivates a user.
+ */
+export async function freezeEmployeeCycles(employeeId: string, adminId: string): Promise<{
+  frozenCount: number
+  cycles: Array<{ cycleId: string; cycleName: string; prorationFactor: number }>
+}> {
+  const now = new Date()
+  const result: Array<{ cycleId: string; cycleName: string; prorationFactor: number }> = []
+
+  // Find all non-published appraisals for this employee
+  const appraisals = await prisma.appraisal.findMany({
+    where: {
+      employee_id: employeeId,
+      is_exit_frozen: false,
+      cycle: { status: { notIn: ['published', 'draft'] } },
+    },
+    include: {
+      cycle: { select: { id: true, name: true, quarter: true, year: true } },
+    },
+  })
+
+  for (const appraisal of appraisals) {
+    const { start, end } = getCycleDateRange(appraisal.cycle.quarter, appraisal.cycle.year)
+    const prorationFactor = calculateProration(now, start, end)
+
+    await prisma.appraisal.update({
+      where: { id: appraisal.id },
+      data: {
+        exited_at: now,
+        is_exit_frozen: true,
+        proration_factor: prorationFactor,
+        updated_at: now,
+      },
+    })
+
+    await prisma.auditLog.create({
+      data: {
+        cycle_id: appraisal.cycle.id,
+        changed_by: adminId,
+        action: 'employee_exited_cycle',
+        entity_type: 'appraisal',
+        entity_id: appraisal.id,
+        new_value: {
+          employee_id: employeeId,
+          cycle_id: appraisal.cycle.id,
+          proration_factor: prorationFactor,
+          exited_at: now.toISOString(),
+        },
+      },
+    })
+
+    result.push({
+      cycleId: appraisal.cycle.id,
+      cycleName: appraisal.cycle.name,
+      prorationFactor,
+    })
+  }
+
+  return { frozenCount: result.length, cycles: result }
+}
+
 // ─── Scoping Helpers ─────────────────────────────────────────────────
 
 /**

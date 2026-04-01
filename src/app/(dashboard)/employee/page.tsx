@@ -252,7 +252,11 @@ export default async function EmployeeReviewPage() {
     learning:    { bg: 'bg-emerald-500/20', text: 'text-emerald-400' },
   }
 
-  const isSelfReview = resolvedStatus === 'self_review'
+  const isExitFrozen = !!(appraisal as any)?.is_exit_frozen
+  const exitedAt = (appraisal as any)?.exited_at
+  const prorationFactor = (appraisal as any)?.proration_factor != null ? Number((appraisal as any).proration_factor) : null
+
+  const isSelfReview = resolvedStatus === 'self_review' && !isExitFrozen
   const isPublished = resolvedStatus === 'published'
   const showReadOnlyReview = !isSelfReview && review?.status === 'submitted'
 
@@ -272,6 +276,27 @@ export default async function EmployeeReviewPage() {
         <h1 className="text-2xl font-bold">My Review — {cycle.name}</h1>
         <CycleStatusBadge status={resolvedStatus} />
       </div>
+
+      {/* Exit frozen banner */}
+      {isExitFrozen && (
+        <div className="glass rounded-xl border border-red-500/30 bg-red-500/10 p-4 space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-red-500/20 px-2.5 py-0.5 text-xs font-semibold text-red-400">
+              Cycle Frozen
+            </span>
+            {exitedAt && (
+              <span className="text-xs text-muted-foreground">
+                Exited {new Date(exitedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-red-300/80">
+            Your participation in this cycle has been frozen due to your exit.
+            {prorationFactor != null && ` Proration: ${(prorationFactor * 100).toFixed(1)}% of the cycle.`}
+            {' '}Your existing submissions are preserved. Contact HR for any questions.
+          </p>
+        </div>
+      )}
 
       {isSelfReview && (
         <DeadlineBanner deadline={cycle.self_review_deadline ? String(cycle.self_review_deadline) : null} label="Self-review" />

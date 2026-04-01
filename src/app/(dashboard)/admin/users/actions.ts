@@ -8,7 +8,8 @@ import { redirect } from 'next/navigation'
 import type { ActionResult, UserRole } from '@/lib/types'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
-import { sendInviteEmail } from '@/lib/email'
+import { sendInviteEmail, notifyUsers } from '@/lib/email'
+import { freezeEmployeeCycles } from '@/lib/cycle-helpers'
 
 export async function triggerZimyoSync(): Promise<{ error?: string }> {
   const user = await requireRole(['admin'])
@@ -295,7 +296,7 @@ export async function updateUserRole(userId: string, role: string): Promise<void
 }
 
 export async function toggleUserActive(userId: string, currentActive: boolean): Promise<void> {
-  const user = await requireRole(['admin'])
+  const admin = await requireRole(['admin'])
 
   try {
     await prisma.user.update({
@@ -308,7 +309,7 @@ export async function toggleUserActive(userId: string, currentActive: boolean): 
 
   await prisma.auditLog.create({
     data: {
-      changed_by: user.id,
+      changed_by: admin.id,
       action: 'toggle_active',
       entity_type: 'user',
       entity_id: userId,
@@ -316,6 +317,28 @@ export async function toggleUserActive(userId: string, currentActive: boolean): 
       new_value: { is_active: !currentActive },
     },
   })
+
+  // On deactivation: freeze active cycle participations and notify manager
+  if (currentActive) {
+    const employee = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { full_name: true, manager_id: true },
+    })
+
+    const { frozenCount, cycles } = await freezeEmployeeCycles(userId, admin.id)
+
+    if (frozenCount > 0 && employee?.manager_id) {
+      const cycleNames = cycles.map(c => c.cycleName).join(', ')
+      notifyUsers(
+        [employee.manager_id],
+        'admin_message',
+        {
+          message: `${employee.full_name} has exited during ${cycleNames}. You may optionally complete their review.`,
+          link: '/manager',
+        }
+      ).catch(console.error)
+    }
+  }
 
   revalidatePath('/admin/users')
 }

@@ -16,6 +16,9 @@ interface AppraisalRow {
   payout_multiplier: number | null
   payout_amount: number | null
   snapshotted_variable_pay: number | null
+  is_exit_frozen: boolean
+  exited_at: string | null
+  proration_factor: number | null
   employee: { full_name: string; department_id: string | null; department: { name: string } | null } | null
 }
 
@@ -40,6 +43,9 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
         payout_multiplier: true,
         payout_amount: true,
         snapshotted_variable_pay: true,
+        is_exit_frozen: true,
+        exited_at: true,
+        proration_factor: true,
         employee: {
           select: {
             full_name: true,
@@ -66,9 +72,13 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
   const allRows = allAppraisals as unknown as AppraisalRow[]
 
   // Apply department filter
-  const rows = selectedDept
+  const filteredRows = selectedDept
     ? allRows.filter(a => a.employee?.department_id === selectedDept)
     : allRows
+
+  // Separate active and exited employees
+  const rows = filteredRows.filter(a => !a.is_exit_frozen)
+  const exitedRows = filteredRows.filter(a => a.is_exit_frozen)
 
   const distribution: Record<RatingTier, number> = { FEE: 0, EE: 0, ME: 0, SME: 0, BE: 0 }
   for (const a of rows) {
@@ -117,7 +127,7 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
               </Link>
             )}
             <span className="text-xs text-muted-foreground ml-auto">
-              Showing {rows.length} of {allRows.length} appraisals
+              Showing {rows.length} active{exitedRows.length > 0 ? ` + ${exitedRows.length} exited` : ''} of {allRows.length} appraisals
             </span>
           </div>
           <script
@@ -138,7 +148,7 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
             <span className="text-sm text-muted-foreground">Department: <span className="font-medium text-foreground">{departments[0].name}</span></span>
           )}
           <span className="text-xs text-muted-foreground ml-auto">
-            Showing {rows.length} appraisals
+            Showing {rows.length} active{exitedRows.length > 0 ? ` + ${exitedRows.length} exited` : ''} appraisals
           </span>
         </div>
       )}
@@ -216,6 +226,67 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
           )}
         </table>
       </div>
+
+      {/* ── Exited Employees Section ── */}
+      {exitedRows.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+            Exited Employees
+            <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-xs font-semibold text-red-400">{exitedRows.length}</span>
+          </h2>
+          <div className="glass overflow-hidden opacity-80">
+            <table className="w-full text-sm table-row-hover">
+              <thead>
+                <tr className="border-b border-border bg-red-500/5">
+                  <th className="p-3 text-left text-muted-foreground">Employee</th>
+                  <th className="p-3 text-left text-muted-foreground">Department</th>
+                  <th className="p-3 text-left text-muted-foreground">Manager Rating</th>
+                  <th className="p-3 text-left text-muted-foreground">Final Rating</th>
+                  <th className="p-3 text-right text-muted-foreground">Proration</th>
+                  <th className="p-3 text-left text-muted-foreground">Exited On</th>
+                  {['locked', 'published'].includes(typedCycle?.status ?? '') && (
+                    <th className="p-3 text-right text-muted-foreground">Payout</th>
+                  )}
+                  {isCalibrating && <th className="p-3 text-left text-muted-foreground">Override</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {exitedRows.map(a => (
+                  <tr key={a.id} className="border-b border-border">
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        {a.employee?.full_name}
+                        <span className="rounded-full bg-red-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-red-400">Exited</span>
+                      </div>
+                    </td>
+                    <td className="p-3 text-muted-foreground">{a.employee?.department?.name ?? '—'}</td>
+                    <td className="p-3 text-muted-foreground">{a.manager_rating ?? '—'}</td>
+                    <td className="p-3 font-medium">{a.final_rating ?? a.manager_rating ?? '—'}</td>
+                    <td className="p-3 text-right text-muted-foreground">
+                      {a.proration_factor != null ? `${(Number(a.proration_factor) * 100).toFixed(1)}%` : '—'}
+                    </td>
+                    <td className="p-3 text-muted-foreground text-xs">
+                      {a.exited_at ? new Date(a.exited_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '—'}
+                    </td>
+                    {['locked', 'published'].includes(typedCycle?.status ?? '') && (
+                      <td className="p-3 text-right text-muted-foreground">₹{(Number(a.payout_amount) ?? 0).toLocaleString('en-IN')}</td>
+                    )}
+                    {isCalibrating && (
+                      <td className="p-3">
+                        <OverrideForm
+                          appraisalId={a.id}
+                          cycleId={cycleId}
+                          currentRating={a.final_rating ?? a.manager_rating}
+                        />
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       <CalibrationActionsClient
         cycleId={cycleId}

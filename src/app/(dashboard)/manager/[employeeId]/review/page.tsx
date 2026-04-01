@@ -79,15 +79,35 @@ export default async function ManagerReviewPage({
   const ungroupedKpis = kpisByKra.get(null) ?? []
 
   const submitted = !!(appraisal as Appraisal | null)?.manager_submitted_at
+  const isExitFrozen = !!(appraisal as any)?.is_exit_frozen
+  const exitedAt = (appraisal as any)?.exited_at
+  const prorationFactor = (appraisal as any)?.proration_factor != null ? Number((appraisal as any).proration_factor) : null
 
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Review: {(employee as unknown as User)?.full_name}</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold">Review: {(employee as unknown as User)?.full_name}</h1>
+          {isExitFrozen && (
+            <span className="rounded-full bg-red-500/20 px-3 py-1 text-xs font-semibold text-red-400">
+              Exited
+            </span>
+          )}
+        </div>
         {submitted && (
           <p className="mt-1 text-sm text-green-600 font-medium">
             ✓ Rating submitted: {(appraisal as Appraisal | null)?.manager_rating}
           </p>
+        )}
+        {isExitFrozen && (
+          <div className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+            <p className="text-sm text-amber-300">
+              <strong>Exit frozen:</strong> This employee exited the cycle
+              {exitedAt ? ` on ${new Date(exitedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}.
+              {prorationFactor != null && ` Proration factor: ${(prorationFactor * 100).toFixed(1)}%.`}
+              {' '}Manager rating is optional for exited employees.
+            </p>
+          </div>
         )}
       </div>
 

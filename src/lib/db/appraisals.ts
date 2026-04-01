@@ -42,13 +42,14 @@ export async function bulkLockAppraisals(cycleId: string): Promise<void> {
       }
       const payoutMultiplier = ratioMap[effectiveRating] ?? 0
       const varPay = Number(a.snapshotted_variable_pay ?? 0)
+      const prorationFactor = a.is_exit_frozen ? Number(a.proration_factor ?? 1) : 1
 
       await tx.appraisal.update({
         where: { id: a.id },
         data: {
           final_rating:      effectiveRating,
           payout_multiplier: payoutMultiplier,
-          payout_amount:     varPay * payoutMultiplier,
+          payout_amount:     varPay * payoutMultiplier * prorationFactor,
           locked_at:         new Date(),
         },
       })

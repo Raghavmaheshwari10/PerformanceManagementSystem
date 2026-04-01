@@ -74,6 +74,15 @@ export async function submitSelfReview(_prev: ActionResult, formData: FormData):
 
   const cycleId = formData.get('cycle_id') as string
 
+  // Guard: block if employee's appraisal is exit-frozen
+  const frozenCheck = await prisma.appraisal.findFirst({
+    where: { cycle_id: cycleId, employee_id: user.id, is_exit_frozen: true },
+    select: { id: true },
+  })
+  if (frozenCheck) {
+    return { data: null, error: 'Your participation in this cycle has been frozen due to exit. Contact HR for assistance.' }
+  }
+
   // Deadline enforcement: employee's resolved status must be self_review and deadline not passed
   const cycle = await prisma.cycle.findUnique({
     where: { id: cycleId },
@@ -191,6 +200,15 @@ export async function saveDraftReview(_prev: ActionResult, formData: FormData): 
   const user = await requireRole(['employee'])
 
   const cycleId = formData.get('cycle_id') as string
+
+  // Guard: block if employee's appraisal is exit-frozen
+  const frozenCheck = await prisma.appraisal.findFirst({
+    where: { cycle_id: cycleId, employee_id: user.id, is_exit_frozen: true },
+    select: { id: true },
+  })
+  if (frozenCheck) {
+    return { data: null, error: 'Your participation in this cycle has been frozen due to exit. Contact HR for assistance.' }
+  }
 
   // Prevent saving draft after submission
   const existingReview = await prisma.review.findUnique({

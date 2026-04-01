@@ -417,6 +417,9 @@ model Appraisal {
   snapshotted_variable_pay Decimal? @db.Decimal
   locked_at              DateTime?  @db.Timestamptz(6)
   is_final               Boolean    @default(false)
+  exited_at              DateTime?  @db.Timestamptz(6)
+  proration_factor       Decimal?   @db.Decimal(5, 4)
+  is_exit_frozen         Boolean    @default(false)
   created_at             DateTime   @default(now()) @db.Timestamptz(6)
   updated_at             DateTime   @default(now()) @db.Timestamptz(6)
 
