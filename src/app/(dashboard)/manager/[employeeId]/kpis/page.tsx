@@ -21,21 +21,44 @@ export default async function KpiSettingPage({
   params: Promise<{ employeeId: string }>
   searchParams: Promise<{ cycle?: string; error?: string }>
 }) {
-  const user = await requireRole(["manager"])
-  const { employeeId } = await params
-  const { cycle: cycleId, error: pageError } = await searchParams
+  let user, employeeId: string, cycleId: string | undefined, pageError: string | undefined
 
-  await requireManagerOwnership(employeeId, user.id)
+  try {
+    user = await requireRole(["manager"])
+  } catch (e) {
+    throw e // let redirects pass through
+  }
 
-  const [employee, rawKpis, rawKras] = await Promise.all([
-    prisma.user.findUnique({ where: { id: employeeId } }),
-    cycleId
-      ? prisma.kpi.findMany({ where: { cycle_id: cycleId, employee_id: employeeId }, include: { kra: true, mis_mappings: { include: { aop_target: true } } } })
-      : [],
-    cycleId
-      ? prisma.kra.findMany({ where: { cycle_id: cycleId, employee_id: employeeId }, orderBy: { sort_order: 'asc' } })
-      : [],
-  ])
+  ;({ employeeId } = await params)
+  ;({ cycle: cycleId, error: pageError } = await searchParams)
+
+  try {
+    await requireManagerOwnership(employeeId, user.id)
+  } catch (e) {
+    throw e // let redirects pass through
+  }
+
+  let employee, rawKpis: Awaited<ReturnType<typeof prisma.kpi.findMany<{ include: { kra: true; mis_mappings: { include: { aop_target: true } } } }>>>, rawKras: Awaited<ReturnType<typeof prisma.kra.findMany>>
+
+  try {
+    ;[employee, rawKpis, rawKras] = await Promise.all([
+      prisma.user.findUnique({ where: { id: employeeId } }),
+      cycleId
+        ? prisma.kpi.findMany({ where: { cycle_id: cycleId, employee_id: employeeId }, include: { kra: true, mis_mappings: { include: { aop_target: true } } } })
+        : [],
+      cycleId
+        ? prisma.kra.findMany({ where: { cycle_id: cycleId, employee_id: employeeId }, orderBy: { sort_order: 'asc' } })
+        : [],
+    ])
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    return (
+      <div className="max-w-3xl space-y-4 p-6">
+        <h1 className="text-xl font-bold text-destructive">Error loading KPI data</h1>
+        <pre className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive whitespace-pre-wrap">{msg}</pre>
+      </div>
+    )
+  }
 
   // Serialize Prisma Decimal to plain numbers for rendering
   const kpis = rawKpis.map(k => ({
