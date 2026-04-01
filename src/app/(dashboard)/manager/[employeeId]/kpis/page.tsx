@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { KpiTemplatePicker } from '@/components/kpi-template-picker'
 import { KraTemplatePicker } from '@/components/kra-template-picker'
-import { KpiMisLink } from '@/components/kpi-mis-link'
 
 const CATEGORY_STYLES: Record<string, string> = {
   performance: 'bg-primary/15 text-primary',
@@ -21,68 +20,32 @@ export default async function KpiSettingPage({
   params: Promise<{ employeeId: string }>
   searchParams: Promise<{ cycle?: string; error?: string }>
 }) {
-  let user, employeeId: string, cycleId: string | undefined, pageError: string | undefined
+  const user = await requireRole(["manager"])
+  const { employeeId } = await params
+  const { cycle: cycleId, error: pageError } = await searchParams
 
-  try {
-    user = await requireRole(["manager"])
-  } catch (e) {
-    throw e // let redirects pass through
-  }
+  await requireManagerOwnership(employeeId, user.id)
 
-  ;({ employeeId } = await params)
-  ;({ cycle: cycleId, error: pageError } = await searchParams)
-
-  try {
-    await requireManagerOwnership(employeeId, user.id)
-  } catch (e) {
-    throw e // let redirects pass through
-  }
-
-  let employee, rawKpis: Awaited<ReturnType<typeof prisma.kpi.findMany<{ include: { kra: true; mis_mappings: { include: { aop_target: true } } } }>>>, rawKras: Awaited<ReturnType<typeof prisma.kra.findMany>>
-
-  try {
-    ;[employee, rawKpis, rawKras] = await Promise.all([
-      prisma.user.findUnique({ where: { id: employeeId } }),
-      cycleId
-        ? prisma.kpi.findMany({ where: { cycle_id: cycleId, employee_id: employeeId }, include: { kra: true, mis_mappings: { include: { aop_target: true } } } })
-        : [],
-      cycleId
-        ? prisma.kra.findMany({ where: { cycle_id: cycleId, employee_id: employeeId }, orderBy: { sort_order: 'asc' } })
-        : [],
-    ])
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e)
-    return (
-      <div className="max-w-3xl space-y-4 p-6">
-        <h1 className="text-xl font-bold text-destructive">Error loading KPI data</h1>
-        <pre className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive whitespace-pre-wrap">{msg}</pre>
-      </div>
-    )
-  }
+  const [employee, rawKpis, rawKras] = await Promise.all([
+    prisma.user.findUnique({ where: { id: employeeId } }),
+    cycleId
+      ? prisma.kpi.findMany({ where: { cycle_id: cycleId, employee_id: employeeId }, include: { kra: true } })
+      : [],
+    cycleId
+      ? prisma.kra.findMany({ where: { cycle_id: cycleId, employee_id: employeeId }, orderBy: { sort_order: 'asc' } })
+      : [],
+  ])
 
   // Serialize Prisma Decimal to plain numbers for rendering
   const kpis = rawKpis.map(k => ({
     ...k,
     weight: k.weight ? Number(k.weight) : null,
     kra: k.kra ? { ...k.kra, weight: k.kra.weight ? Number(k.kra.weight) : null } : null,
-    mis_mappings: ('mis_mappings' in k && Array.isArray(k.mis_mappings)) ? k.mis_mappings : [],
   }))
   const kras = rawKras.map(k => ({
     ...k,
     weight: k.weight ? Number(k.weight) : null,
   }))
-
-  // Helper: extract first MIS mapping for a KPI (if any)
-  function getMisMapping(kpi: typeof kpis[number]) {
-    const m = kpi.mis_mappings?.[0]
-    if (!m) return null
-    return {
-      id: m.id,
-      aopTargetId: m.aop_target_id,
-      metricName: m.aop_target.metric_name,
-      formula: m.score_formula,
-    }
-  }
 
   // Group KPIs by kra_id
   const kpisByKra = new Map<string | null, typeof kpis>()
@@ -314,12 +277,6 @@ export default async function KpiSettingPage({
                 <div key={kpi.id} className="glass-interactive flex items-center justify-between rounded-lg p-3">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-medium">{kpi.title}</p>
-                    <KpiMisLink
-                      kpiId={kpi.id}
-                      kpiTitle={kpi.title}
-                      employeeId={employeeId}
-                      currentMapping={getMisMapping(kpi)}
-                    />
                     {kpi.weight != null && (
                       <span className="rounded-full bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground">
                         {String(kpi.weight)}%
@@ -400,12 +357,6 @@ export default async function KpiSettingPage({
               <div key={kpi.id} className="glass-interactive flex items-center justify-between rounded-lg p-3">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="font-medium">{kpi.title}</p>
-                  <KpiMisLink
-                    kpiId={kpi.id}
-                    kpiTitle={kpi.title}
-                    employeeId={employeeId}
-                    currentMapping={getMisMapping(kpi)}
-                  />
                   {kpi.weight != null && (
                     <span className="rounded-full bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground">
                       {String(kpi.weight)}%
