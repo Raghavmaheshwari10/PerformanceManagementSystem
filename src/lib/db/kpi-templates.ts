@@ -27,15 +27,24 @@ export async function applyKpiTemplate(
   if (templates.length === 0) return 0
 
   return await prisma.$transaction(async (tx) => {
-    // Fetch existing KRAs — use kra_template_id for direct matching
+    // Fetch existing KRAs — build lookup maps for matching
     const kras = await tx.kra.findMany({
       where: { cycle_id: cycleId, employee_id: employeeId },
-      select: { id: true, kra_template_id: true, category: true },
+      select: { id: true, title: true, kra_template_id: true, category: true },
     })
     const kraByTemplateId = new Map(
       kras.filter(k => k.kra_template_id).map(k => [k.kra_template_id!, k.id])
     )
+    const kraByTitle = new Map(kras.map(k => [k.title, k.id]))
     const kraByCategory = new Map(kras.map(k => [k.category, k.id]))
+
+    // Helper: resolve KRA ID for a template
+    function resolveKraId(t: typeof templates[number]): string | null {
+      return (t.kra_template_id && kraByTemplateId.get(t.kra_template_id))
+        ?? (t.kra_template?.title && kraByTitle.get(t.kra_template.title))
+        ?? kraByCategory.get(t.category)
+        ?? null
+    }
 
     const existingKpis = await tx.kpi.findMany({
       where: {
@@ -43,30 +52,40 @@ export async function applyKpiTemplate(
         employee_id: employeeId,
         title:       { in: templates.map(t => t.title) },
       },
-      select: { title: true },
+      select: { id: true, title: true, kra_id: true },
     })
+    const existingByTitle = new Map(existingKpis.map(k => [k.title, k]))
+
+    // Reassign orphaned KPIs (kra_id is null) to matching KRAs
+    for (const t of templates) {
+      const existing = existingByTitle.get(t.title)
+      if (existing && !existing.kra_id) {
+        const kraId = resolveKraId(t)
+        if (kraId) {
+          await tx.kpi.update({
+            where: { id: existing.id },
+            data: { kra_id: kraId },
+          })
+        }
+      }
+    }
+
     const existingTitles = new Set(existingKpis.map(k => k.title))
     const toCreate = templates.filter(t => !existingTitles.has(t.title))
 
     if (toCreate.length > 0) {
       await tx.kpi.createMany({
-        data: toCreate.map(t => {
-          // Match by kra_template_id first, then fall back to category
-          const kraId = (t.kra_template_id && kraByTemplateId.get(t.kra_template_id))
-            ?? kraByCategory.get(t.category)
-            ?? null
-          return {
-            cycle_id:    cycleId,
-            employee_id: employeeId,
-            manager_id:  managerId,
-            kra_id:      kraId,
-            title:       t.title,
-            description: t.description,
-            weight:      t.weight,
-          }
-        }),
+        data: toCreate.map(t => ({
+          cycle_id:    cycleId,
+          employee_id: employeeId,
+          manager_id:  managerId,
+          kra_id:      resolveKraId(t),
+          title:       t.title,
+          description: t.description,
+          weight:      t.weight,
+        })),
       })
     }
-    return toCreate.length
+    return toCreate.length + [...existingByTitle.values()].filter(k => !k.kra_id).length
   })
 }
