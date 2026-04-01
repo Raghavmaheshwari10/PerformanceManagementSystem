@@ -197,7 +197,7 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
                 <td className="p-3 font-medium">{a.final_rating ?? a.manager_rating}</td>
                 {['locked', 'published'].includes(typedCycle?.status ?? '') && (
                   <>
-                    <td className="p-3 text-right text-muted-foreground">x{Number(a.payout_multiplier)?.toFixed(3) ?? '—'}</td>
+                    <td className="p-3 text-right text-muted-foreground">x{Number(a.payout_multiplier)?.toFixed(2) ?? '—'}</td>
                     <td className="p-3 text-right text-muted-foreground">Rs.{(Number(a.payout_amount) ?? 0).toLocaleString('en-IN')}</td>
                   </>
                 )}
