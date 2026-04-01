@@ -3,12 +3,8 @@ import { requireRole } from '@/lib/auth'
 import { toTitleCase } from '@/lib/constants'
 import Link from 'next/link'
 import { SyncButton } from './sync-button'
-
-function ragBadge(achievement: number, red: number, amber: number) {
-  if (achievement >= amber) return <span className="inline-block rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs font-medium text-emerald-400">Green</span>
-  if (achievement >= red) return <span className="inline-block rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-400">Amber</span>
-  return <span className="inline-block rounded-full bg-red-500/20 px-2 py-0.5 text-xs font-medium text-red-400">Red</span>
-}
+import { MisClient } from './mis-client'
+import { CsvImport } from './csv-import'
 
 export default async function AdminMisPage(props: {
   searchParams: Promise<{ category?: string; level?: string }>
@@ -18,15 +14,12 @@ export default async function AdminMisPage(props: {
   const filterCategory = searchParams.category
   const filterLevel = searchParams.level
 
-  const [config, totalTargets, lastSync, unmappedCount, syncLogs, allTargets, categories, levels] = await Promise.all([
+  const [config, totalTargets, lastSync, unmappedCount, syncLogs, allTargetsRaw, categories, levels, departments, employees] = await Promise.all([
     prisma.misConfig.findFirst(),
     prisma.aopTarget.count(),
     prisma.misSyncLog.findFirst({ orderBy: { started_at: 'desc' } }),
     prisma.aopTarget.count({
-      where: {
-        kpi_mappings: { none: {} },
-        level: 'individual',
-      },
+      where: { kpi_mappings: { none: {} }, level: 'individual' },
     }),
     prisma.misSyncLog.findMany({ orderBy: { started_at: 'desc' }, take: 10 }),
     prisma.aopTarget.findMany({
@@ -37,14 +30,39 @@ export default async function AdminMisPage(props: {
       include: {
         department: { select: { name: true } },
         employee: { select: { full_name: true } },
+        actuals: { select: { month: true, actual_value: true } },
       },
       orderBy: { metric_name: 'asc' },
     }),
     prisma.aopTarget.groupBy({ by: ['category'], _count: true }),
     prisma.aopTarget.groupBy({ by: ['level'], _count: true }),
+    prisma.department.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true } }),
+    prisma.user.findMany({
+      where: { is_active: true, role: { notIn: ['admin', 'hrbp'] } },
+      orderBy: { full_name: 'asc' },
+      select: { id: true, full_name: true, email: true, department_id: true },
+    }),
   ])
 
   const fiscalYear = config?.fiscal_year ?? new Date().getFullYear()
+
+  // Serialize targets for client component
+  const targets = allTargetsRaw.map(t => ({
+    id: t.id,
+    metric_name: t.metric_name,
+    category: t.category,
+    level: t.level,
+    annual_target: Number(t.annual_target),
+    unit: t.unit,
+    ytd_actual: Number(t.ytd_actual ?? 0),
+    department_id: t.department_id,
+    employee_id: t.employee_id,
+    department_name: t.department?.name ?? null,
+    employee_name: t.employee?.full_name ?? null,
+    red_threshold: Number(t.red_threshold),
+    amber_threshold: Number(t.amber_threshold),
+    actuals: Object.fromEntries(t.actuals.map(a => [a.month, Number(a.actual_value)])),
+  }))
 
   return (
     <div className="space-y-6">
@@ -53,7 +71,7 @@ export default async function AdminMisPage(props: {
         <div>
           <h1 className="text-2xl font-bold">MIS Integration</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Manage AOP targets, sync data from MIS, and monitor integration health
+            Manage AOP targets, enter actuals, and monitor integration health
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -98,26 +116,27 @@ export default async function AdminMisPage(props: {
         </div>
       </div>
 
+      {/* CSV Import */}
+      <CsvImport fiscalYear={fiscalYear} />
+
       {/* Sync History */}
-      <div className="space-y-3">
-        <h2 className="text-lg font-semibold">Sync History</h2>
-        <div className="glass overflow-hidden rounded-xl">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/30">
-                <th className="p-3 text-left text-muted-foreground">Type</th>
-                <th className="p-3 text-left text-muted-foreground">Status</th>
-                <th className="p-3 text-right text-muted-foreground">Synced</th>
-                <th className="p-3 text-right text-muted-foreground">Failed</th>
-                <th className="p-3 text-left text-muted-foreground">Started</th>
-                <th className="p-3 text-left text-muted-foreground">Duration</th>
-              </tr>
-            </thead>
-            <tbody>
-              {syncLogs.length === 0 ? (
-                <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">No sync history</td></tr>
-              ) : (
-                syncLogs.map(log => {
+      {syncLogs.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-lg font-semibold">Sync History</h2>
+          <div className="glass overflow-hidden rounded-xl">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/30">
+                  <th className="p-3 text-left text-muted-foreground">Type</th>
+                  <th className="p-3 text-left text-muted-foreground">Status</th>
+                  <th className="p-3 text-right text-muted-foreground">Synced</th>
+                  <th className="p-3 text-right text-muted-foreground">Failed</th>
+                  <th className="p-3 text-left text-muted-foreground">Started</th>
+                  <th className="p-3 text-left text-muted-foreground">Duration</th>
+                </tr>
+              </thead>
+              <tbody>
+                {syncLogs.map(log => {
                   const duration = log.completed_at && log.started_at
                     ? Math.round((new Date(log.completed_at).getTime() - new Date(log.started_at).getTime()) / 1000)
                     : null
@@ -142,18 +161,16 @@ export default async function AdminMisPage(props: {
                       <td className="p-3 text-muted-foreground">{duration != null ? `${duration}s` : '...'}</td>
                     </tr>
                   )
-                })
-              )}
-            </tbody>
-          </table>
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Target Overview */}
+      {/* Filters */}
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold">Target Overview</h2>
-
-        {/* Filters */}
+        <h2 className="text-lg font-semibold">Targets</h2>
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2">
             <label className="text-xs text-muted-foreground">Category:</label>
@@ -196,53 +213,15 @@ export default async function AdminMisPage(props: {
             </div>
           </div>
         </div>
-
-        <div className="glass overflow-hidden rounded-xl">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/30">
-                <th className="p-3 text-left text-muted-foreground">Metric</th>
-                <th className="p-3 text-left text-muted-foreground">Category</th>
-                <th className="p-3 text-left text-muted-foreground">Level</th>
-                <th className="p-3 text-left text-muted-foreground">Department / Employee</th>
-                <th className="p-3 text-right text-muted-foreground">Annual Target</th>
-                <th className="p-3 text-right text-muted-foreground">YTD Actual</th>
-                <th className="p-3 text-right text-muted-foreground">Achievement</th>
-                <th className="p-3 text-center text-muted-foreground">RAG</th>
-              </tr>
-            </thead>
-            <tbody>
-              {allTargets.length === 0 ? (
-                <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">No targets found</td></tr>
-              ) : (
-                allTargets.map(t => {
-                  const annual = Number(t.annual_target)
-                  const ytd = Number(t.ytd_actual ?? 0)
-                  const achievement = annual > 0 ? (ytd / annual) * 100 : 0
-                  return (
-                    <tr key={t.id} className="border-b border-border">
-                      <td className="p-3 font-medium">{t.metric_name}</td>
-                      <td className="p-3 text-muted-foreground">{toTitleCase(t.category)}</td>
-                      <td className="p-3 text-muted-foreground">{toTitleCase(t.level)}</td>
-                      <td className="p-3 text-muted-foreground">
-                        {t.employee?.full_name ?? t.department?.name ?? '—'}
-                      </td>
-                      <td className="p-3 text-right">
-                        {annual.toLocaleString('en-IN')} {t.unit}
-                      </td>
-                      <td className="p-3 text-right">{ytd.toLocaleString('en-IN')}</td>
-                      <td className="p-3 text-right">{achievement.toFixed(1)}%</td>
-                      <td className="p-3 text-center">
-                        {ragBadge(achievement, Number(t.red_threshold), Number(t.amber_threshold))}
-                      </td>
-                    </tr>
-                  )
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
       </div>
+
+      {/* Interactive target list with CRUD + actuals entry */}
+      <MisClient
+        targets={targets}
+        departments={departments}
+        employees={employees}
+        fiscalYear={fiscalYear}
+      />
     </div>
   )
 }
