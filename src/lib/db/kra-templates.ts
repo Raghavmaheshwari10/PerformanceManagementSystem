@@ -23,10 +23,21 @@ export async function applyKraTemplate(
         employee_id: employeeId,
         title:       { in: templates.map(t => t.title) },
       },
-      select: { title: true },
+      select: { id: true, title: true, kra_template_id: true },
     })
-    const existingTitles = new Set(existingKras.map(k => k.title))
-    const toCreate = templates.filter(t => !existingTitles.has(t.title))
+    const existingByTitle = new Map(existingKras.map(k => [k.title, k]))
+    const toCreate = templates.filter(t => !existingByTitle.has(t.title))
+
+    // Backfill kra_template_id on existing KRAs that were created before this feature
+    for (const t of templates) {
+      const existing = existingByTitle.get(t.title)
+      if (existing && !existing.kra_template_id) {
+        await tx.kra.update({
+          where: { id: existing.id },
+          data: { kra_template_id: t.id },
+        })
+      }
+    }
 
     if (toCreate.length > 0) {
       await tx.kra.createMany({
