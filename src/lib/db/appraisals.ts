@@ -13,11 +13,11 @@ export async function bulkLockAppraisals(cycleId: string): Promise<void> {
       configs.map(c => [c.rating_tier, Number(c.multiplier)])
     )
 
-    const feeMultiplier = Number(cycle.fee_multiplier ?? configMap['FEE'] ?? 1.25)
-    const eeMultiplier  = Number(cycle.ee_multiplier  ?? configMap['EE']  ?? 1.10)
-    const meMultiplier  = Number(cycle.me_multiplier  ?? configMap['ME']  ?? 1.00)
+    // Always use global PayoutConfig — no per-cycle overrides
+    const feeMultiplier = Number(configMap['FEE'] ?? 1.25)
+    const eeMultiplier  = Number(configMap['EE']  ?? 1.10)
+    const meMultiplier  = Number(configMap['ME']  ?? 1.00)
     const smeBase       = Number(configMap['SME'] ?? 1.00)
-    const smeExtra      = Number(cycle.sme_multiplier ?? 0)
     const bizMultiplier = Number(cycle.business_multiplier ?? 1.0)
 
     const appraisals = await tx.appraisal.findMany({
@@ -39,7 +39,7 @@ export async function bulkLockAppraisals(cycleId: string): Promise<void> {
         FEE: feeMultiplier,
         EE:  eeMultiplier,
         ME:  meMultiplier,
-        SME: smeBase + smeExtra,
+        SME: smeBase,
         BE:  0,
       }
       const ratio = ratioMap[effectiveRating] ?? 0

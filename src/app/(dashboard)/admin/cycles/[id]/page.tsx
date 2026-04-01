@@ -207,18 +207,6 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
         </div>
       )}
 
-      {/* Per-cycle multiplier overrides */}
-      {(cycle.fee_multiplier != null || cycle.ee_multiplier != null || cycle.me_multiplier != null) && (
-        <div className="text-sm">
-          <p className="text-xs font-semibold text-muted-foreground mb-1">Per-cycle multiplier overrides:</p>
-          <div className="flex gap-4">
-            {cycle.fee_multiplier != null && <span>FEE: &times;{String(cycle.fee_multiplier)}</span>}
-            {cycle.ee_multiplier != null && <span>EE: &times;{String(cycle.ee_multiplier)}</span>}
-            {cycle.me_multiplier != null && <span>ME: &times;{String(cycle.me_multiplier)}</span>}
-          </div>
-        </div>
-      )}
-
       {/* Per-employee table */}
       <div className="rounded-md border">
         <table className="w-full text-sm">

@@ -32,8 +32,7 @@ export default async function PayoutConfigPage() {
       <div>
         <h1 className="text-2xl font-bold">Payout Multipliers</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Global defaults. Individual cycles can override FEE, EE, and ME.
-          Changes apply to future cycle locks only.
+          These multipliers apply to all cycles. Changes apply to future cycle locks only.
         </p>
       </div>
 

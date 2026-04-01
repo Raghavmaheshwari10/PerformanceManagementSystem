@@ -16,13 +16,11 @@ export const DEFAULT_PAYOUT_CONFIG: PayoutConfigMap = {
   FEE: 1.25, EE: 1.10, ME: 1.00, SME: 1.00, BE: 0.00,
 }
 
-// Updated: accepts explicit config map instead of hardcoded values
+// Returns the global payout multiplier for a rating tier
 export function getPayoutMultiplier(
   rating: RatingTier,
-  smeMultiplier: number,
   config: PayoutConfigMap = DEFAULT_PAYOUT_CONFIG
 ): number {
-  if (rating === 'SME') return (config.SME ?? 1.0) + smeMultiplier
   return config[rating] ?? 0
 }
 

@@ -20,7 +20,6 @@ export async function overrideRating(_prev: ActionResult, formData: FormData): P
 
   const appraisal = await prisma.appraisal.findUnique({
     where: { id: appraisalId },
-    include: { cycle: { select: { sme_multiplier: true } } },
   })
 
   if (!appraisal) return { data: null, error: 'Appraisal not found' }
@@ -28,8 +27,12 @@ export async function overrideRating(_prev: ActionResult, formData: FormData): P
   // Cross-cycle guard: ensure the appraisal belongs to the requested cycle
   if (appraisal.cycle_id !== cycleId) return { data: null, error: 'Appraisal does not belong to this cycle' }
 
-  const smeMultiplier = Number(appraisal.cycle?.sme_multiplier ?? 0)
-  const multiplier = getPayoutMultiplier(newRating, smeMultiplier)
+  // Use global payout config (no per-cycle overrides)
+  const configs = await prisma.payoutConfig.findMany()
+  const configMap = Object.fromEntries(
+    configs.map(c => [c.rating_tier, Number(c.multiplier)])
+  ) as import('@/lib/constants').PayoutConfigMap
+  const multiplier = getPayoutMultiplier(newRating, configMap)
 
   const employee = await prisma.user.findUnique({
     where: { id: appraisal.employee_id },
