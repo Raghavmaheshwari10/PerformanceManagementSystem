@@ -45,13 +45,30 @@ export async function sendSlackDM(slackUserId: string, text: string, blocks?: un
   }
 }
 
-/** Look up a Slack user by email */
+/** Look up a Slack user by email (tries alternate domain if primary fails) */
 export async function lookupSlackUser(email: string): Promise<string | null> {
+  const ALTERNATE_DOMAINS: Record<string, string> = {
+    'emb.global': 'exmyb.com',
+    'exmyb.com': 'emb.global',
+  }
+
   try {
+    // Try exact email first
     const result = await slackApi('users.lookupByEmail', { email })
     if (result.ok && result.user) {
       return (result.user as { id: string }).id
     }
+
+    // Try alternate domain
+    const [username, domain] = email.split('@')
+    const altDomain = ALTERNATE_DOMAINS[domain]
+    if (altDomain) {
+      const altResult = await slackApi('users.lookupByEmail', { email: `${username}@${altDomain}` })
+      if (altResult.ok && altResult.user) {
+        return (altResult.user as { id: string }).id
+      }
+    }
+
     return null
   } catch {
     return null

@@ -149,11 +149,25 @@ export async function dispatchPendingNotifications(recipientId: string): Promise
       }
 
       // Send Slack DM
-      if (isSlackConfigured() && notif.recipient.slack_user_id) {
-        const slackData = NOTIFICATION_SLACK[notif.type]?.(payload)
-        if (slackData) {
-          const blocks = buildSlackBlocks(slackData.title, slackData.body, slackData.link)
-          await sendSlackDM(notif.recipient.slack_user_id, slackData.body, blocks)
+      if (isSlackConfigured()) {
+        let slackId = notif.recipient.slack_user_id
+        // Auto-resolve slack_user_id if not set
+        if (!slackId) {
+          const { lookupSlackUser } = await import('@/lib/slack')
+          slackId = await lookupSlackUser(notif.recipient.email)
+          if (slackId) {
+            await prisma.user.update({
+              where: { id: notif.recipient_id },
+              data: { slack_user_id: slackId },
+            }).catch(() => {})
+          }
+        }
+        if (slackId) {
+          const slackData = NOTIFICATION_SLACK[notif.type]?.(payload)
+          if (slackData) {
+            const blocks = buildSlackBlocks(slackData.title, slackData.body, slackData.link)
+            await sendSlackDM(slackId, slackData.body, blocks)
+          }
         }
       }
 
