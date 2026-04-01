@@ -4,6 +4,7 @@ import { requireRole } from '@/lib/auth'
 import { getVisibleCycleForUser, getStatusForEmployee } from '@/lib/cycle-helpers'
 import { CycleStatusBadge } from '@/components/cycle-status-badge'
 import { DeadlineBanner } from '@/components/deadline-banner'
+import { formatKpiValue } from '@/lib/constants'
 import { SelfReviewForm } from './self-review-form'
 import { PayoutBreakdown } from '@/components/payout-breakdown'
 import { CycleTimeline } from '@/components/cycle-timeline'
@@ -486,12 +487,12 @@ export default async function EmployeeReviewPage() {
                         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                           {kpi.target != null && (
                             <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
-                              Target: {kpi.unit === 'percent' ? `${kpi.target}%` : String(kpi.target)}
+                              Target: {formatKpiValue(Number(kpi.target), kpi.unit)}
                             </span>
                           )}
                           {kpi.achievement != null && (
                             <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-                              Achievement: {kpi.unit === 'percent' ? `${kpi.achievement}%` : String(kpi.achievement)}
+                              Achievement: {formatKpiValue(Number(kpi.achievement), kpi.unit)}
                             </span>
                           )}
                           <span className="rounded-full bg-muted/50 px-2 py-0.5 text-[10px] font-semibold tabular-nums">
@@ -560,12 +561,12 @@ export default async function EmployeeReviewPage() {
                                   <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                                     {kpi.target != null && (
                                       <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
-                                        Target: {kpi.unit === 'percent' ? `${kpi.target}%` : String(kpi.target)}
+                                        Target: {formatKpiValue(Number(kpi.target), kpi.unit)}
                                       </span>
                                     )}
                                     {kpi.achievement != null && (
                                       <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-                                        Achievement: {kpi.unit === 'percent' ? `${kpi.achievement}%` : String(kpi.achievement)}
+                                        Achievement: {formatKpiValue(Number(kpi.achievement), kpi.unit)}
                                       </span>
                                     )}
                                     <span className="rounded-full bg-muted/50 px-2 py-0.5 text-[10px] font-semibold tabular-nums">
@@ -619,12 +620,12 @@ export default async function EmployeeReviewPage() {
                               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                                 {kpi.target != null && (
                                   <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
-                                    Target: {kpi.unit === 'percent' ? `${kpi.target}%` : String(kpi.target)}
+                                    Target: {formatKpiValue(Number(kpi.target), kpi.unit)}
                                   </span>
                                 )}
                                 {kpi.achievement != null && (
                                   <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-                                    Achievement: {kpi.unit === 'percent' ? `${kpi.achievement}%` : String(kpi.achievement)}
+                                    Achievement: {formatKpiValue(Number(kpi.achievement), kpi.unit)}
                                   </span>
                                 )}
                                 <span className="rounded-full bg-muted/50 px-2 py-0.5 text-[10px] font-semibold tabular-nums">
@@ -799,10 +800,10 @@ export default async function EmployeeReviewPage() {
                     {(kpi.target != null || kpi.achievement != null) && (
                       <div className="flex items-center gap-3 text-xs">
                         {kpi.target != null && (
-                          <span className="text-muted-foreground">Target: <span className="font-semibold text-blue-400">{kpi.unit === 'percent' ? `${kpi.target}%` : String(kpi.target)}</span></span>
+                          <span className="text-muted-foreground">Target: <span className="font-semibold text-blue-400">{formatKpiValue(Number(kpi.target), kpi.unit)}</span></span>
                         )}
                         {kpi.achievement != null && (
-                          <span className="text-muted-foreground">Achievement: <span className="font-semibold text-emerald-400">{kpi.unit === 'percent' ? `${kpi.achievement}%` : String(kpi.achievement)}</span></span>
+                          <span className="text-muted-foreground">Achievement: <span className="font-semibold text-emerald-400">{formatKpiValue(Number(kpi.achievement), kpi.unit)}</span></span>
                         )}
                       </div>
                     )}

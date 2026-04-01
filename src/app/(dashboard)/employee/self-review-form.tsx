@@ -321,9 +321,10 @@ export function SelfReviewForm({ cycleId, review, kpis, kras, questions = [], ex
 
 function formatTarget(kpi: Kpi) {
   if (kpi.target == null) return null
-  if (kpi.unit === 'percent') return `${kpi.target}%`
   if (kpi.unit === 'boolean') return kpi.target ? 'Yes' : 'No'
-  return String(kpi.target)
+  if (kpi.unit === 'percent' && Number(kpi.target) <= 200) return `${kpi.target}%`
+  const v = Number(kpi.target)
+  return v >= 1000 ? v.toLocaleString('en-IN') : String(kpi.target)
 }
 
 function KpiRatingCard({

@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole, requireManagerOwnership } from '@/lib/auth'
-import { toTitleCase } from '@/lib/constants'
+import { toTitleCase, formatKpiValue } from '@/lib/constants'
 import { calculateEmployeeScore } from '@/lib/mis-scoring'
 import { ReviewForm } from './review-form'
 import type { User, Kpi, Kra, Review, Appraisal, ReviewQuestionWithCompetency } from '@/lib/types'
@@ -339,12 +339,12 @@ export default async function ManagerReviewPage({
                     <p className="text-sm font-medium">{kpi.title}</p>
                     {kpi.target != null && (
                       <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
-                        Target: {kpi.unit === 'percent' ? `${kpi.target}%` : String(kpi.target)}
+                        Target: {formatKpiValue(kpi.target!, kpi.unit)}
                       </span>
                     )}
                     {kpi.achievement != null && (
                       <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-                        Achievement: {kpi.unit === 'percent' ? `${kpi.achievement}%` : String(kpi.achievement)}
+                        Achievement: {formatKpiValue(kpi.achievement!, kpi.unit)}
                       </span>
                     )}
                     <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs">{kpi.weight}%</span>
@@ -388,12 +388,12 @@ export default async function ManagerReviewPage({
                             <p className="text-sm font-medium">{kpi.title}</p>
                             {kpi.target != null && (
                               <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
-                                Target: {kpi.unit === 'percent' ? `${kpi.target}%` : String(kpi.target)}
+                                Target: {formatKpiValue(kpi.target!, kpi.unit)}
                               </span>
                             )}
                             {kpi.achievement != null && (
                               <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-                                Achievement: {kpi.unit === 'percent' ? `${kpi.achievement}%` : String(kpi.achievement)}
+                                Achievement: {formatKpiValue(kpi.achievement!, kpi.unit)}
                               </span>
                             )}
                             <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs">{kpi.weight}%</span>
@@ -421,12 +421,12 @@ export default async function ManagerReviewPage({
                           <p className="text-sm font-medium">{kpi.title}</p>
                           {kpi.target != null && (
                             <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
-                              Target: {kpi.unit === 'percent' ? `${kpi.target}%` : String(kpi.target)}
+                              Target: {formatKpiValue(kpi.target!, kpi.unit)}
                             </span>
                           )}
                           {kpi.achievement != null && (
                             <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-                              Achievement: {kpi.unit === 'percent' ? `${kpi.achievement}%` : String(kpi.achievement)}
+                              Achievement: {formatKpiValue(kpi.achievement!, kpi.unit)}
                             </span>
                           )}
                           <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs">{kpi.weight}%</span>

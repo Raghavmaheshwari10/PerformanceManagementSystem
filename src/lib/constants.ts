@@ -64,6 +64,14 @@ export function toTitleCase(str: string): string {
   return str.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
 
+/** Format a KPI value with the correct unit suffix.
+ *  Handles data where unit='percent' was incorrectly assigned to number-type KPIs. */
+export function formatKpiValue(value: number, unit?: string | null): string {
+  if (unit === 'percent' && value <= 200) return `${value}%`
+  if (value >= 1000) return value.toLocaleString('en-IN')
+  return String(value)
+}
+
 export const CYCLE_STATUS_ORDER: CycleStatus[] = [
   'draft', 'kpi_setting', 'self_review', 'manager_review', 'calibrating', 'locked', 'published',
 ]

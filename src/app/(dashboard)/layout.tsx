@@ -6,6 +6,44 @@ import { NotificationBell } from '@/components/notification-bell'
 import { Greeting } from '@/components/greeting'
 import { ClientProviders } from '@/components/client-providers'
 
+/** Generate a human-readable notification message from type + payload */
+function notificationMessage(type: string, p: Record<string, string | undefined>): string {
+  const name = p.employee_name ?? p.sender_name ?? ''
+  const cycle = p.cycle_name ?? ''
+  switch (type) {
+    case 'cycle_kpi_setting_open':
+      return cycle ? `KPI setting is now open for ${cycle}.` : 'KPI setting is now open.'
+    case 'cycle_self_review_open':
+      return cycle ? `Self-review is now open for ${cycle}.` : 'Self-review is now open.'
+    case 'cycle_manager_review_open':
+      return cycle ? `Manager review is now open for ${cycle}.` : 'Manager review is now open.'
+    case 'cycle_published':
+      return cycle ? `Results for ${cycle} have been published.` : 'Cycle results have been published.'
+    case 'review_submitted':
+      return name ? `${name} submitted their self-review.` : 'A self-review has been submitted.'
+    case 'manager_review_submitted':
+      return name ? `Manager review submitted for ${name}.` : 'A manager review has been submitted.'
+    case 'review_reminder':
+      return cycle ? `Reminder: Complete your review for ${cycle}.` : 'Reminder: Complete your pending review.'
+    case 'meeting_scheduled':
+      return name ? `Discussion meeting scheduled for ${name}.` : 'A discussion meeting has been scheduled.'
+    case 'meeting_reminder':
+      return name ? `Reminder: Discussion meeting for ${name} is tomorrow.` : 'Reminder: You have a discussion meeting tomorrow.'
+    case 'meeting_mom_submitted':
+      return name ? `Meeting MOM submitted for ${name}. Manager review is now unlocked.` : 'Meeting MOM has been submitted.'
+    case 'peer_review_requested':
+      return name ? `${name} requested a peer review from you.` : 'You have a new peer review request.'
+    case 'peer_review_submitted':
+      return name ? `${name} submitted a peer review.` : 'A peer review has been submitted.'
+    case 'feedback_received':
+      return name ? `${name} sent you feedback.` : 'You received new feedback.'
+    case 'admin_message':
+      return p.text ?? 'You have a new message from admin.'
+    default:
+      return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+  }
+}
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser()
 
@@ -25,13 +63,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
   })
 
   // Map Prisma notifications to NotificationBell's expected shape
-  // payload JSON may contain { message, link } fields
+  // Generate a human-readable message from notification type + payload
   const notifications = rawNotifications.map(n => {
-    const p = (n.payload ?? {}) as Record<string, unknown>
+    const p = (n.payload ?? {}) as Record<string, string | undefined>
     return {
       id: n.id,
       type: n.type as string,
-      message: (p.message as string | undefined) ?? '',
+      message: (p.message as string | undefined) ?? notificationMessage(n.type, p),
       link: (p.link as string | null | undefined) ?? null,
       is_read: n.status === 'sent',
       created_at: n.created_at.toISOString(),

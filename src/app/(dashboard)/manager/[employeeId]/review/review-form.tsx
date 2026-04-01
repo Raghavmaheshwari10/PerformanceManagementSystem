@@ -275,16 +275,18 @@ export function ReviewForm({ cycleId, employeeId, kpis, kras, defaultRating, def
 
 function formatTarget(kpi: Kpi) {
   if (kpi.target == null) return null
-  if (kpi.unit === 'percent') return `${kpi.target}%`
   if (kpi.unit === 'boolean') return kpi.target ? 'Yes' : 'No'
-  return String(kpi.target)
+  if (kpi.unit === 'percent' && Number(kpi.target) <= 200) return `${kpi.target}%`
+  const v = Number(kpi.target)
+  return v >= 1000 ? v.toLocaleString('en-IN') : String(kpi.target)
 }
 
 function formatAchievement(kpi: Kpi) {
   if (kpi.achievement == null) return null
-  if (kpi.unit === 'percent') return `${kpi.achievement}%`
   if (kpi.unit === 'boolean') return kpi.achievement ? 'Yes' : 'No'
-  return String(kpi.achievement)
+  if (kpi.unit === 'percent' && Number(kpi.achievement) <= 200) return `${kpi.achievement}%`
+  const v = Number(kpi.achievement)
+  return v >= 1000 ? v.toLocaleString('en-IN') : String(kpi.achievement)
 }
 
 function KpiRatingCard({
