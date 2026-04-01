@@ -31,13 +31,14 @@ export async function applyKraTemplate(
     if (toCreate.length > 0) {
       await tx.kra.createMany({
         data: toCreate.map(t => ({
-          cycle_id:    cycleId,
-          employee_id: employeeId,
-          title:       t.title,
-          description: t.description,
-          category:    t.category,
-          weight:      t.weight,
-          sort_order:  t.sort_order,
+          cycle_id:        cycleId,
+          employee_id:     employeeId,
+          kra_template_id: t.id,
+          title:           t.title,
+          description:     t.description,
+          category:        t.category,
+          weight:          t.weight,
+          sort_order:      t.sort_order,
         })),
       })
     }

@@ -15,6 +15,7 @@ function parseTemplateForm(formData: FormData) {
     target: formData.get('target') ? Number(formData.get('target')) : null,
     weight: formData.get('weight') ? Number(formData.get('weight')) : null,
     category: formData.get('category') as string,
+    kra_template_id: (formData.get('kra_template_id') as string) || null,
     sort_order: Number(formData.get('sort_order') || 0),
     is_active: formData.get('is_active') === 'true',
   }

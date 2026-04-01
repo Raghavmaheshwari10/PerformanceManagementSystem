@@ -23,14 +23,23 @@ const ROLE_OPTIONS = [
   { value: 'operations_pm', label: 'Operations / PM' },
 ]
 
-interface Props {
-  action: (prev: ActionResult, formData: FormData) => Promise<ActionResult>
-  defaultValues?: Partial<KpiTemplate>
+interface KraTemplateOption {
+  id: string
+  title: string
+  role_slug: string | null
+  category: string
 }
 
-export function TemplateForm({ action, defaultValues = {} }: Props) {
+interface Props {
+  action: (prev: ActionResult, formData: FormData) => Promise<ActionResult>
+  defaultValues?: Partial<KpiTemplate> & { kra_template_id?: string | null }
+  kraTemplates?: KraTemplateOption[]
+}
+
+export function TemplateForm({ action, defaultValues = {}, kraTemplates = [] }: Props) {
   const [state, formAction] = useActionState(action, INITIAL)
   const [category, setCategory] = useState<string>(defaultValues.category ?? 'performance')
+  const [roleSlug, setRoleSlug] = useState<string>(defaultValues.role_slug ?? '')
 
   const isPerformance = category === 'performance'
 
@@ -43,7 +52,7 @@ export function TemplateForm({ action, defaultValues = {} }: Props) {
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="role_slug">Role <span className="text-destructive">*</span></Label>
-          <select id="role_slug" name="role_slug" defaultValue={defaultValues.role_slug ?? ''} required
+          <select id="role_slug" name="role_slug" value={roleSlug} onChange={e => setRoleSlug(e.target.value)} required
             className="w-full rounded-md border bg-background px-3 py-1.5 text-sm">
             <option value="">— Select role —</option>
             {ROLE_OPTIONS.map(r => (
@@ -56,6 +65,22 @@ export function TemplateForm({ action, defaultValues = {} }: Props) {
           <Input id="title" name="title" defaultValue={defaultValues.title} required />
         </div>
       </div>
+
+      {kraTemplates.length > 0 && (
+        <div className="space-y-1.5">
+          <Label htmlFor="kra_template_id">KRA Template (parent)</Label>
+          <select id="kra_template_id" name="kra_template_id" defaultValue={defaultValues.kra_template_id ?? ''}
+            className="w-full rounded-md border bg-background px-3 py-1.5 text-sm">
+            <option value="">— None (unassigned) —</option>
+            {kraTemplates
+              .filter(k => !roleSlug || !k.role_slug || k.role_slug === roleSlug)
+              .map(k => (
+                <option key={k.id} value={k.id}>{k.title} ({k.category})</option>
+              ))}
+          </select>
+          <p className="text-[11px] text-muted-foreground">When this template is applied, the KPI will be placed under this KRA.</p>
+        </div>
+      )}
 
       <div className="space-y-1.5">
         <Label htmlFor="description">Description</Label>
