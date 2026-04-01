@@ -82,6 +82,7 @@ enum NotificationType {
   review_reminder
   peer_review_requested
   peer_review_submitted
+  feedback_received
 
   @@map("notification_type")
 }

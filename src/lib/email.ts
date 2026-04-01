@@ -61,6 +61,7 @@ const NOTIFICATION_SUBJECTS: Partial<Record<NotificationType, string>> = {
   admin_message: 'Message from HR',
   peer_review_requested: 'Peer Review Requested',
   peer_review_submitted: 'A Peer Has Submitted Their Review',
+  feedback_received: 'You Received New Feedback',
 }
 
 /** Branded email wrapper with header and footer */
@@ -142,6 +143,12 @@ ${ctaButton('View Request', `${appUrl}/employee/peer-reviews`)}`
     `<h2 style="color:#1e293b;margin:0 0 16px">Peer Review Submitted</h2>
 <p style="color:#475569;line-height:1.6">${p.peer_name ?? 'A peer'} has submitted their peer review for you${p.cycle_name ? ` in <strong>${p.cycle_name}</strong>` : ''}.</p>`
   ),
+  feedback_received: (p) => wrapEmail(
+    `<h2 style="color:#1e293b;margin:0 0 16px">You Received New Feedback</h2>
+<p style="color:#475569;line-height:1.6">A colleague has shared <strong>${p.category ?? ''}</strong> feedback with you.</p>
+${ctaButton('View Feedback', `${appUrl}/employee/feedback`)}
+<p style="color:#94a3b8;font-size:13px">Feedback helps you grow. Check it out when you have a moment.</p>`
+  ),
 }
 
 const NOTIFICATION_SLACK: Partial<Record<NotificationType, (payload: Record<string, string>) => { title: string; body: string; link?: string }>> = {
@@ -155,6 +162,7 @@ const NOTIFICATION_SLACK: Partial<Record<NotificationType, (payload: Record<stri
   admin_message: (p) => ({ title: 'Admin Message', body: p.message ?? 'You have a new message.', link: p.link }),
   peer_review_requested: (p) => ({ title: 'Peer Review Requested', body: `${p.requester_name ?? 'A colleague'} requested a peer review${p.reviewee_name ? ` for *${p.reviewee_name}*` : ''}.`, link: `${appUrl}/employee/peer-reviews` }),
   peer_review_submitted: (p) => ({ title: 'Peer Review Submitted', body: `${p.peer_name ?? 'A peer'} has submitted their peer review for you.`, link: `${appUrl}/employee/peer-reviews` }),
+  feedback_received: (p) => ({ title: 'New Feedback Received', body: `A colleague shared *${p.category ?? ''}* feedback with you.`, link: `${appUrl}/employee/feedback` }),
 }
 
 // ─── Unified Notification Dispatcher ─────────────────────────────────

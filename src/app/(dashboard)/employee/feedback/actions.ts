@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
+import { notifyUsers } from '@/lib/email'
 import type { ActionResult } from '@/lib/types'
 import type { FeedbackCategory, FeedbackVisibility } from '@prisma/client'
 
@@ -39,6 +40,12 @@ export async function sendFeedback(_prev: ActionResult, formData: FormData): Pro
       entity_id: feedback.id,
       new_value: { to_user_id, category, visibility },
     },
+  })
+
+  // Notify recipient via email + Slack
+  await notifyUsers([to_user_id], 'feedback_received', {
+    sender_name: user.full_name,
+    category,
   })
 
   revalidatePath('/employee/feedback')
