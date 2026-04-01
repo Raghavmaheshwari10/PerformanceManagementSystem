@@ -75,6 +75,15 @@ export async function submitSelfReview(_prev: ActionResult, formData: FormData):
     return { data: null, error: 'Self-review deadline has passed — contact your HRBP' }
   }
 
+  // Prevent re-submission: only allow if review doesn't exist or is still a draft
+  const existingReview = await prisma.review.findUnique({
+    where: { cycle_id_employee_id: { cycle_id: cycleId, employee_id: user.id } },
+    select: { status: true },
+  })
+  if (existingReview?.status === 'submitted') {
+    return { data: null, error: 'Self-review has already been submitted. You cannot submit again.' }
+  }
+
   const selfRating = formData.get('self_rating') as string
   const selfComments = formData.get('self_comments') as string
 
@@ -166,6 +175,16 @@ export async function saveDraftReview(_prev: ActionResult, formData: FormData): 
   const user = await requireRole(['employee'])
 
   const cycleId = formData.get('cycle_id') as string
+
+  // Prevent saving draft after submission
+  const existingReview = await prisma.review.findUnique({
+    where: { cycle_id_employee_id: { cycle_id: cycleId, employee_id: user.id } },
+    select: { status: true },
+  })
+  if (existingReview?.status === 'submitted') {
+    return { data: null, error: 'Self-review has already been submitted. Cannot save as draft.' }
+  }
+
   const selfRating = formData.get('self_rating') as string
 
   const draftReview = await prisma.review.upsert({

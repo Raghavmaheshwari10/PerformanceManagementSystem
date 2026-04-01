@@ -7,6 +7,7 @@ import { DeadlineBanner } from '@/components/deadline-banner'
 import { SelfReviewForm } from './self-review-form'
 import { PayoutBreakdown } from '@/components/payout-breakdown'
 import { CycleTimeline } from '@/components/cycle-timeline'
+import { RATING_TIERS } from '@/lib/constants'
 import type { Cycle, Kpi, Kra, Review, Appraisal, ReviewQuestionWithCompetency } from '@/lib/types'
 
 /* ── Action computation (inlined from action-inbox) ── */
@@ -75,7 +76,7 @@ function computePrimaryAction(status: string, cycle: Cycle, kpis: Kpi[], review:
     }
     return {
       label: 'Self-review submitted',
-      description: 'Your review has been submitted. You can still edit and re-submit below until the self-review phase ends.',
+      description: 'Your self-review has been submitted successfully.',
       href: '#self-review-form',
       urgency: 'success',
     }
@@ -252,6 +253,7 @@ export default async function EmployeeReviewPage() {
 
   const isSelfReview = resolvedStatus === 'self_review'
   const isPublished = resolvedStatus === 'published'
+  const showReadOnlyReview = !isSelfReview && review?.status === 'submitted'
 
   const heroAction = computePrimaryAction(
     resolvedStatus,
@@ -595,6 +597,93 @@ export default async function EmployeeReviewPage() {
             existingResponses={existingResponses}
           />
         </div>
+      )}
+
+      {/* ── Read-only submitted self-review (shown after self_review phase) ── */}
+      {showReadOnlyReview && (
+        <section className="glass rounded-xl p-6 space-y-4">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold">Your Submitted Self-Review</h2>
+            <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-400">
+              Submitted
+            </span>
+            {review!.submitted_at && (
+              <span className="text-xs text-muted-foreground ml-auto">
+                {new Date(review!.submitted_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </span>
+            )}
+          </div>
+
+          {/* Overall rating */}
+          {review!.self_rating && (
+            <div className="glass-interactive p-3 space-y-1">
+              <p className="text-xs text-muted-foreground font-medium">Overall Self-Rating</p>
+              <span className="inline-flex rounded-full bg-primary/15 px-3 py-1 text-sm font-semibold text-primary">
+                {RATING_TIERS.find(t => t.code === review!.self_rating)?.name ?? review!.self_rating}
+              </span>
+            </div>
+          )}
+
+          {/* Self comments */}
+          {review!.self_comments && (
+            <div className="glass-interactive p-3 space-y-1">
+              <p className="text-xs text-muted-foreground font-medium">Your Comments</p>
+              <p className="text-sm whitespace-pre-wrap">{review!.self_comments}</p>
+            </div>
+          )}
+
+          {/* Per-KPI self-ratings */}
+          {serializedKpis.some(k => k.self_rating) && (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground font-medium">KPI Ratings</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {serializedKpis.filter(k => k.self_rating).map(kpi => (
+                  <div key={kpi.id} className="glass-interactive p-3 space-y-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-medium">{kpi.title}</p>
+                      <span className="shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">
+                        {RATING_TIERS.find(t => t.code === kpi.self_rating)?.name ?? kpi.self_rating}
+                      </span>
+                    </div>
+                    {kpi.self_comments && (
+                      <p className="text-xs text-muted-foreground">{kpi.self_comments}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Competency responses */}
+          {Object.keys(existingResponses).length > 0 && templateQuestions.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground font-medium">Competency Assessment</p>
+              <div className="space-y-2">
+                {templateQuestions.map(q => {
+                  const resp = existingResponses[q.id]
+                  if (!resp) return null
+                  return (
+                    <div key={q.id} className="glass-interactive p-3 space-y-1">
+                      <p className="text-sm font-medium">{q.competency?.name ?? q.question_text}</p>
+                      {resp.rating_value != null && (
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map(star => (
+                            <svg key={star} xmlns="http://www.w3.org/2000/svg" className={`size-4 ${star <= resp.rating_value! ? 'text-amber-400 fill-amber-400' : 'text-muted-foreground/30'}`} viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" fill="none">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
+                            </svg>
+                          ))}
+                        </div>
+                      )}
+                      {resp.text_value && (
+                        <p className="text-xs text-muted-foreground">{resp.text_value}</p>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </section>
       )}
 
       {/* ── Final Results ── */}
