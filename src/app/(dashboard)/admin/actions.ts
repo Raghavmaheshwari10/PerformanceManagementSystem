@@ -129,6 +129,12 @@ export async function advanceCycleStatus(cycleId: string, currentStatus: CycleSt
     return { data: null, error: 'Cycle status has already been changed by another user — please refresh' }
   }
 
+  // Also advance all department statuses that are at the same phase
+  await prisma.cycleDepartment.updateMany({
+    where: { cycle_id: cycleId, status: currentStatus },
+    data: { status: nextStatus },
+  })
+
   await prisma.auditLog.create({
     data: {
       changed_by: user.id,
@@ -145,6 +151,8 @@ export async function advanceCycleStatus(cycleId: string, currentStatus: CycleSt
 
   revalidatePath('/admin')
   revalidatePath('/hrbp')
+  revalidatePath('/employee')
+  revalidatePath('/manager')
   return { data: null, error: null }
 }
 
@@ -190,7 +198,7 @@ export async function advanceDepartmentStatus(
       changed_by: user.id,
       action: 'department_status_changed',
       entity_type: 'cycle_department',
-      entity_id: `${cycleId}:${departmentId}`,
+      entity_id: cycleId,
       old_value: { status: currentStatus },
       new_value: { status: nextStatus },
     },
@@ -201,6 +209,8 @@ export async function advanceDepartmentStatus(
 
   revalidatePath('/admin')
   revalidatePath('/hrbp')
+  revalidatePath('/employee')
+  revalidatePath('/manager')
   revalidatePath(`/admin/cycles/${cycleId}`)
   return { data: null, error: null }
 }
