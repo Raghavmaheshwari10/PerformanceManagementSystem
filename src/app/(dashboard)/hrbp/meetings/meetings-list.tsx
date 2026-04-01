@@ -247,8 +247,8 @@ function ScheduleModal({ cycleId, employeeId, employeeName, onClose }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full max-w-md rounded-xl bg-white shadow-xl" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 backdrop-blur-sm py-8" onClick={onClose}>
+      <div className="w-full max-w-md rounded-xl bg-white shadow-xl mx-4 my-auto" onClick={e => e.stopPropagation()}>
         <div className="border-b border-slate-100 px-6 py-4">
           <h3 className="text-base font-semibold text-slate-900">Schedule Discussion Meeting</h3>
           <p className="text-sm text-slate-500 mt-0.5">For {employeeName}</p>
@@ -341,8 +341,8 @@ function MomFormModal({ meetingId, employeeName, onClose }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm overflow-y-auto py-8" onClick={onClose}>
-      <div className="w-full max-w-2xl rounded-xl bg-white shadow-xl mx-4" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 backdrop-blur-sm py-8" onClick={onClose}>
+      <div className="w-full max-w-2xl rounded-xl bg-white shadow-xl mx-4 my-auto" onClick={e => e.stopPropagation()}>
         <div className="border-b border-slate-100 px-6 py-4">
           <h3 className="text-base font-semibold text-slate-900">Minutes of Meeting (MOM)</h3>
           <p className="text-sm text-slate-500 mt-0.5">Discussion with {employeeName}</p>
@@ -489,8 +489,8 @@ function ViewMomModal({ minutes, employeeName, onClose }: {
   minutes: MeetingMinutesData; employeeName: string; onClose: () => void
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm overflow-y-auto py-8" onClick={onClose}>
-      <div className="w-full max-w-2xl rounded-xl bg-white shadow-xl mx-4" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 backdrop-blur-sm py-8" onClick={onClose}>
+      <div className="w-full max-w-2xl rounded-xl bg-white shadow-xl mx-4 my-auto" onClick={e => e.stopPropagation()}>
         <div className="border-b border-slate-100 px-6 py-4 flex items-center justify-between">
           <div>
             <h3 className="text-base font-semibold text-slate-900">Minutes of Meeting</h3>
