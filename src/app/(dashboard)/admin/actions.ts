@@ -323,8 +323,7 @@ export async function setEmployeeStatusOverride(
       changed_by: user.id,
       action: statusOverride ? 'employee_status_override_set' : 'employee_status_override_cleared',
       entity_type: 'cycle_employee',
-      entity_id: `${cycleId}:${employeeId}`,
-      new_value: { status_override: statusOverride },
+      new_value: { cycle_id: cycleId, employee_id: employeeId, status_override: statusOverride },
     },
   })
 

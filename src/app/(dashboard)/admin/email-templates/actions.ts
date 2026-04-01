@@ -63,7 +63,6 @@ export async function deleteEmailTemplate(
       changed_by: user.id,
       action: 'email_template_deleted',
       entity_type: 'email_template',
-      entity_id: notificationType,
       new_value: { notification_type: notificationType },
     },
   })
