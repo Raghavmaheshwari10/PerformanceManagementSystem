@@ -78,9 +78,16 @@ export async function lockCycle(cycleId: string): Promise<ActionResult> {
     return { data: null, error: e instanceof Error ? e.message : 'Failed to lock appraisals' }
   }
 
+  // Lock the main cycle status
   await prisma.cycle.update({
     where: { id: cycleId },
     data: { status: 'locked', updated_at: new Date() },
+  })
+
+  // Also lock all department-level statuses for dept-scoped cycles
+  await prisma.cycleDepartment.updateMany({
+    where: { cycle_id: cycleId },
+    data: { status: 'locked' },
   })
 
   await prisma.auditLog.create({
@@ -129,6 +136,12 @@ export async function publishCycle(cycleId: string): Promise<ActionResult> {
       published_at: new Date(),
       updated_at: new Date(),
     },
+  })
+
+  // Also publish all department-level statuses for dept-scoped cycles
+  await prisma.cycleDepartment.updateMany({
+    where: { cycle_id: cycleId },
+    data: { status: 'published' },
   })
 
   const deptIds = await getCycleDepartmentIds(cycleId)
