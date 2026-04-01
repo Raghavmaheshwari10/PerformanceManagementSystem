@@ -38,6 +38,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
   ],
   manager: [
     { label: 'My Team',      href: '/manager',           icon: Users2 },
+    { label: 'Team Payouts', href: '/manager/payouts',   icon: Wallet },
     { label: 'MIS Tracking', href: '/manager/mis',       icon: BarChart3 },
     { label: 'My Review',    href: '/manager/my-review', icon: ClipboardCheck },
     { label: 'Docs',         href: '/docs',              icon: BookOpen },
@@ -47,6 +48,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Cycles',       href: '/hrbp',              icon: CalendarClock },
     { label: 'Calibration',  href: '/hrbp/calibration',  icon: Scale },
     { label: 'Employees',    href: '/hrbp/employees',    icon: Users2 },
+    { label: 'Payouts',      href: '/hrbp/payouts',      icon: Wallet },
     { label: 'Reports',      href: '/hrbp/reports',      icon: BarChart3 },
     { label: 'MIS Overview', href: '/hrbp/mis',          icon: BarChart3 },
     { label: 'Audit Log',    href: '/hrbp/audit-log',    icon: ScrollText },
@@ -68,6 +70,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Notifications',    href: '/admin/notifications',    icon: Bell },
     { label: 'Feature Flags',    href: '/admin/feature-flags',    icon: Flag },
     { label: 'Payout Config',    href: '/admin/payout-config',    icon: Wallet },
+    { label: 'Payouts',          href: '/admin/payouts',          icon: Settings2 },
     { label: 'Audit Log',        href: '/admin/audit-log',        icon: ScrollText },
     { label: 'Docs',             href: '/docs',                   icon: BookOpen },
     { label: 'Help',             href: '#help',                   icon: HelpCircle },
