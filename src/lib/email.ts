@@ -51,29 +51,97 @@ export async function sendNotificationEmail(to: string, subject: string, html: s
 // ─── Notification Templates ──────────────────────────────────────────
 
 const NOTIFICATION_SUBJECTS: Partial<Record<NotificationType, string>> = {
-  cycle_kpi_setting_open: 'KPI Setting Phase is Open',
-  cycle_self_review_open: 'Self Review Phase is Open',
-  cycle_manager_review_open: 'Manager Review Phase is Open',
-  cycle_published: 'Your Performance Results are Available',
-  review_submitted: 'Employee Submitted Their Self-Review',
-  manager_review_submitted: 'Your Manager Review Has Been Submitted',
-  review_reminder: 'Reminder: Complete Your Pending Review',
-  admin_message: 'Message from Admin',
+  cycle_kpi_setting_open: 'Action Required: Set KPIs for Your Team',
+  cycle_self_review_open: 'Time to Submit Your Self-Review',
+  cycle_manager_review_open: 'Review Your Team',
+  cycle_published: 'Your Performance Results Are Ready',
+  review_submitted: 'Self-Review Submitted',
+  manager_review_submitted: 'Your Manager Has Completed Your Review',
+  review_reminder: 'Reminder: You Have a Pending Review',
+  admin_message: 'Message from HR',
   peer_review_requested: 'Peer Review Requested',
   peer_review_submitted: 'A Peer Has Submitted Their Review',
 }
 
+/** Branded email wrapper with header and footer */
+function wrapEmail(body: string): string {
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:32px 16px"><tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1)">
+<tr><td style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:24px 32px"><span style="color:#ffffff;font-size:18px;font-weight:700">PMS</span><span style="color:#c7d2fe;font-size:11px;margin-left:8px;text-transform:uppercase;letter-spacing:1px">EMB Global</span></td></tr>
+<tr><td style="padding:32px">${body}</td></tr>
+<tr><td style="background:#f8fafc;padding:20px 32px;border-top:1px solid #e2e8f0"><p style="color:#94a3b8;font-size:12px;margin:0;line-height:1.5">This is an automated message from the Performance Management System.<br>EMB Global &middot; <a href="${appUrl}" style="color:#6366f1;text-decoration:none">pms.emb.global</a></p></td></tr>
+</table></td></tr></table></body></html>`
+}
+
+/** CTA button helper */
+function ctaButton(text: string, href: string, color = '#4f46e5'): string {
+  return `<table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0"><tr><td align="center"><a href="${href}" style="background:${color};color:#ffffff;padding:12px 32px;text-decoration:none;border-radius:8px;font-weight:600;display:inline-block">${text}</a></td></tr></table>`
+}
+
 const NOTIFICATION_HTML: Partial<Record<NotificationType, (payload: Record<string, string>) => string>> = {
-  cycle_kpi_setting_open: (p) => `<p>The KPI setting phase has opened${p.cycle_name ? ` for <strong>${p.cycle_name}</strong>` : ''}. Please log in to set KRAs and KPIs for your team.</p>`,
-  cycle_self_review_open: (p) => `<p>The self-review phase is open${p.cycle_name ? ` for <strong>${p.cycle_name}</strong>` : ''}. Please submit your self-review${p.deadline ? ` by ${p.deadline}` : ''}.</p>`,
-  cycle_manager_review_open: (p) => `<p>Manager reviews are open${p.cycle_name ? ` for <strong>${p.cycle_name}</strong>` : ''}. Please review your direct reports${p.deadline ? ` by ${p.deadline}` : ''}.</p>`,
-  cycle_published: (p) => `<p>Your performance results${p.cycle_name ? ` for <strong>${p.cycle_name}</strong>` : ''} are now available. Log in to view your rating and payout.</p>`,
-  review_submitted: (p) => `<p>${p.employee_name ?? 'An employee'} has submitted their self-review and is awaiting your manager review.</p>`,
-  manager_review_submitted: () => '<p>Your manager has submitted their performance review for you.</p>',
-  review_reminder: (p) => `<p>You have a pending ${p.kind === 'manager_review' ? 'manager' : 'self'} review. Please complete it before the deadline.</p>`,
-  admin_message: (p) => `<p>${p.message ?? 'You have a message from the admin.'}</p>${p.link ? `<p><a href="${p.link}">View details</a></p>` : ''}`,
-  peer_review_requested: (p) => `<p>${p.requester_name ?? 'A colleague'} has requested you to provide a peer review${p.reviewee_name ? ` for <strong>${p.reviewee_name}</strong>` : ''}. Please log in to accept or decline.</p>`,
-  peer_review_submitted: (p) => `<p>${p.peer_name ?? 'A peer'} has submitted their peer review for you${p.cycle_name ? ` in <strong>${p.cycle_name}</strong>` : ''}.</p>`,
+  cycle_kpi_setting_open: (p) => wrapEmail(
+    `<h2 style="color:#1e293b;margin:0 0 16px">KPI Setting Phase is Now Open</h2>
+<p style="color:#475569;line-height:1.6">Hi${p.employee_name ? ` ${p.employee_name}` : ''},</p>
+<p style="color:#475569;line-height:1.6">The <strong>KPI setting phase</strong> has started${p.cycle_name ? ` for <strong>${p.cycle_name}</strong>` : ''}. Please define KRAs and KPIs for your direct reports.</p>
+${ctaButton('Set KPIs Now', `${appUrl}/manager`)}
+<p style="color:#94a3b8;font-size:13px">Please complete this before the deadline. Your team is counting on you.</p>`
+  ),
+  cycle_self_review_open: (p) => wrapEmail(
+    `<h2 style="color:#1e293b;margin:0 0 16px">Self-Review Phase is Open</h2>
+<p style="color:#475569;line-height:1.6">Hi${p.employee_name ? ` ${p.employee_name}` : ''},</p>
+<p style="color:#475569;line-height:1.6">The <strong>self-review phase</strong> is now open${p.cycle_name ? ` for <strong>${p.cycle_name}</strong>` : ''}. Please reflect on your performance and submit your self-assessment.</p>
+${p.deadline ? `<div style="background:#f1f5f9;border-radius:8px;padding:16px;margin:16px 0"><p style="color:#475569;margin:0;font-size:14px"><strong>Deadline:</strong> ${p.deadline}</p></div>` : ''}
+${ctaButton('Start Self-Review', `${appUrl}/employee`)}
+<p style="color:#94a3b8;font-size:13px">Your self-review helps your manager understand your perspective.</p>`
+  ),
+  cycle_manager_review_open: (p) => wrapEmail(
+    `<h2 style="color:#1e293b;margin:0 0 16px">Manager Review Phase is Open</h2>
+<p style="color:#475569;line-height:1.6">Hi${p.employee_name ? ` ${p.employee_name}` : ''},</p>
+<p style="color:#475569;line-height:1.6">It's time to review your direct reports${p.cycle_name ? ` for <strong>${p.cycle_name}</strong>` : ''}. Please review each team member's self-assessment, rate their KPIs, and provide constructive feedback.</p>
+${p.deadline ? `<div style="background:#f1f5f9;border-radius:8px;padding:16px;margin:16px 0"><p style="color:#475569;margin:0;font-size:14px"><strong>Deadline:</strong> ${p.deadline}</p></div>` : ''}
+${ctaButton('Review My Team', `${appUrl}/manager`)}`
+  ),
+  cycle_published: (p) => wrapEmail(
+    `<h2 style="color:#1e293b;margin:0 0 16px">Your Results Are In</h2>
+<p style="color:#475569;line-height:1.6">Hi${p.employee_name ? ` ${p.employee_name}` : ''},</p>
+<p style="color:#475569;line-height:1.6">Your performance results${p.cycle_name ? ` for <strong>${p.cycle_name}</strong>` : ''} have been published. You can now view your final rating, feedback, and payout information.</p>
+${ctaButton('View My Results', `${appUrl}/employee`, '#059669')}
+<p style="color:#94a3b8;font-size:13px">If you have questions about your review, please reach out to your manager or HR.</p>`
+  ),
+  review_submitted: (p) => wrapEmail(
+    `<h2 style="color:#1e293b;margin:0 0 16px">Self-Review Submitted</h2>
+<p style="color:#475569;line-height:1.6"><strong>${p.employee_name ?? 'An employee'}</strong> has submitted their self-review${p.cycle_name ? ` for <strong>${p.cycle_name}</strong>` : ''} and is waiting for your manager review.</p>
+${ctaButton('Review Now', `${appUrl}/manager`)}`
+  ),
+  manager_review_submitted: (p) => wrapEmail(
+    `<h2 style="color:#1e293b;margin:0 0 16px">Manager Review Complete</h2>
+<p style="color:#475569;line-height:1.6">Hi${p.employee_name ? ` ${p.employee_name}` : ''},</p>
+<p style="color:#475569;line-height:1.6">Your manager has submitted their performance review for you${p.cycle_name ? ` in <strong>${p.cycle_name}</strong>` : ''}. Your results will be available once the calibration and publishing process is complete.</p>
+<p style="color:#94a3b8;font-size:13px">No action is needed from you at this time.</p>`
+  ),
+  review_reminder: (p) => wrapEmail(
+    `<h2 style="color:#1e293b;margin:0 0 16px">Don't Forget Your Review</h2>
+<p style="color:#475569;line-height:1.6">Hi${p.employee_name ? ` ${p.employee_name}` : ''},</p>
+<p style="color:#475569;line-height:1.6">You have a pending <strong>${p.kind === 'manager_review' ? 'manager' : 'self'} review</strong>${p.cycle_name ? ` for <strong>${p.cycle_name}</strong>` : ''} that hasn't been completed yet.</p>
+${ctaButton('Complete Review', `${appUrl}`, '#d97706')}
+<p style="color:#94a3b8;font-size:13px">Timely reviews help keep the process fair for everyone.</p>`
+  ),
+  admin_message: (p) => wrapEmail(
+    `<h2 style="color:#1e293b;margin:0 0 16px">Message from HR</h2>
+<p style="color:#475569;line-height:1.6">${p.message ?? 'You have a message from the admin.'}</p>
+${p.link ? ctaButton('View Details', p.link) : ''}`
+  ),
+  peer_review_requested: (p) => wrapEmail(
+    `<h2 style="color:#1e293b;margin:0 0 16px">Peer Review Requested</h2>
+<p style="color:#475569;line-height:1.6">${p.requester_name ?? 'A colleague'} has requested you to provide a peer review${p.reviewee_name ? ` for <strong>${p.reviewee_name}</strong>` : ''}.</p>
+${ctaButton('View Request', `${appUrl}/employee/peer-reviews`)}`
+  ),
+  peer_review_submitted: (p) => wrapEmail(
+    `<h2 style="color:#1e293b;margin:0 0 16px">Peer Review Submitted</h2>
+<p style="color:#475569;line-height:1.6">${p.peer_name ?? 'A peer'} has submitted their peer review for you${p.cycle_name ? ` in <strong>${p.cycle_name}</strong>` : ''}.</p>`
+  ),
 }
 
 const NOTIFICATION_SLACK: Partial<Record<NotificationType, (payload: Record<string, string>) => { title: string; body: string; link?: string }>> = {
@@ -85,7 +153,7 @@ const NOTIFICATION_SLACK: Partial<Record<NotificationType, (payload: Record<stri
   manager_review_submitted: () => ({ title: 'Manager Review Done', body: 'Your manager has submitted their review for you.', link: `${appUrl}/employee` }),
   review_reminder: (p) => ({ title: 'Review Reminder', body: `You have a pending ${p.kind === 'manager_review' ? 'manager' : 'self'} review. Please complete it soon.`, link: `${appUrl}` }),
   admin_message: (p) => ({ title: 'Admin Message', body: p.message ?? 'You have a new message.', link: p.link }),
-  peer_review_requested: (p) => ({ title: 'Peer Review Requested', body: `${p.requester_name ?? 'A colleague'} has requested you to provide a peer review${p.reviewee_name ? ` for *${p.reviewee_name}*` : ''}. Accept or decline in PMS.`, link: `${appUrl}/employee/peer-reviews` }),
+  peer_review_requested: (p) => ({ title: 'Peer Review Requested', body: `${p.requester_name ?? 'A colleague'} requested a peer review${p.reviewee_name ? ` for *${p.reviewee_name}*` : ''}.`, link: `${appUrl}/employee/peer-reviews` }),
   peer_review_submitted: (p) => ({ title: 'Peer Review Submitted', body: `${p.peer_name ?? 'A peer'} has submitted their peer review for you.`, link: `${appUrl}/employee/peer-reviews` }),
 }
 
