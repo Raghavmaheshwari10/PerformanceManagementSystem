@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole, requireManagerOwnership } from '@/lib/auth'
 import { validateWeight } from '@/lib/validate'
+import { getStatusForEmployee } from '@/lib/cycle-helpers'
 import { revalidatePath } from 'next/cache'
 import type { ActionResult } from '@/lib/types'
 import type { RatingTier } from '@prisma/client'
@@ -271,16 +272,18 @@ export async function submitManagerRating(_prev: ActionResult, formData: FormDat
 
   const cycleId = formData.get('cycle_id') as string
 
-  // Deadline check: cycle must be in manager_review status and deadline not passed
-  const cycle = await prisma.cycle.findUnique({
-    where: { id: cycleId },
-    select: { status: true, manager_review_deadline: true },
-  })
-
-  if (!cycle || cycle.status !== 'manager_review') {
+  // Status check: use resolved status (dept-scoped cycles have per-department status)
+  const resolvedStatus = await getStatusForEmployee(cycleId, employeeId)
+  if (resolvedStatus !== 'manager_review') {
     return { data: null, error: 'Cycle is not in manager review phase' }
   }
-  if (cycle.manager_review_deadline && new Date() > new Date(cycle.manager_review_deadline)) {
+
+  // Deadline check
+  const cycle = await prisma.cycle.findUnique({
+    where: { id: cycleId },
+    select: { manager_review_deadline: true },
+  })
+  if (cycle?.manager_review_deadline && new Date() > new Date(cycle.manager_review_deadline)) {
     return { data: null, error: 'Manager review deadline has passed — contact your HRBP' }
   }
 
