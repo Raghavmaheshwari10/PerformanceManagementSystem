@@ -8,15 +8,15 @@ export async function applyKraTemplate(
   roleSlug: string,
   cycleId: string,
   employeeId: string
-): Promise<void> {
+): Promise<number> {
   const templates = await prisma.kraTemplate.findMany({
     where: { role_slug: roleSlug, is_active: true },
     orderBy: { sort_order: 'asc' },
   })
 
-  if (templates.length === 0) return
+  if (templates.length === 0) return 0
 
-  await prisma.$transaction(async (tx) => {
+  return await prisma.$transaction(async (tx) => {
     const existingKras = await tx.kra.findMany({
       where: {
         cycle_id:    cycleId,
@@ -41,5 +41,6 @@ export async function applyKraTemplate(
         })),
       })
     }
+    return toCreate.length
   })
 }

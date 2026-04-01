@@ -3,26 +3,29 @@ import { prisma } from '@/lib/prisma'
 /**
  * Creates KPIs for an employee from a role template.
  * Automatically assigns KPIs to matching KRAs by category.
- * Atomic: batches existence check and createMany inside a transaction.
+ * Returns the number of KPIs created.
  */
 export async function applyKpiTemplate(
   roleSlug: string,
   cycleId: string,
-  employeeId: string
-): Promise<void> {
-  const employee = await prisma.user.findUnique({ where: { id: employeeId } })
-  if (!employee?.manager_id) {
-    throw new Error(`Employee ${employeeId} has no manager assigned`)
-  }
+  employeeId: string,
+  currentUserId: string,
+): Promise<number> {
+  const employee = await prisma.user.findUnique({
+    where: { id: employeeId },
+    select: { manager_id: true },
+  })
+  // Use employee's manager, or fall back to current user (admin acting as manager)
+  const managerId = employee?.manager_id ?? currentUserId
 
   const templates = await prisma.kpiTemplate.findMany({
     where: { role_slug: roleSlug, is_active: true },
     orderBy: { sort_order: 'asc' },
   })
 
-  if (templates.length === 0) return
+  if (templates.length === 0) return 0
 
-  await prisma.$transaction(async (tx) => {
+  return await prisma.$transaction(async (tx) => {
     // Fetch existing KRAs to auto-assign KPIs by category
     const kras = await tx.kra.findMany({
       where: { cycle_id: cycleId, employee_id: employeeId },
@@ -46,7 +49,7 @@ export async function applyKpiTemplate(
         data: toCreate.map(t => ({
           cycle_id:    cycleId,
           employee_id: employeeId,
-          manager_id:  employee.manager_id!,
+          manager_id:  managerId,
           kra_id:      kraByCategory.get(t.category) ?? null,
           title:       t.title,
           description: t.description,
@@ -54,5 +57,6 @@ export async function applyKpiTemplate(
         })),
       })
     }
+    return toCreate.length
   })
 }

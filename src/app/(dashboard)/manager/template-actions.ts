@@ -11,11 +11,14 @@ export async function applyKpiTemplate(
   cycleId: string,
   employeeId: string,
 ): Promise<ActionResult> {
-  await requireRole(['manager', 'admin'])
+  const user = await requireRole(['manager', 'admin'])
 
   try {
-    await applyKpiTemplateDb(roleSlug, cycleId, employeeId)
+    const count = await applyKpiTemplateDb(roleSlug, cycleId, employeeId, user.id)
     revalidatePath(`/manager/${employeeId}/kpis`)
+    if (count === 0) {
+      return { data: null, error: `No KPI templates found for this role. Create templates in Admin → KPI Templates first.` }
+    }
     return { data: null, error: null }
   } catch (e) {
     return { data: null, error: e instanceof Error ? e.message : 'Failed to apply template' }
@@ -30,8 +33,11 @@ export async function applyKraTemplate(
   await requireRole(['manager', 'admin'])
 
   try {
-    await applyKraTemplateDb(roleSlug, cycleId, employeeId)
+    const count = await applyKraTemplateDb(roleSlug, cycleId, employeeId)
     revalidatePath(`/manager/${employeeId}/kpis`)
+    if (count === 0) {
+      return { data: null, error: `No KRA templates found for this role. Create templates in Admin → KRA Templates first.` }
+    }
     return { data: null, error: null }
   } catch (e) {
     return { data: null, error: e instanceof Error ? e.message : 'Failed to apply KRA template' }
