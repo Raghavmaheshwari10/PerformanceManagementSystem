@@ -10,6 +10,19 @@ import type { ActionResult, KpiTemplate } from '@/lib/types'
 
 const INITIAL: ActionResult = { data: null, error: null }
 
+const ROLE_OPTIONS = [
+  { value: 'software_engineer', label: 'Software Engineer' },
+  { value: 'senior_engineer', label: 'Senior Engineer' },
+  { value: 'engineering_manager', label: 'Engineering Manager' },
+  { value: 'product_manager', label: 'Product Manager' },
+  { value: 'qa_sdet', label: 'QA / SDET' },
+  { value: 'devops_sre', label: 'DevOps / SRE' },
+  { value: 'sales_bizdev', label: 'Sales / BizDev' },
+  { value: 'hr_people_ops', label: 'HR / People Ops' },
+  { value: 'finance', label: 'Finance' },
+  { value: 'operations_pm', label: 'Operations / PM' },
+]
+
 interface Props {
   action: (prev: ActionResult, formData: FormData) => Promise<ActionResult>
   defaultValues?: Partial<KpiTemplate>
@@ -29,8 +42,14 @@ export function TemplateForm({ action, defaultValues = {} }: Props) {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label htmlFor="role_slug">Role Slug <span className="text-destructive">*</span></Label>
-          <Input id="role_slug" name="role_slug" defaultValue={defaultValues.role_slug} placeholder="e.g. software_engineer" required />
+          <Label htmlFor="role_slug">Role <span className="text-destructive">*</span></Label>
+          <select id="role_slug" name="role_slug" defaultValue={defaultValues.role_slug ?? ''} required
+            className="w-full rounded-md border bg-background px-3 py-1.5 text-sm">
+            <option value="">— Select role —</option>
+            {ROLE_OPTIONS.map(r => (
+              <option key={r.value} value={r.value}>{r.label}</option>
+            ))}
+          </select>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="title">Title <span className="text-destructive">*</span></Label>
