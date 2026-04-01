@@ -178,8 +178,14 @@ export async function cancelCalendarEvent(eventId: string, organizerEmail: strin
 export function generateFallbackMeetLink(): string {
   // Google Meet allows creating instant meetings via URL
   // The organizer will need to manually share the link
-  const chars = 'abcdefghijklmnopqrstuvwxyz'
-  const segment = (len: number) => Array.from({ length: len }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+  function segment(len: number): string {
+    const alphabet = 'abcdefghijklmnopqrstuvwxyz'
+    let result = ''
+    for (let i = 0; i < len; i++) {
+      result += alphabet[Math.floor(Math.random() * alphabet.length)]
+    }
+    return result
+  }
   // Format: xxx-xxxx-xxx (Google Meet format)
   return `https://meet.google.com/${segment(3)}-${segment(4)}-${segment(3)}`
 }
