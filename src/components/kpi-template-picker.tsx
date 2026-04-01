@@ -52,7 +52,7 @@ export function KpiTemplatePicker({ cycleId, employeeId }: Props) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">Use Template</Button>
+        <Button variant="outline" size="sm">KPI Template</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
