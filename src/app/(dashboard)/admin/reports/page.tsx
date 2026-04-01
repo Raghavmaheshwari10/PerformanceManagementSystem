@@ -1,34 +1,20 @@
-import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { fetchCycleReports, fetchDeptBreakdown, fetchEmployeeRows } from '@/lib/db/reports'
 import { ReportDashboard } from '@/components/report-dashboard'
 
-export default async function HrbpReportsPage() {
-  const user = await requireRole(['hrbp'])
+export default async function AdminReportsPage() {
+  await requireRole(['admin'])
 
-  // HRBP sees departments they're assigned to
-  const hrbpDepts = await prisma.hrbpDepartment.findMany({
-    where: { hrbp_id: user.id },
-    select: { department_id: true },
-  })
-  const deptIds = hrbpDepts.map(d => d.department_id)
+  // Admin sees everything — no department scoping
+  const cycleReports = await fetchCycleReports({ limit: 10 })
 
-  // If HRBP has no department assignments, show all (fallback for admin-level HRBPs)
-  const scopedDeptIds = deptIds.length > 0 ? deptIds : undefined
-
-  const cycleReports = await fetchCycleReports({
-    departmentIds: scopedDeptIds,
-    limit: 10,
-  })
-
-  // Fetch dept breakdown and employee rows for each cycle
   const deptBreakdown: Record<string, any[]> = {}
   const employeeRows: Record<string, any[]> = {}
 
   for (const report of cycleReports) {
     const [depts, employees] = await Promise.all([
-      fetchDeptBreakdown(report.cycleId, scopedDeptIds),
-      fetchEmployeeRows(report.cycleId, { departmentIds: scopedDeptIds }),
+      fetchDeptBreakdown(report.cycleId),
+      fetchEmployeeRows(report.cycleId),
     ])
     deptBreakdown[report.cycleId] = depts.map(d => ({
       departmentName: d.departmentName,
@@ -60,8 +46,8 @@ export default async function HrbpReportsPage() {
       cycles={cycles}
       deptBreakdown={deptBreakdown}
       employeeRows={employeeRows}
-      title="HR Reports"
-      subtitle={scopedDeptIds ? `${scopedDeptIds.length} department(s) in scope` : 'All departments'}
+      title="Organisation Reports"
+      subtitle="All departments, all cycles"
     />
   )
 }

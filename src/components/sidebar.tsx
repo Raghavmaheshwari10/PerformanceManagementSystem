@@ -39,6 +39,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
   manager: [
     { label: 'My Team',      href: '/manager',           icon: Users2 },
     { label: 'Team Payouts', href: '/manager/payouts',   icon: Wallet },
+    { label: 'Team Reports', href: '/manager/reports',   icon: FileBarChart },
     { label: 'MIS Tracking', href: '/manager/mis',       icon: BarChart3 },
     { label: 'My Review',    href: '/manager/my-review', icon: ClipboardCheck },
     { label: 'Docs',         href: '/docs',              icon: BookOpen },
@@ -71,6 +72,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Feature Flags',    href: '/admin/feature-flags',    icon: Flag },
     { label: 'Payout Config',    href: '/admin/payout-config',    icon: Wallet },
     { label: 'Payouts',          href: '/admin/payouts',          icon: Settings2 },
+    { label: 'Reports',          href: '/admin/reports',          icon: FileBarChart },
     { label: 'Audit Log',        href: '/admin/audit-log',        icon: ScrollText },
     { label: 'Docs',             href: '/docs',                   icon: BookOpen },
     { label: 'Help',             href: '#help',                   icon: HelpCircle },

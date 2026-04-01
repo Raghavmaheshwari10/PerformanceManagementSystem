@@ -3,32 +3,41 @@ import { requireRole } from '@/lib/auth'
 import { fetchCycleReports, fetchDeptBreakdown, fetchEmployeeRows } from '@/lib/db/reports'
 import { ReportDashboard } from '@/components/report-dashboard'
 
-export default async function HrbpReportsPage() {
-  const user = await requireRole(['hrbp'])
+export default async function ManagerReportsPage() {
+  const user = await requireRole(['manager'])
 
-  // HRBP sees departments they're assigned to
-  const hrbpDepts = await prisma.hrbpDepartment.findMany({
-    where: { hrbp_id: user.id },
-    select: { department_id: true },
+  // Manager sees only direct reports
+  const directReports = await prisma.user.findMany({
+    where: { manager_id: user.id, is_active: true },
+    select: { id: true, department_id: true },
   })
-  const deptIds = hrbpDepts.map(d => d.department_id)
 
-  // If HRBP has no department assignments, show all (fallback for admin-level HRBPs)
-  const scopedDeptIds = deptIds.length > 0 ? deptIds : undefined
+  const reportIds = directReports.map(r => r.id)
+  const reportDeptIds = [...new Set(directReports.map(r => r.department_id).filter(Boolean))] as string[]
+
+  if (reportIds.length === 0) {
+    return (
+      <div className="glass flex flex-col items-center justify-center py-16 text-center">
+        <h3 className="text-lg font-semibold mb-1">No Direct Reports</h3>
+        <p className="text-sm text-muted-foreground max-w-xs">
+          You don&apos;t have any active direct reports. Reports will appear here once team members are assigned.
+        </p>
+      </div>
+    )
+  }
 
   const cycleReports = await fetchCycleReports({
-    departmentIds: scopedDeptIds,
+    employeeIds: reportIds,
     limit: 10,
   })
 
-  // Fetch dept breakdown and employee rows for each cycle
   const deptBreakdown: Record<string, any[]> = {}
   const employeeRows: Record<string, any[]> = {}
 
   for (const report of cycleReports) {
     const [depts, employees] = await Promise.all([
-      fetchDeptBreakdown(report.cycleId, scopedDeptIds),
-      fetchEmployeeRows(report.cycleId, { departmentIds: scopedDeptIds }),
+      fetchDeptBreakdown(report.cycleId, reportDeptIds),
+      fetchEmployeeRows(report.cycleId, { employeeIds: reportIds }),
     ])
     deptBreakdown[report.cycleId] = depts.map(d => ({
       departmentName: d.departmentName,
@@ -60,8 +69,8 @@ export default async function HrbpReportsPage() {
       cycles={cycles}
       deptBreakdown={deptBreakdown}
       employeeRows={employeeRows}
-      title="HR Reports"
-      subtitle={scopedDeptIds ? `${scopedDeptIds.length} department(s) in scope` : 'All departments'}
+      title="Team Reports"
+      subtitle={`${reportIds.length} direct report(s)`}
     />
   )
 }
