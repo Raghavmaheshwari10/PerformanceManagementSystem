@@ -149,6 +149,12 @@ export default async function ManagerReviewPage({
                   {kpi.description && (
                     <p className="mt-1 text-xs text-muted-foreground">{kpi.description}</p>
                   )}
+                  {kpi.self_rating && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Self-rated: <span className="font-semibold text-foreground">{kpi.self_rating}</span>
+                      {kpi.self_comments && <> — {kpi.self_comments}</>}
+                    </p>
+                  )}
                 </div>
               ))
             ) : (
@@ -164,6 +170,7 @@ export default async function ManagerReviewPage({
                   return (
                     <div key={kra.id} className="rounded-lg border border-border bg-muted/30 backdrop-blur-sm p-3 space-y-2">
                       <div className="flex items-center gap-2 flex-wrap">
+                        <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold uppercase text-primary tracking-wide">KRA</span>
                         <p className="text-sm font-semibold">{kra.title}</p>
                         <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${catColor}`}>
                           {toTitleCase(kra.category)}
@@ -181,6 +188,12 @@ export default async function ManagerReviewPage({
                           {kpi.description && (
                             <p className="mt-1 text-xs text-muted-foreground">{kpi.description}</p>
                           )}
+                          {kpi.self_rating && (
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Self-rated: <span className="font-semibold text-foreground">{kpi.self_rating}</span>
+                              {kpi.self_comments && <> — {kpi.self_comments}</>}
+                            </p>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -197,6 +210,12 @@ export default async function ManagerReviewPage({
                         </div>
                         {kpi.description && (
                           <p className="mt-1 text-xs text-muted-foreground">{kpi.description}</p>
+                        )}
+                        {kpi.self_rating && (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Self-rated: <span className="font-semibold text-foreground">{kpi.self_rating}</span>
+                            {kpi.self_comments && <> — {kpi.self_comments}</>}
+                          </p>
                         )}
                       </div>
                     ))}
@@ -250,6 +269,8 @@ export default async function ManagerReviewPage({
             <ReviewForm
               cycleId={cycleId}
               employeeId={employeeId}
+              kpis={kpis}
+              kras={kras}
               defaultRating={(appraisal as Appraisal | null)?.manager_rating ?? misScore?.suggested_rating ?? undefined}
               defaultComments={(appraisal as Appraisal | null)?.manager_comments ?? undefined}
             />

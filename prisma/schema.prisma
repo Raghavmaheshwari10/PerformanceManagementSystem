@@ -294,9 +294,13 @@ model Kpi {
   kra_id      String?  @db.Uuid
   title       String
   description String?
-  weight      Decimal? @db.Decimal(5, 2)
-  created_at  DateTime @default(now()) @db.Timestamptz(6)
-  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+  weight        Decimal?   @db.Decimal(5, 2)
+  self_rating       RatingTier?
+  self_comments     String?
+  manager_rating    RatingTier?
+  manager_comments  String?
+  created_at        DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime   @default(now()) @db.Timestamptz(6)
 
   // Relations
   cycle    Cycle @relation(fields: [cycle_id], references: [id])

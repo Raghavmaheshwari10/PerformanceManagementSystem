@@ -4,7 +4,7 @@ import { useConfirm } from '@/lib/confirm'
 import { useToast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
-import { advanceCycleStatus } from '../../actions'
+import { advanceCycleStatus, revertCycleStatus } from '../../actions'
 import { sendSelfReviewReminders, sendManagerReviewReminders } from './actions'
 import type { CycleStatus } from '@/lib/types'
 
@@ -12,6 +12,7 @@ interface Props {
   cycleId: string
   currentStatus: CycleStatus
   nextStatus: string | null
+  previousStatus: string | null
   pendingSelfCount: number
   pendingManagerCount: number
 }
@@ -20,6 +21,7 @@ export function CycleActionsClient({
   cycleId,
   currentStatus,
   nextStatus,
+  previousStatus,
   pendingSelfCount,
   pendingManagerCount,
 }: Props) {
@@ -31,7 +33,7 @@ export function CycleActionsClient({
     const ok = await confirm({
       title: 'Advance cycle?',
       description:
-        'This will move the cycle to the next stage and notify the relevant users. This cannot be undone.',
+        'This will move the cycle to the next stage and notify the relevant users.',
       confirmLabel: 'Advance',
       variant: 'destructive',
     })
@@ -41,6 +43,22 @@ export function CycleActionsClient({
     setLoading(null)
     if (result.error) toast.error(result.error)
     else toast.success('Cycle advanced successfully.')
+  }
+
+  async function handleRevert() {
+    const ok = await confirm({
+      title: 'Revert cycle stage?',
+      description:
+        `This will move the cycle back to "${previousStatus?.replace(/_/g, ' ')}". Employees and managers will see the previous stage.`,
+      confirmLabel: 'Revert',
+      variant: 'destructive',
+    })
+    if (!ok) return
+    setLoading('revert')
+    const result = await revertCycleStatus(cycleId, currentStatus)
+    setLoading(null)
+    if (result.error) toast.error(result.error)
+    else toast.success('Cycle reverted to previous stage.')
   }
 
   async function handleSelfReminders() {
@@ -79,6 +97,11 @@ export function CycleActionsClient({
 
   return (
     <div className="flex flex-wrap gap-3">
+      {previousStatus && (
+        <Button onClick={handleRevert} disabled={!!loading} variant="outline" size="sm">
+          {loading === 'revert' ? 'Reverting…' : `Revert to ${previousStatus.replace(/_/g, ' ')}`}
+        </Button>
+      )}
       {nextStatus && (
         <Button onClick={handleAdvance} disabled={!!loading} variant="destructive" data-tour="advance-btn">
           {loading === 'advance' ? 'Advancing…' : `Advance to ${nextStatus.replace(/_/g, ' ')}`}

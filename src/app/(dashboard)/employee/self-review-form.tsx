@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { RatingPillSelector, STANDARD_RATING_OPTIONS } from '@/components/rating-pill-selector'
 import { RATING_TIERS } from '@/lib/constants'
 import { useToast } from '@/lib/toast'
-import type { ActionResult, Review, ReviewQuestionWithCompetency } from '@/lib/types'
+import type { ActionResult, Kpi, Kra, Review, ReviewQuestionWithCompetency } from '@/lib/types'
 
 const INITIAL: ActionResult = { data: null, error: null }
 
@@ -24,16 +24,31 @@ const SENTENCE_STARTERS = [
 interface SelfReviewFormProps {
   cycleId: string
   review: Review | null
+  kpis: Kpi[]
+  kras: Kra[]
   questions?: ReviewQuestionWithCompetency[]
   existingResponses?: Record<string, { rating_value: number | null; text_value: string | null }>
 }
 
 const STAR_LABELS = ['Poor', 'Below Average', 'Average', 'Good', 'Excellent']
 
-export function SelfReviewForm({ cycleId, review, questions = [], existingResponses = {} }: SelfReviewFormProps) {
+const KRA_CATEGORY_STYLES: Record<string, { bg: string; text: string }> = {
+  performance: { bg: 'bg-blue-500/20', text: 'text-blue-400' },
+  behaviour:   { bg: 'bg-amber-500/20', text: 'text-amber-400' },
+  learning:    { bg: 'bg-emerald-500/20', text: 'text-emerald-400' },
+}
+
+export function SelfReviewForm({ cycleId, review, kpis, kras, questions = [], existingResponses = {} }: SelfReviewFormProps) {
   const [submitState, submitAction] = useActionState(submitSelfReview, INITIAL)
   const [draftState, draftAction] = useActionState(saveDraftReview, INITIAL)
   const [rating, setRating] = useState(review?.self_rating ?? '')
+  const [kpiRatings, setKpiRatings] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {}
+    for (const kpi of kpis) {
+      if (kpi.self_rating) initial[kpi.id] = kpi.self_rating
+    }
+    return initial
+  })
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { toast } = useToast()
 
@@ -62,20 +77,115 @@ export function SelfReviewForm({ cycleId, review, questions = [], existingRespon
     el.setSelectionRange(el.value.length, el.value.length)
   }
 
+  // Group KPIs by KRA
+  const kpisByKra = new Map<string | null, Kpi[]>()
+  for (const kpi of kpis) {
+    const key = kpi.kra_id ?? null
+    if (!kpisByKra.has(key)) kpisByKra.set(key, [])
+    kpisByKra.get(key)!.push(kpi)
+  }
+  const ungroupedKpis = kpisByKra.get(null) ?? []
+  const hasKras = kras.length > 0
+
   return (
-    <section className="rounded border p-4 space-y-4">
+    <section className="rounded border p-4 space-y-6">
       <h2 className="text-lg font-semibold">Self Assessment</h2>
-      <form className="space-y-4">
+      <form className="space-y-6">
         <input type="hidden" name="cycle_id" value={cycleId} />
         <input type="hidden" name="self_rating" value={rating} />
+        {/* Serialize per-KPI ratings as hidden inputs */}
+        {Object.entries(kpiRatings).map(([kpiId, r]) => (
+          <input key={kpiId} type="hidden" name={`kpi_rating_${kpiId}`} value={r} />
+        ))}
 
         {error && (
           <p className="rounded bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
         )}
 
-        {/* Rating pills replace the old <select> */}
-        <div className="space-y-2">
-          <Label>Self Rating</Label>
+        {/* ── Per-KPI / KRA Ratings ── */}
+        {kpis.length > 0 && (
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-base font-semibold">Rate Your KPIs</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                Rate your performance on each KPI and add optional comments.
+              </p>
+            </div>
+
+            {hasKras ? (
+              /* Grouped by KRA */
+              <>
+                {kras.map(kra => {
+                  const kraKpis = kpisByKra.get(kra.id) ?? []
+                  if (kraKpis.length === 0) return null
+                  const catStyle = KRA_CATEGORY_STYLES[kra.category] ?? KRA_CATEGORY_STYLES.performance
+                  return (
+                    <div key={kra.id} className="glass p-4 space-y-3">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold uppercase text-primary tracking-wide">KRA</span>
+                        <h4 className="font-semibold text-sm">{kra.title}</h4>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${catStyle.bg} ${catStyle.text}`}>
+                          {kra.category}
+                        </span>
+                        {kra.weight && (
+                          <span className="rounded-full bg-muted/50 px-2 py-0.5 text-xs font-semibold tabular-nums">
+                            {String(kra.weight)}%
+                          </span>
+                        )}
+                      </div>
+                      {kra.description && (
+                        <p className="text-xs text-muted-foreground">{kra.description}</p>
+                      )}
+                      <div className="space-y-3">
+                        {kraKpis.map(kpi => (
+                          <KpiRatingCard
+                            key={kpi.id}
+                            kpi={kpi}
+                            rating={kpiRatings[kpi.id] ?? null}
+                            onRatingChange={(v) => setKpiRatings(prev => ({ ...prev, [kpi.id]: v }))}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+
+                {/* Ungrouped KPIs */}
+                {ungroupedKpis.length > 0 && (
+                  <div className="glass p-4 space-y-3">
+                    <h4 className="font-semibold text-sm">General KPIs</h4>
+                    <div className="space-y-3">
+                      {ungroupedKpis.map(kpi => (
+                        <KpiRatingCard
+                          key={kpi.id}
+                          kpi={kpi}
+                          rating={kpiRatings[kpi.id] ?? null}
+                          onRatingChange={(v) => setKpiRatings(prev => ({ ...prev, [kpi.id]: v }))}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              /* Flat list */
+              <div className="space-y-3">
+                {kpis.map(kpi => (
+                  <KpiRatingCard
+                    key={kpi.id}
+                    kpi={kpi}
+                    rating={kpiRatings[kpi.id] ?? null}
+                    onRatingChange={(v) => setKpiRatings(prev => ({ ...prev, [kpi.id]: v }))}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Overall Rating ── */}
+        <div className="space-y-2 border-t border-border pt-4">
+          <Label>Overall Self Rating</Label>
           <RatingPillSelector
             options={STANDARD_RATING_OPTIONS}
             value={rating || null}
@@ -89,7 +199,7 @@ export function SelfReviewForm({ cycleId, review, questions = [], existingRespon
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="self_comments">Comments</Label>
+            <Label htmlFor="self_comments">Overall Comments</Label>
             <span className="text-xs text-muted-foreground">Sentence starters</span>
           </div>
 
@@ -111,9 +221,9 @@ export function SelfReviewForm({ cycleId, review, questions = [], existingRespon
             ref={textareaRef}
             id="self_comments"
             name="self_comments"
-            rows={6}
+            rows={4}
             defaultValue={review?.self_comments ?? ''}
-            placeholder="Describe your key achievements, how you met your KPIs, and any challenges you overcame…"
+            placeholder="Summarize your key achievements and any challenges you overcame…"
             required
           />
         </div>
@@ -141,7 +251,6 @@ export function SelfReviewForm({ cycleId, review, questions = [], existingRespon
                     )}
                   </div>
 
-                  {/* Rating (for rating or mixed answer_type) */}
                   {(q.answer_type === 'rating' || q.answer_type === 'mixed') && (
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">Rating</Label>
@@ -166,7 +275,6 @@ export function SelfReviewForm({ cycleId, review, questions = [], existingRespon
                     </div>
                   )}
 
-                  {/* Text (for text or mixed answer_type) */}
                   {(q.answer_type === 'text' || q.answer_type === 'mixed') && (
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">
@@ -197,5 +305,46 @@ export function SelfReviewForm({ cycleId, review, questions = [], existingRespon
         </div>
       </form>
     </section>
+  )
+}
+
+/* ── Per-KPI Rating Card ── */
+
+function KpiRatingCard({
+  kpi,
+  rating,
+  onRatingChange,
+}: {
+  kpi: Kpi
+  rating: string | null
+  onRatingChange: (value: string) => void
+}) {
+  return (
+    <div className="glass-interactive p-3 space-y-2">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="font-medium text-sm leading-snug">{kpi.title}</p>
+          {kpi.description && (
+            <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{kpi.description}</p>
+          )}
+        </div>
+        <span className="shrink-0 rounded-full bg-muted/50 px-2 py-0.5 text-xs font-semibold tabular-nums">
+          {String(kpi.weight)}%
+        </span>
+      </div>
+      <RatingPillSelector
+        options={STANDARD_RATING_OPTIONS}
+        value={rating}
+        onChange={onRatingChange}
+        label="Your rating"
+      />
+      <Textarea
+        name={`kpi_comments_${kpi.id}`}
+        rows={2}
+        defaultValue={kpi.self_comments ?? ''}
+        placeholder="Comments on this KPI (optional)…"
+        className="text-xs"
+      />
+    </div>
   )
 }

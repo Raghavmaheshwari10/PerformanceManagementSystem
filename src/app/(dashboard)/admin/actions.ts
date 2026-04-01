@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
-import { canTransition, getTransitionRequirements } from '@/lib/cycle-machine'
+import { canTransition, getTransitionRequirements, getPreviousStatus, getRevertRequirements, STATUS_ORDER } from '@/lib/cycle-machine'
 import { notifyUsers } from '@/lib/email'
 import { getScopedEmployeeWhere } from '@/lib/cycle-helpers'
 import type { ActionResult, CycleStatus } from '@/lib/types'
@@ -148,6 +148,81 @@ export async function advanceCycleStatus(cycleId: string, currentStatus: CycleSt
 
   // Send notifications for the transition
   await sendTransitionNotifications(cycleId, nextStatus, null)
+
+  revalidatePath('/admin')
+  revalidatePath('/hrbp')
+  revalidatePath('/employee')
+  revalidatePath('/manager')
+  return { data: null, error: null }
+}
+
+/**
+ * Revert a cycle to the previous status. Admin only.
+ */
+export async function revertCycleStatus(cycleId: string, currentStatus: CycleStatus): Promise<ActionResult> {
+  const user = await requireRole(['admin'])
+
+  const prevStatus = getPreviousStatus(currentStatus)
+  if (!prevStatus) {
+    return { data: null, error: `Cannot revert from ${currentStatus}` }
+  }
+
+  const req = getRevertRequirements(currentStatus)
+  if (!req?.allowedRoles.includes(user.role)) {
+    return { data: null, error: 'Only admins can revert cycle status' }
+  }
+
+  // Revert departments at the current status
+  const deptReverted = await prisma.cycleDepartment.updateMany({
+    where: { cycle_id: cycleId, status: currentStatus },
+    data: { status: prevStatus },
+  })
+
+  // Also revert the cycle-level status if it matches (org-wide or synced)
+  // For dept-scoped cycles, cycle.status may lag — update it to prevStatus too
+  // so it stays at or behind the most advanced department
+  const cycle = await prisma.cycle.findUnique({
+    where: { id: cycleId },
+    select: { status: true },
+  })
+  if (cycle) {
+    const cycleIdx = STATUS_ORDER.indexOf(cycle.status)
+    const currentIdx = STATUS_ORDER.indexOf(currentStatus)
+    // If cycle status is at or ahead of currentStatus, pull it back
+    if (cycleIdx >= currentIdx) {
+      await prisma.cycle.update({
+        where: { id: cycleId },
+        data: { status: prevStatus, updated_at: new Date() },
+      })
+    }
+  }
+
+  if (deptReverted.count === 0 && cycle?.status !== currentStatus) {
+    return { data: null, error: 'No departments at this stage to revert — please refresh' }
+  }
+
+  // When reverting to self_review, reset submitted reviews back to draft
+  // so employees can edit and re-submit
+  if (prevStatus === 'self_review') {
+    await prisma.review.updateMany({
+      where: { cycle_id: cycleId, status: 'submitted' },
+      data: { status: 'draft', submitted_at: null, updated_at: new Date() },
+    })
+  }
+
+  // When reverting to kpi_setting, also clear any draft reviews
+  // (self_review hasn't started yet)
+
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'cycle_status_reverted',
+      entity_type: 'cycle',
+      entity_id: cycleId,
+      old_value: { status: currentStatus },
+      new_value: { status: prevStatus },
+    },
+  })
 
   revalidatePath('/admin')
   revalidatePath('/hrbp')

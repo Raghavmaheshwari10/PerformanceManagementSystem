@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import { CycleStatusBadge } from '@/components/cycle-status-badge'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
-import { getNextStatus, STATUS_ORDER, getTransitionLabel } from '@/lib/cycle-machine'
+import { getNextStatus, getPreviousStatus, STATUS_ORDER, getTransitionLabel } from '@/lib/cycle-machine'
 import { getScopedEmployeeWhere, getCycleDepartmentStatuses, getStatusForEmployee } from '@/lib/cycle-helpers'
 import { DepartmentTransitionClient } from './department-transition-client'
 import { EditDepartmentsForm } from './edit-departments-form'
@@ -72,6 +72,17 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
   const isOverdue = deadlineDays !== null && deadlineDays < 0
 
   const next = getNextStatus(cycle.status)
+  const prev = getPreviousStatus(cycle.status)
+
+  // For dept-scoped cycles, compute effective status from the most advanced department
+  const effectiveDeptStatus: CycleStatus | null = isDeptScoped && deptStatuses.length > 0
+    ? deptStatuses.reduce((max, d) => {
+        const maxIdx = STATUS_ORDER.indexOf(max)
+        const dIdx = STATUS_ORDER.indexOf(d.status)
+        return dIdx > maxIdx ? d.status : max
+      }, deptStatuses[0].status)
+    : null
+  const deptPrev = effectiveDeptStatus ? getPreviousStatus(effectiveDeptStatus) : null
 
   return (
     <div className="space-y-6">
@@ -102,7 +113,7 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
           </p>
         </div>
 
-        {/* Org-wide advance button (only for non-dept-scoped cycles) */}
+        {/* Org-wide advance/revert buttons (only for non-dept-scoped cycles) */}
         {!isDeptScoped && next && (
           <DepartmentTransitionClient
             cycleId={id}
@@ -110,6 +121,7 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
             departmentName="All Employees"
             currentStatus={cycle.status}
             nextStatus={next}
+            previousStatus={prev}
           />
         )}
       </div>
@@ -117,7 +129,18 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
       {/* ── Per-Department Pipeline ── */}
       {isDeptScoped && (
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Department Stages</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Department Stages</h2>
+            {(deptPrev ?? prev) && (
+              <DepartmentTransitionClient
+                cycleId={id}
+                departmentId={null}
+                departmentName="Entire Cycle"
+                currentStatus={effectiveDeptStatus ?? cycle.status}
+                previousStatus={deptPrev ?? prev}
+              />
+            )}
+          </div>
           {deptStatuses.map(dept => {
             const deptNext = getNextStatus(dept.status)
             const deptEmps = employees.filter(e => e.department_id === dept.departmentId)

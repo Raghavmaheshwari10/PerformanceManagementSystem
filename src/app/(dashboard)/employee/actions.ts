@@ -7,6 +7,52 @@ import { revalidatePath } from 'next/cache'
 import type { ActionResult } from '@/lib/types'
 import type { RatingTier } from '@prisma/client'
 
+/** Extract per-KPI ratings and comments from form data */
+function extractKpiRatings(formData: FormData): Array<{ kpiId: string; rating: string | null; comments: string | null }> {
+  const entries: Array<{ kpiId: string; rating: string | null; comments: string | null }> = []
+  const seenKpiIds = new Set<string>()
+
+  for (const [key, value] of formData.entries()) {
+    if (key.startsWith('kpi_rating_')) {
+      const kpiId = key.replace('kpi_rating_', '')
+      seenKpiIds.add(kpiId)
+      const comments = (formData.get(`kpi_comments_${kpiId}`) as string)?.trim() || null
+      entries.push({ kpiId, rating: String(value) || null, comments })
+    }
+  }
+
+  // Also pick up kpi_comments for KPIs that don't have a rating yet
+  for (const [key, value] of formData.entries()) {
+    if (key.startsWith('kpi_comments_') && !key.startsWith('kpi_comments_undefined')) {
+      const kpiId = key.replace('kpi_comments_', '')
+      if (!seenKpiIds.has(kpiId)) {
+        entries.push({ kpiId, rating: null, comments: String(value)?.trim() || null })
+      }
+    }
+  }
+
+  return entries
+}
+
+/** Save per-KPI self-ratings to the kpis table */
+async function saveKpiRatings(formData: FormData, cycleId: string, employeeId: string) {
+  const kpiRatings = extractKpiRatings(formData)
+  if (kpiRatings.length === 0) return
+
+  await Promise.all(
+    kpiRatings.map(({ kpiId, rating, comments }) =>
+      prisma.kpi.updateMany({
+        where: { id: kpiId, cycle_id: cycleId, employee_id: employeeId },
+        data: {
+          self_rating: (rating as RatingTier) || null,
+          self_comments: comments,
+          updated_at: new Date(),
+        },
+      })
+    )
+  )
+}
+
 export async function submitSelfReview(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const user = await requireRole(['employee'])
 
@@ -51,6 +97,9 @@ export async function submitSelfReview(_prev: ActionResult, formData: FormData):
     },
     select: { id: true },
   })
+
+  // Save per-KPI ratings
+  await saveKpiRatings(formData, cycleId, user.id)
 
   // Save competency assessment responses
   const responseEntries: Array<{ question_id: string; rating_value: number | null; text_value: string | null }> = []
@@ -136,6 +185,9 @@ export async function saveDraftReview(_prev: ActionResult, formData: FormData): 
     },
     select: { id: true },
   })
+
+  // Save per-KPI ratings
+  await saveKpiRatings(formData, cycleId, user.id)
 
   // Save competency assessment responses as draft too
   const responseEntries: Array<{ question_id: string; rating_value: number | null; text_value: string | null }> = []

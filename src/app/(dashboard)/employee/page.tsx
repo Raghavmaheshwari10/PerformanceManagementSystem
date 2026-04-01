@@ -75,7 +75,8 @@ function computePrimaryAction(status: string, cycle: Cycle, kpis: Kpi[], review:
     }
     return {
       label: 'Self-review submitted',
-      description: 'Your review has been submitted. Your manager will review it next.',
+      description: 'Your review has been submitted. You can still edit and re-submit below until the self-review phase ends.',
+      href: '#self-review-form',
       urgency: 'success',
     }
   }
@@ -220,10 +221,22 @@ export default async function EmployeeReviewPage() {
       }))
     : []
 
+  // Serialize Prisma Decimals to plain numbers for client components
+  const serializedKpis: Kpi[] = kpis.map(k => ({
+    ...k,
+    weight: k.weight !== null ? Number(k.weight) : null,
+    kra: k.kra ? { ...k.kra, weight: k.kra.weight !== null ? Number(k.kra.weight) : null } : undefined,
+  })) as unknown as Kpi[]
+
+  const serializedKras: Kra[] = kras.map(k => ({
+    ...k,
+    weight: k.weight !== null ? Number(k.weight) : null,
+  })) as unknown as Kra[]
+
   /* ── Group KPIs by KRA ── */
-  const hasKras = kras.length > 0
-  const kpisByKra = new Map<string | null, typeof kpis>()
-  for (const kpi of kpis) {
+  const hasKras = serializedKras.length > 0
+  const kpisByKra = new Map<string | null, Kpi[]>()
+  for (const kpi of serializedKpis) {
     const key = kpi.kra_id ?? null
     if (!kpisByKra.has(key)) kpisByKra.set(key, [])
     kpisByKra.get(key)!.push(kpi)
@@ -242,7 +255,7 @@ export default async function EmployeeReviewPage() {
   const heroAction = computePrimaryAction(
     resolvedStatus,
     cycle as unknown as Cycle,
-    kpis as unknown as Kpi[],
+    serializedKpis,
     review as unknown as Review | null,
   )
 
@@ -308,7 +321,7 @@ export default async function EmployeeReviewPage() {
         {/* Left: KPI cards (3 cols) */}
         <section className="lg:col-span-3 space-y-3" data-tour="kpi-list">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Your KPIs
+            Your KRAs &amp; KPIs
           </h2>
 
           {kpis.length === 0 ? (
@@ -324,7 +337,7 @@ export default async function EmployeeReviewPage() {
           ) : !hasKras ? (
             /* Flat list when no KRAs exist (backwards compatible) */
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {(kpis as unknown as Kpi[]).map(kpi => {
+              {serializedKpis.map(kpi => {
                 const weight = Number(kpi.weight ?? 0)
                 return (
                   <div key={kpi.id} className="glass-interactive p-4 space-y-3">
@@ -357,7 +370,7 @@ export default async function EmployeeReviewPage() {
           ) : (
             /* Grouped by KRA */
             <div className="space-y-4">
-              {(kras as unknown as Kra[]).map(kra => {
+              {serializedKras.map(kra => {
                 const kraKpis = (kpisByKra.get(kra.id) ?? []) as unknown as Kpi[]
                 const catStyle = KRA_CATEGORY_STYLES[kra.category] ?? KRA_CATEGORY_STYLES.performance
                 const kraWeight = Number(kra.weight ?? 0)
@@ -366,6 +379,7 @@ export default async function EmployeeReviewPage() {
                     {/* KRA header */}
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <div className="flex items-center gap-2">
+                        <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold uppercase text-primary tracking-wide">KRA</span>
                         <h3 className="font-semibold text-sm">{kra.title}</h3>
                         <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${catStyle.bg} ${catStyle.text}`}>
                           {kra.category}
@@ -428,7 +442,7 @@ export default async function EmployeeReviewPage() {
                     </span>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    {(ungroupedKpis as unknown as Kpi[]).map(kpi => {
+                    {ungroupedKpis.map(kpi => {
                       const weight = Number(kpi.weight ?? 0)
                       return (
                         <div key={kpi.id} className="glass-interactive p-3 space-y-2">
@@ -542,11 +556,13 @@ export default async function EmployeeReviewPage() {
       })()}
 
       {/* ── Self-review form ── */}
-      {isSelfReview && review?.status !== 'submitted' && (
+      {isSelfReview && (
         <div id="self-review-form" data-tour="self-review-form">
           <SelfReviewForm
             cycleId={cycle.id}
             review={review as unknown as Review | null}
+            kpis={serializedKpis}
+            kras={serializedKras}
             questions={templateQuestions}
             existingResponses={existingResponses}
           />

@@ -300,6 +300,41 @@ export async function submitManagerRating(_prev: ActionResult, formData: FormDat
     },
   })
 
+  // Save per-KPI manager ratings
+  const kpiUpdates: Array<Promise<unknown>> = []
+  for (const [key, value] of formData.entries()) {
+    if (key.startsWith('kpi_rating_')) {
+      const kpiId = key.replace('kpi_rating_', '')
+      const kpiComments = (formData.get(`kpi_comments_${kpiId}`) as string)?.trim() || null
+      kpiUpdates.push(
+        prisma.kpi.updateMany({
+          where: { id: kpiId, cycle_id: cycleId, employee_id: employeeId },
+          data: {
+            manager_rating: (String(value) as RatingTier) || null,
+            manager_comments: kpiComments,
+            updated_at: new Date(),
+          },
+        })
+      )
+    }
+  }
+  // Also pick up kpi_comments for KPIs without a rating
+  for (const [key, value] of formData.entries()) {
+    if (key.startsWith('kpi_comments_') && !formData.has(`kpi_rating_${key.replace('kpi_comments_', '')}`)) {
+      const kpiId = key.replace('kpi_comments_', '')
+      const kpiComments = String(value)?.trim() || null
+      if (kpiComments) {
+        kpiUpdates.push(
+          prisma.kpi.updateMany({
+            where: { id: kpiId, cycle_id: cycleId, employee_id: employeeId },
+            data: { manager_comments: kpiComments, updated_at: new Date() },
+          })
+        )
+      }
+    }
+  }
+  if (kpiUpdates.length > 0) await Promise.all(kpiUpdates)
+
   // Notify all HRBPs that manager has submitted a rating
   const hrbps = await prisma.user.findMany({
     where: { role: 'hrbp', is_active: true },

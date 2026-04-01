@@ -82,6 +82,10 @@ export interface Kpi {
   title: string
   description: string | null
   weight: number | null
+  self_rating: RatingTier | null
+  self_comments: string | null
+  manager_rating: RatingTier | null
+  manager_comments: string | null
   created_at: string
   updated_at: string
   kra?: Kra
