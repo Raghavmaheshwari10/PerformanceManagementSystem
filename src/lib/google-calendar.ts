@@ -183,19 +183,10 @@ export async function cancelCalendarEvent(eventId: string, organizerEmail: strin
 
 /**
  * Generate a fallback Google Meet link (for when Calendar API is not configured).
- * This creates a meet.google.com/new link that participants can join.
+ * Uses meet.google.com/new which creates an instant meeting when opened.
+ * Note: Random meet codes (xxx-xxxx-xxx) do NOT work — only real API-created
+ * codes or /new are valid.
  */
 export function generateFallbackMeetLink(): string {
-  // Google Meet allows creating instant meetings via URL
-  // The organizer will need to manually share the link
-  function segment(len: number): string {
-    const alphabet = 'abcdefghijklmnopqrstuvwxyz'
-    let result = ''
-    for (let i = 0; i < len; i++) {
-      result += alphabet[Math.floor(Math.random() * alphabet.length)]
-    }
-    return result
-  }
-  // Format: xxx-xxxx-xxx (Google Meet format)
-  return `https://meet.google.com/${segment(3)}-${segment(4)}-${segment(3)}`
+  return 'https://meet.google.com/new'
 }
