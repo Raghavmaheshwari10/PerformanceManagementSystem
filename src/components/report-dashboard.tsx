@@ -138,7 +138,7 @@ export function ReportDashboard({ cycles, deptBreakdown, employeeRows, title, su
         'Manager Rating': e.managerRating ?? '',
         'Final Rating': e.finalRating ?? '',
         'Variable Pay': e.variablePay,
-        Multiplier: e.multiplier.toFixed(3),
+        Multiplier: e.multiplier.toFixed(2),
         'Payout Amount': e.payoutAmount,
         'Exit Frozen': e.isExitFrozen ? 'Yes' : 'No',
         Proration: e.prorationFactor != null ? `${(e.prorationFactor * 100).toFixed(1)}%` : '',
@@ -159,7 +159,7 @@ export function ReportDashboard({ cycles, deptBreakdown, employeeRows, title, su
         'Manager Review %': c.managerReviewRate,
         'Total Rated': c.totalRated,
         'Total Payout': c.totalPayout,
-        'Avg Multiplier': c.avgMultiplier.toFixed(3),
+        'Avg Multiplier': c.avgMultiplier.toFixed(2),
         Exited: c.exitedCount,
       })),
       'cycle-summary-report.csv'
@@ -343,7 +343,7 @@ export function ReportDashboard({ cycles, deptBreakdown, employeeRows, title, su
               <div className="h-px bg-border" />
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Avg Multiplier</span>
-                <span className="text-lg font-bold tabular-nums">x{(selectedCycle?.avgMultiplier ?? 0).toFixed(3)}</span>
+                <span className="text-lg font-bold tabular-nums">x{(selectedCycle?.avgMultiplier ?? 0).toFixed(2)}</span>
               </div>
               <div className="h-px bg-border" />
               <div className="flex items-center justify-between">
@@ -417,7 +417,7 @@ export function ReportDashboard({ cycles, deptBreakdown, employeeRows, title, su
                         ) : '—'}
                       </td>
                       <td className="p-3 text-right tabular-nums text-muted-foreground">₹{e.variablePay.toLocaleString('en-IN')}</td>
-                      <td className="p-3 text-right tabular-nums text-muted-foreground">x{e.multiplier.toFixed(3)}</td>
+                      <td className="p-3 text-right tabular-nums text-muted-foreground">x{e.multiplier.toFixed(2)}</td>
                       <td className="p-3 text-right tabular-nums font-medium">₹{e.payoutAmount.toLocaleString('en-IN')}</td>
                       <td className="p-3">
                         {e.isExitFrozen ? (
@@ -438,7 +438,7 @@ export function ReportDashboard({ cycles, deptBreakdown, employeeRows, title, su
                     <td colSpan={5} className="p-3 text-right text-sm text-muted-foreground">Totals</td>
                     <td className="p-3 text-right tabular-nums text-sm">₹{empData.reduce((s, e) => s + e.variablePay, 0).toLocaleString('en-IN')}</td>
                     <td className="p-3 text-right tabular-nums text-sm text-muted-foreground">
-                      x{(empData.reduce((s, e) => s + e.multiplier, 0) / Math.max(empData.length, 1)).toFixed(3)}
+                      x{(empData.reduce((s, e) => s + e.multiplier, 0) / Math.max(empData.length, 1)).toFixed(2)}
                     </td>
                     <td className="p-3 text-right tabular-nums text-sm">₹{empData.reduce((s, e) => s + e.payoutAmount, 0).toLocaleString('en-IN')}</td>
                     <td className="p-3" />

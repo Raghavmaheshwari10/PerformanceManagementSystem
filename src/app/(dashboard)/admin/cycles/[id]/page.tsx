@@ -32,7 +32,7 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
   const [users, reviews, appraisals, allDepartments, cycleEmployees] = await Promise.all([
     prisma.user.findMany({
       where: empWhere,
-      select: { id: true, full_name: true, department_id: true, department: { select: { name: true } }, manager_id: true, role: true },
+      select: { id: true, full_name: true, department_id: true, department: { select: { name: true } }, manager_id: true, manager: { select: { full_name: true } }, role: true },
     }),
     prisma.review.findMany({
       where: { cycle_id: id },
@@ -225,7 +225,7 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
             {employees.map(emp => {
               const review = reviewMap.get(emp.id)
               const appraisal = appraisalMap.get(emp.id)
-              const manager = emp.manager_id ? userMap.get(emp.manager_id) : null
+              const manager = emp.manager
               const selfDone = review?.status === 'submitted'
               const managerDone = !!appraisal?.manager_submitted_at
               const managerOverdue = isOverdue && !managerDone
@@ -311,7 +311,7 @@ export default async function CycleDetailPage({ params }: { params: Promise<{ id
                     <td className="py-2">{p.employee?.full_name}</td>
                     <td className="py-2 text-muted-foreground">{p.employee?.department?.name ?? '—'}</td>
                     <td className="py-2">{p.final_rating ?? '—'}</td>
-                    <td className="py-2 text-right">&times;{Number(p.payout_multiplier)?.toFixed(3) ?? '—'}</td>
+                    <td className="py-2 text-right">&times;{Number(p.payout_multiplier)?.toFixed(2) ?? '—'}</td>
                     <td className="py-2 text-right font-medium">&rupee;{Number(p.payout_amount ?? 0).toLocaleString('en-IN')}</td>
                   </tr>
                 ))}

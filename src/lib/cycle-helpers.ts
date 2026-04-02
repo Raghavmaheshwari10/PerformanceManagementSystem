@@ -164,10 +164,19 @@ export async function getActiveCycleForUser(
  * Same as getActiveCycleForUser but uses a broader status filter
  * (everything except 'draft'). Used on the employee dashboard where
  * published cycles should still be visible to show final results.
+ *
+ * Priority: active cycles first (kpi_setting → locked), then published.
+ * This ensures employees always see an active cycle even when a published
+ * cycle from a prior period exists.
  */
 export async function getVisibleCycleForUser(
   userId: string
 ): Promise<Cycle | null> {
+  // Try active cycle first — this takes priority
+  const activeCycle = await getActiveCycleForUser(userId);
+  if (activeCycle) return activeCycle;
+
+  // Fallback: look for most recent published cycle
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { id: true, department_id: true },
@@ -180,14 +189,12 @@ export async function getVisibleCycleForUser(
   });
   const excludedCycleIds = exclusions.map((e) => e.cycle_id);
 
-  const VISIBLE_STATUSES: CycleStatus[] = [...ACTIVE_STATUSES, "published"];
-
-  // Employee override
+  // Employee override with published status
   const empOverride = await prisma.cycleEmployee.findFirst({
     where: {
       employee_id: user.id,
       excluded: false,
-      status_override: { in: VISIBLE_STATUSES },
+      status_override: "published",
       cycle_id: { notIn: excludedCycleIds },
     },
     include: { cycle: true },
@@ -195,12 +202,12 @@ export async function getVisibleCycleForUser(
   });
   if (empOverride) return empOverride.cycle;
 
-  // Dept-scoped cycle with visible department status
+  // Dept-scoped published cycle
   if (user.department_id) {
     const deptCycle = await prisma.cycleDepartment.findFirst({
       where: {
         department_id: user.department_id,
-        status: { in: VISIBLE_STATUSES },
+        status: "published",
         cycle_id: { notIn: excludedCycleIds },
       },
       include: { cycle: true },
@@ -209,11 +216,11 @@ export async function getVisibleCycleForUser(
     if (deptCycle) return deptCycle.cycle;
   }
 
-  // Org-wide cycle
+  // Org-wide published cycle
   const orgCycle = await prisma.cycle.findFirst({
     where: {
       id: { notIn: excludedCycleIds },
-      status: { not: "draft" },
+      status: "published",
       departments: { none: {} },
     },
     orderBy: { created_at: "desc" },

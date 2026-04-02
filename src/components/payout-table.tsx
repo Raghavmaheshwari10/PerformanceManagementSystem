@@ -152,7 +152,7 @@ export function PayoutDashboard({
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Avg Multiplier</span>
-                  <span>{c.avgMultiplier.toFixed(3)}x</span>
+                  <span>{c.avgMultiplier.toFixed(2)}x</span>
                 </div>
               </div>
             ) : (
@@ -205,7 +205,7 @@ export function PayoutDashboard({
                         {formatCurrency(r.variablePay)}
                       </td>
                       <td className="p-3 text-right tabular-nums text-muted-foreground">
-                        x{r.multiplier.toFixed(3)}
+                        x{r.multiplier.toFixed(2)}
                       </td>
                       <td className="p-3 text-right tabular-nums font-semibold">
                         {formatCurrency(r.payoutAmount)}

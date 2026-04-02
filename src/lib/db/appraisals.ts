@@ -27,6 +27,9 @@ export async function bulkLockAppraisals(cycleId: string): Promise<void> {
           { manager_rating: { not: null } },
         ],
       },
+      include: {
+        employee: { select: { variable_pay: true } },
+      },
     })
 
     for (const a of appraisals) {
@@ -41,16 +44,19 @@ export async function bulkLockAppraisals(cycleId: string): Promise<void> {
         BE:  0,
       }
       const payoutMultiplier = ratioMap[effectiveRating] ?? 0
-      const varPay = Number(a.snapshotted_variable_pay ?? 0)
+
+      // Snapshot the employee's current variable_pay if not already set
+      const varPay = Number(a.snapshotted_variable_pay ?? a.employee?.variable_pay ?? 0)
       const prorationFactor = a.is_exit_frozen ? Number(a.proration_factor ?? 1) : 1
 
       await tx.appraisal.update({
         where: { id: a.id },
         data: {
-          final_rating:      effectiveRating,
-          payout_multiplier: payoutMultiplier,
-          payout_amount:     varPay * payoutMultiplier * prorationFactor,
-          locked_at:         new Date(),
+          final_rating:           effectiveRating,
+          payout_multiplier:      payoutMultiplier,
+          snapshotted_variable_pay: varPay,
+          payout_amount:          varPay * payoutMultiplier * prorationFactor,
+          locked_at:              new Date(),
         },
       })
     }

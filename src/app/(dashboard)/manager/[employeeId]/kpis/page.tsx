@@ -314,10 +314,19 @@ export default async function KpiSettingPage({
                     <input type="hidden" name="cycle_id" value={cycleId} />
                     <input type="hidden" name="employee_id" value={employeeId} />
                     <input type="hidden" name="kra_id" value={kra.id} />
-                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
                       <div className="space-y-1 sm:col-span-2">
                         <Label htmlFor={`kpi-title-${kra.id}`}>Title</Label>
                         <Input id={`kpi-title-${kra.id}`} name="title" required placeholder="e.g. Deliver feature X by Q2" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor={`kpi-unit-${kra.id}`}>Unit</Label>
+                        <select id={`kpi-unit-${kra.id}`} name="unit" className="flex h-9 w-full rounded-md border border-border bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                          <option value="number">Number</option>
+                          <option value="percent">Percent</option>
+                          <option value="boolean">Yes/No</option>
+                          <option value="rating">Rating</option>
+                        </select>
                       </div>
                       <div className="space-y-1">
                         <Label htmlFor={`kpi-target-${kra.id}`}>Target</Label>
