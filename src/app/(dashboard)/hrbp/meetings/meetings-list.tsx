@@ -75,7 +75,29 @@ export function MeetingsList({ data, hrbpId }: { data: CycleData[]; hrbpId: stri
   const [momFor, setMomFor] = useState<{ meetingId: string; employeeName: string } | null>(null)
   const [viewMom, setViewMom] = useState<{ minutes: MeetingMinutesData; employeeName: string } | null>(null)
 
-  // If MOM form is active, show it as full page instead of the meetings list
+  // Full-page views — replace the meetings list when active
+  if (scheduleFor) {
+    return (
+      <SchedulePage
+        cycleId={scheduleFor.cycleId}
+        employeeId={scheduleFor.employeeId}
+        employeeName={scheduleFor.employeeName}
+        onClose={() => setScheduleFor(null)}
+      />
+    )
+  }
+
+  if (rescheduleFor) {
+    return (
+      <ReschedulePage
+        meetingId={rescheduleFor.meetingId}
+        employeeName={rescheduleFor.employeeName}
+        currentTime={rescheduleFor.currentTime}
+        onClose={() => setRescheduleFor(null)}
+      />
+    )
+  }
+
   if (momFor) {
     return (
       <MomFormPage
@@ -225,26 +247,6 @@ export function MeetingsList({ data, hrbpId }: { data: CycleData[]; hrbpId: stri
         )
       })}
 
-      {/* Schedule Meeting Modal */}
-      {scheduleFor && (
-        <ScheduleModal
-          cycleId={scheduleFor.cycleId}
-          employeeId={scheduleFor.employeeId}
-          employeeName={scheduleFor.employeeName}
-          onClose={() => setScheduleFor(null)}
-        />
-      )}
-
-      {/* Reschedule Meeting Modal */}
-      {rescheduleFor && (
-        <RescheduleModal
-          meetingId={rescheduleFor.meetingId}
-          employeeName={rescheduleFor.employeeName}
-          currentTime={rescheduleFor.currentTime}
-          onClose={() => setRescheduleFor(null)}
-        />
-      )}
-
       {/* View MOM Modal */}
       {viewMom && (
         <ViewMomModal
@@ -257,78 +259,85 @@ export function MeetingsList({ data, hrbpId }: { data: CycleData[]; hrbpId: stri
   )
 }
 
-function ScheduleModal({ cycleId, employeeId, employeeName, onClose }: {
+function SchedulePage({ cycleId, employeeId, employeeName, onClose }: {
   cycleId: string; employeeId: string; employeeName: string; onClose: () => void
 }) {
   const [state, action, pending] = useActionState(scheduleMeeting, INITIAL)
 
   if (state.error === null && state.data === null && !pending && state !== INITIAL) {
-    // Success — close modal after a tick
     setTimeout(onClose, 100)
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 backdrop-blur-sm py-8" onClick={onClose}>
-      <div className="w-full max-w-md rounded-xl bg-white shadow-xl mx-4 my-auto" onClick={e => e.stopPropagation()}>
-        <div className="border-b border-slate-100 px-6 py-4">
-          <h3 className="text-base font-semibold text-slate-900">Schedule Discussion Meeting</h3>
-          <p className="text-sm text-slate-500 mt-0.5">For {employeeName}</p>
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <button onClick={onClose} className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700">
+          <ChevronRight className="h-4 w-4 rotate-180" /> Back to Meetings
+        </button>
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white max-w-lg">
+        <div className="border-b border-slate-100 px-6 py-5">
+          <h2 className="text-lg font-semibold text-slate-900">Schedule Discussion Meeting</h2>
+          <p className="text-sm text-slate-500 mt-1">For {employeeName}</p>
         </div>
 
-        <form action={action} className="px-6 py-4 space-y-4">
+        <form action={action}>
           <input type="hidden" name="cycle_id" value={cycleId} />
           <input type="hidden" name="employee_id" value={employeeId} />
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Date & Time</label>
-            <input
-              type="datetime-local"
-              name="scheduled_at"
-              required
-              min={new Date().toISOString().slice(0, 16)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-            />
-          </div>
+          <div className="px-6 py-6 space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Date & Time</label>
+              <input
+                type="datetime-local"
+                name="scheduled_at"
+                required
+                min={new Date().toISOString().slice(0, 16)}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Duration (minutes)</label>
-            <select
-              name="duration_minutes"
-              defaultValue="60"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-            >
-              <option value="30">30 minutes</option>
-              <option value="45">45 minutes</option>
-              <option value="60">60 minutes</option>
-              <option value="90">90 minutes</option>
-            </select>
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Duration (minutes)</label>
+              <select
+                name="duration_minutes"
+                defaultValue="60"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              >
+                <option value="30">30 minutes</option>
+                <option value="45">45 minutes</option>
+                <option value="60">60 minutes</option>
+                <option value="90">90 minutes</option>
+              </select>
+            </div>
 
-          <div className="rounded-lg bg-blue-50 border border-blue-200 p-3">
-            <div className="flex items-start gap-2">
-              <Video className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
-              <div className="text-xs text-blue-700">
-                <p className="font-medium">Google Meet link will be auto-generated</p>
-                <p className="mt-0.5">Calendar invites will be sent to the employee, manager, and you.</p>
+            <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
+              <div className="flex items-start gap-2">
+                <Video className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+                <div className="text-sm text-blue-700">
+                  <p className="font-medium">Google Meet link will be auto-generated</p>
+                  <p className="mt-1 text-xs">A Google Calendar invite with accept/decline will be sent to the employee, manager, and you.</p>
+                </div>
               </div>
             </div>
+
+            {state.error && (
+              <div className="rounded-lg bg-red-50 border border-red-200 p-3 flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
+                <p className="text-sm text-red-700">{state.error}</p>
+              </div>
+            )}
           </div>
 
-          {state.error && (
-            <div className="rounded-lg bg-red-50 border border-red-200 p-3 flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
-              <p className="text-xs text-red-700">{state.error}</p>
-            </div>
-          )}
-
-          <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
+          <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100">
+            <button type="button" onClick={onClose} className="rounded-lg border border-slate-200 px-5 py-2.5 text-sm text-slate-600 hover:bg-slate-50">
               Cancel
             </button>
             <button
               type="submit"
               disabled={pending}
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+              className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
             >
               {pending ? 'Scheduling...' : 'Schedule Meeting'}
             </button>
@@ -580,7 +589,7 @@ function ViewMomModal({ minutes, employeeName, onClose }: {
   )
 }
 
-function RescheduleModal({ meetingId, employeeName, currentTime, onClose }: {
+function ReschedulePage({ meetingId, employeeName, currentTime, onClose }: {
   meetingId: string; employeeName: string; currentTime: string; onClose: () => void
 }) {
   const [state, action, pending] = useActionState(rescheduleMeeting, INITIAL)
@@ -590,74 +599,82 @@ function RescheduleModal({ meetingId, employeeName, currentTime, onClose }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 backdrop-blur-sm py-8" onClick={onClose}>
-      <div className="w-full max-w-md rounded-xl bg-white shadow-xl mx-4 my-auto" onClick={e => e.stopPropagation()}>
-        <div className="border-b border-slate-100 px-6 py-4">
-          <h3 className="text-base font-semibold text-slate-900">Reschedule Meeting</h3>
-          <p className="text-sm text-slate-500 mt-0.5">For {employeeName}</p>
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <button onClick={onClose} className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700">
+          <ChevronRight className="h-4 w-4 rotate-180" /> Back to Meetings
+        </button>
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white max-w-lg">
+        <div className="border-b border-slate-100 px-6 py-5">
+          <h2 className="text-lg font-semibold text-slate-900">Reschedule Meeting</h2>
+          <p className="text-sm text-slate-500 mt-1">For {employeeName}</p>
         </div>
 
-        <form action={action} className="px-6 py-4 space-y-4">
+        <form action={action}>
           <input type="hidden" name="meeting_id" value={meetingId} />
 
-          <div className="rounded-lg bg-slate-50 border border-slate-200 p-3">
-            <p className="text-xs text-slate-500">Currently scheduled</p>
-            <p className="text-sm font-medium text-slate-700 mt-0.5">
-              {new Date(currentTime).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}{' '}
-              at {new Date(currentTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-            </p>
-          </div>
+          <div className="px-6 py-6 space-y-5">
+            <div className="rounded-lg bg-slate-50 border border-slate-200 p-4">
+              <p className="text-xs text-slate-500">Currently scheduled</p>
+              <p className="text-sm font-medium text-slate-700 mt-1">
+                {new Date(currentTime).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}{' '}
+                at {new Date(currentTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">New Date & Time</label>
-            <input
-              type="datetime-local"
-              name="scheduled_at"
-              required
-              min={new Date().toISOString().slice(0, 16)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">New Date & Time</label>
+              <input
+                type="datetime-local"
+                name="scheduled_at"
+                required
+                min={new Date().toISOString().slice(0, 16)}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Duration (minutes)</label>
-            <select
-              name="duration_minutes"
-              defaultValue="60"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-            >
-              <option value="30">30 minutes</option>
-              <option value="45">45 minutes</option>
-              <option value="60">60 minutes</option>
-              <option value="90">90 minutes</option>
-            </select>
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Duration (minutes)</label>
+              <select
+                name="duration_minutes"
+                defaultValue="60"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              >
+                <option value="30">30 minutes</option>
+                <option value="45">45 minutes</option>
+                <option value="60">60 minutes</option>
+                <option value="90">90 minutes</option>
+              </select>
+            </div>
 
-          <div className="rounded-lg bg-blue-50 border border-blue-200 p-3">
-            <div className="flex items-start gap-2">
-              <RefreshCw className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
-              <div className="text-xs text-blue-700">
-                <p className="font-medium">Old calendar event will be cancelled</p>
-                <p className="mt-0.5">A new Google Meet link and calendar invite will be generated.</p>
+            <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
+              <div className="flex items-start gap-2">
+                <RefreshCw className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+                <div className="text-sm text-blue-700">
+                  <p className="font-medium">Old calendar event will be cancelled</p>
+                  <p className="mt-1 text-xs">A new Google Calendar invite with Google Meet link will be sent to all participants.</p>
+                </div>
               </div>
             </div>
+
+            {state.error && (
+              <div className="rounded-lg bg-red-50 border border-red-200 p-3 flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
+                <p className="text-sm text-red-700">{state.error}</p>
+              </div>
+            )}
           </div>
 
-          {state.error && (
-            <div className="rounded-lg bg-red-50 border border-red-200 p-3 flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
-              <p className="text-xs text-red-700">{state.error}</p>
-            </div>
-          )}
-
-          <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
+          <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100">
+            <button type="button" onClick={onClose} className="rounded-lg border border-slate-200 px-5 py-2.5 text-sm text-slate-600 hover:bg-slate-50">
               Cancel
             </button>
             <button
               type="submit"
               disabled={pending}
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+              className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
             >
               {pending ? 'Rescheduling...' : 'Reschedule Meeting'}
             </button>
