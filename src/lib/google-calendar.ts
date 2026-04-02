@@ -38,10 +38,11 @@ interface ScheduleMeetingParams {
  * and the Calendar scope authorized in Google Workspace admin.
  */
 async function getServiceAccountToken(impersonateEmail: string): Promise<string | null> {
-  const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL
-  const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, '\n')
+  const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim()
+  const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.trim().replace(/\\n/g, '\n')
 
   if (!clientEmail || !privateKey) {
+    console.warn('[Google Calendar] Missing credentials:', { hasEmail: !!clientEmail, hasKey: !!privateKey })
     return null
   }
 
@@ -76,11 +77,14 @@ async function getServiceAccountToken(impersonateEmail: string): Promise<string 
   })
 
   if (!tokenRes.ok) {
-    console.error('Failed to get service account token:', await tokenRes.text())
+    const errText = await tokenRes.text()
+    console.error('[Google Calendar] Token exchange failed:', tokenRes.status, errText)
+    console.error('[Google Calendar] Service account:', clientEmail, '| Impersonating:', impersonateEmail)
     return null
   }
 
   const data = await tokenRes.json()
+  console.log('[Google Calendar] Token acquired for:', impersonateEmail)
   return data.access_token
 }
 

@@ -89,13 +89,17 @@ export async function scheduleMeeting(_prev: ActionResult, formData: FormData): 
       if (calendarResult) {
         meetLink = calendarResult.meetLink
         calendarEventId = calendarResult.eventId
+        console.log('[Meeting] Google Calendar invite sent! Event:', calendarResult.eventId, 'Meet:', calendarResult.meetLink)
+      } else {
+        console.warn('[Meeting] Google Calendar API returned null — using fallback')
       }
     } catch (calendarErr) {
-      console.error('Google Calendar API error (falling back to generated link):', calendarErr)
+      console.error('[Meeting] Google Calendar API error (falling back):', calendarErr)
     }
 
     if (!meetLink) {
       meetLink = generateFallbackMeetLink()
+      console.warn('[Meeting] Using fallback meet link:', meetLink)
     }
 
     // If existing cancelled meeting, delete it first

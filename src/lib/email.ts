@@ -310,8 +310,13 @@ export async function dispatchPendingNotifications(recipientId: string): Promise
       const emailEnabled = pref?.email_enabled ?? true
       const inAppEnabled = pref?.in_app_enabled ?? true
 
+      // Skip PMS email for meeting_scheduled — Google Calendar API sends the
+      // native invite (with accept/decline, Meet link, calendar integration).
+      // We still keep the in-app notification and Slack DM.
+      const skipEmail = notif.type === 'meeting_scheduled'
+
       // Send email
-      if (emailEnabled) {
+      if (emailEnabled && !skipEmail) {
         // Check for admin-customised template in DB first
         const customTemplate = await prisma.emailTemplate.findUnique({
           where: { notification_type: notif.type },
@@ -335,30 +340,7 @@ export async function dispatchPendingNotifications(recipientId: string): Promise
             ?? '<p>You have a new notification in PMS.</p>'
         }
 
-        // Attach .ics calendar invite for meeting notifications
-        let attachments: EmailAttachment[] | undefined
-        if (notif.type === 'meeting_scheduled' && payload.scheduled_at) {
-          const startTime = new Date(payload.scheduled_at)
-          const durationMinutes = Number(payload.duration_minutes || 60)
-          const meetingSummary = `${payload.cycle_name ?? 'Review Cycle'} - ${payload.employee_name ?? 'Employee'} - Performance Meeting`
-          const icsContent = generateIcsContent({
-            summary: meetingSummary,
-            description: `Performance review discussion meeting.\n\nCycle: ${payload.cycle_name ?? 'Review Cycle'}\nEmployee: ${payload.employee_name ?? 'Employee'}\nOrganized by: ${payload.hrbp_name ?? 'HRBP'}\nParticipants: Employee, Manager, and HRBP.\n\nPlease come prepared with your self-assessment and goals.`,
-            startTime,
-            durationMinutes,
-            organizerEmail: payload.organizer_email ?? fromAddress,
-            organizerName: payload.hrbp_name ?? 'HRBP',
-            attendeeEmails: [{ email: notif.recipient.email, name: notif.recipient.full_name }],
-            meetLink: payload.meet_link || undefined,
-          })
-          attachments = [{
-            filename: 'invite.ics',
-            content: icsContent,
-            contentType: 'text/calendar; method=REQUEST',
-          }]
-        }
-
-        await sendNotificationEmail(notif.recipient.email, subject, html, attachments)
+        await sendNotificationEmail(notif.recipient.email, subject, html)
       }
 
       // Send Slack DM
