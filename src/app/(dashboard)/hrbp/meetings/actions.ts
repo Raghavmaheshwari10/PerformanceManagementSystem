@@ -72,9 +72,10 @@ export async function scheduleMeeting(_prev: ActionResult, formData: FormData): 
     let calendarEventId: string | null = null
 
     try {
+      const meetingSummary = `${cycle?.name ?? 'Review Cycle'} - ${employee.full_name} - Performance Meeting`
       const calendarResult = await createCalendarEvent({
-        summary: `Performance Discussion: ${employee.full_name} — ${cycle?.name ?? 'Review Cycle'}`,
-        description: `Review discussion meeting for ${employee.full_name}.\n\nParticipants:\n- Employee: ${employee.full_name}\n- Manager: ${employee.manager.full_name}\n- HRBP: ${hrbp?.full_name ?? 'HRBP'}\n\nThis meeting is part of the performance review process. Please come prepared with your self-assessment and goals.`,
+        summary: meetingSummary,
+        description: `Performance review discussion meeting.\n\nCycle: ${cycle?.name ?? 'Review Cycle'}\nEmployee: ${employee.full_name}\nManager: ${employee.manager.full_name}\nHRBP: ${hrbp?.full_name ?? 'HRBP'}\n\nPlease come prepared with your self-assessment and goals. This discussion is a mandatory step before the manager review.`,
         startTime: scheduledDate,
         durationMinutes,
         attendees: [
@@ -315,9 +316,10 @@ export async function rescheduleMeeting(_prev: ActionResult, formData: FormData)
     let calendarEventId: string | null = null
 
     try {
+      const meetingSummary = `${cycle?.name ?? 'Review Cycle'} - ${meeting.employee.full_name} - Performance Meeting`
       const calendarResult = await createCalendarEvent({
-        summary: `Performance Discussion: ${meeting.employee.full_name} — ${cycle?.name ?? 'Review Cycle'}`,
-        description: `Rescheduled review discussion meeting for ${meeting.employee.full_name}.\n\nParticipants:\n- Employee: ${meeting.employee.full_name}\n- Manager: ${meeting.manager.full_name}\n- HRBP: ${meeting.hrbp?.full_name ?? 'HRBP'}\n\nThis meeting is part of the performance review process.`,
+        summary: meetingSummary,
+        description: `Rescheduled performance review discussion meeting.\n\nCycle: ${cycle?.name ?? 'Review Cycle'}\nEmployee: ${meeting.employee.full_name}\nManager: ${meeting.manager.full_name}\nHRBP: ${meeting.hrbp?.full_name ?? 'HRBP'}\n\nPlease come prepared with your self-assessment and goals.`,
         startTime: scheduledDate,
         durationMinutes,
         attendees: [

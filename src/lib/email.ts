@@ -141,8 +141,8 @@ const NOTIFICATION_SUBJECTS: Partial<Record<NotificationType, string>> = {
   peer_review_requested: 'Peer Review Requested',
   peer_review_submitted: 'A Peer Has Submitted Their Review',
   feedback_received: 'You Received New Feedback',
-  meeting_scheduled: 'Review Discussion Meeting Scheduled',
-  meeting_reminder: 'Reminder: Review Discussion Meeting Tomorrow',
+  meeting_scheduled: 'Performance Meeting Scheduled',
+  meeting_reminder: 'Reminder: Performance Meeting Tomorrow',
   meeting_mom_submitted: 'Review Discussion Meeting Completed — MOM Available',
 }
 
@@ -340,9 +340,10 @@ export async function dispatchPendingNotifications(recipientId: string): Promise
         if (notif.type === 'meeting_scheduled' && payload.scheduled_at) {
           const startTime = new Date(payload.scheduled_at)
           const durationMinutes = Number(payload.duration_minutes || 60)
+          const meetingSummary = `${payload.cycle_name ?? 'Review Cycle'} - ${payload.employee_name ?? 'Employee'} - Performance Meeting`
           const icsContent = generateIcsContent({
-            summary: `Performance Discussion: ${payload.employee_name ?? 'Review Meeting'}`,
-            description: `Review discussion meeting for ${payload.employee_name ?? 'employee'} — ${payload.cycle_name ?? 'Review Cycle'}.\n\nParticipants: Employee, Manager, and HRBP.\nPlease come prepared with your self-assessment and goals.`,
+            summary: meetingSummary,
+            description: `Performance review discussion meeting.\n\nCycle: ${payload.cycle_name ?? 'Review Cycle'}\nEmployee: ${payload.employee_name ?? 'Employee'}\nOrganized by: ${payload.hrbp_name ?? 'HRBP'}\nParticipants: Employee, Manager, and HRBP.\n\nPlease come prepared with your self-assessment and goals.`,
             startTime,
             durationMinutes,
             organizerEmail: payload.organizer_email ?? fromAddress,
@@ -351,7 +352,7 @@ export async function dispatchPendingNotifications(recipientId: string): Promise
             meetLink: payload.meet_link || undefined,
           })
           attachments = [{
-            filename: 'meeting-invite.ics',
+            filename: 'invite.ics',
             content: icsContent,
             contentType: 'text/calendar; method=REQUEST',
           }]
