@@ -146,9 +146,19 @@ export async function createCalendarEvent(params: ScheduleMeetingParams): Promis
 
   const created = await res.json()
 
+  const meetLink = created.hangoutLink
+    ?? created.conferenceData?.entryPoints?.find((e: { entryPointType?: string; uri?: string }) => e.entryPointType === 'video')?.uri
+    ?? created.conferenceData?.entryPoints?.[0]?.uri
+    ?? null
+
+  if (!meetLink) {
+    console.warn('Calendar event created but no Meet link found in response — will use fallback')
+    return null
+  }
+
   return {
     eventId: created.id,
-    meetLink: created.hangoutLink ?? created.conferenceData?.entryPoints?.[0]?.uri ?? '',
+    meetLink,
     htmlLink: created.htmlLink ?? '',
   }
 }
