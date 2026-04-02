@@ -4,7 +4,7 @@ import { useState, useTransition, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { BellIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { snoozeNotification, dismissNotification, markAllNotificationsRead } from '@/app/(dashboard)/actions/notifications'
+import { snoozeNotification, dismissNotification, markAllNotificationsRead, dismissAllNotifications } from '@/app/(dashboard)/actions/notifications'
 
 interface Notification {
   id: string
@@ -63,6 +63,12 @@ export function NotificationBell({ notifications: initial }: { notifications: No
     startTransition(() => snoozeNotification(id, until))
   }
 
+  function handleClearAll() {
+    const now = new Date().toISOString()
+    setNotifications(prev => prev.map(n => ({ ...n, dismissed_at: now })))
+    startTransition(() => dismissAllNotifications())
+  }
+
   const dropdown = open && mounted ? createPortal(
     <>
       <div className="fixed inset-0 z-[9998]" onClick={() => setOpen(false)} />
@@ -77,14 +83,24 @@ export function NotificationBell({ notifications: initial }: { notifications: No
       >
         <div className="flex items-center justify-between border-b border-border px-4 py-2">
           <span className="text-sm font-semibold">Notifications</span>
-          {unread > 0 && (
-            <button
-              onClick={() => startTransition(() => markAllNotificationsRead())}
-              className="text-xs text-muted-foreground hover:text-primary"
-            >
-              Mark all read
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {unread > 0 && (
+              <button
+                onClick={() => startTransition(() => markAllNotificationsRead())}
+                className="text-xs text-muted-foreground hover:text-primary"
+              >
+                Mark all read
+              </button>
+            )}
+            {active.length > 0 && (
+              <button
+                onClick={handleClearAll}
+                className="text-xs text-red-500 hover:text-red-600 font-medium"
+              >
+                Clear all
+              </button>
+            )}
+          </div>
         </div>
         <div className="max-h-[360px] overflow-y-auto">
           {active.length === 0 ? (

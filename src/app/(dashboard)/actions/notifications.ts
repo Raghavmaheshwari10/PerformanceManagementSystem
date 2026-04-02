@@ -37,3 +37,14 @@ export async function markAllNotificationsRead() {
   })
   revalidatePath('/', 'layout')
 }
+
+export async function dismissAllNotifications() {
+  const session = await auth()
+  if (!session?.user?.id) return
+
+  await prisma.notification.updateMany({
+    where: { recipient_id: session.user.id, dismissed_at: null },
+    data: { dismissed_at: new Date() },
+  })
+  revalidatePath('/', 'layout')
+}
