@@ -39,13 +39,92 @@ export async function sendInviteEmail(to: string, inviteUrl: string, fullName: s
   })
 }
 
-export async function sendNotificationEmail(to: string, subject: string, html: string): Promise<void> {
+interface EmailAttachment {
+  filename: string
+  content: string // base64 or Buffer
+  contentType?: string
+}
+
+export async function sendNotificationEmail(
+  to: string,
+  subject: string,
+  html: string,
+  attachments?: EmailAttachment[]
+): Promise<void> {
   await resend.emails.send({
     from: fromAddress,
     to,
     subject,
     html,
+    ...(attachments?.length ? {
+      attachments: attachments.map(a => ({
+        filename: a.filename,
+        content: Buffer.from(a.content, 'utf-8'),
+        contentType: a.contentType,
+      })),
+    } : {}),
   })
+}
+
+/**
+ * Generate an .ics (iCalendar) file for a meeting.
+ * When attached to an email, this shows accept/decline in email clients
+ * and adds the event to the recipient's calendar.
+ */
+export function generateIcsContent(params: {
+  summary: string
+  description: string
+  startTime: Date
+  durationMinutes: number
+  organizerEmail: string
+  organizerName: string
+  attendeeEmails: { email: string; name: string }[]
+  meetLink?: string
+  location?: string
+}): string {
+  const { summary, description, startTime, durationMinutes, organizerEmail, organizerName, attendeeEmails, meetLink } = params
+  const endTime = new Date(startTime.getTime() + durationMinutes * 60 * 1000)
+
+  function formatDate(d: Date): string {
+    return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
+  }
+
+  const uid = `pms-meeting-${startTime.getTime()}@emb.global`
+  const now = formatDate(new Date())
+  const dtStart = formatDate(startTime)
+  const dtEnd = formatDate(endTime)
+
+  const attendeeLines = attendeeEmails.map(
+    a => `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;CN=${a.name}:mailto:${a.email}`
+  ).join('\r\n')
+
+  return [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//PMS EMB Global//Performance Management System//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:REQUEST',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${now}`,
+    `DTSTART:${dtStart}`,
+    `DTEND:${dtEnd}`,
+    `SUMMARY:${summary}`,
+    `DESCRIPTION:${description.replace(/\n/g, '\\n')}`,
+    `ORGANIZER;CN=${organizerName}:mailto:${organizerEmail}`,
+    attendeeLines,
+    meetLink ? `URL:${meetLink}` : '',
+    meetLink ? `LOCATION:${meetLink}` : '',
+    'STATUS:CONFIRMED',
+    'SEQUENCE:0',
+    'BEGIN:VALARM',
+    'TRIGGER:-PT15M',
+    'ACTION:DISPLAY',
+    'DESCRIPTION:Meeting in 15 minutes',
+    'END:VALARM',
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].filter(Boolean).join('\r\n')
 }
 
 // ─── Notification Templates ──────────────────────────────────────────
@@ -161,6 +240,9 @@ ${ctaButton('View Feedback', `${appUrl}/employee/feedback`)}
 <p style="color:#475569;margin:0;font-size:14px"><strong>Participants:</strong> Employee, Manager, and HRBP</p>
 </div>
 ${p.meet_link ? ctaButton('Join Google Meet', p.meet_link, '#1a73e8') : ''}
+<div style="background:#eff6ff;border-radius:8px;padding:12px 16px;margin:16px 0;border:1px solid #bfdbfe">
+<p style="color:#1e40af;margin:0;font-size:13px">📅 A calendar invite (.ics) is attached to this email. Open it to add the meeting to your calendar with accept/decline.</p>
+</div>
 <p style="color:#94a3b8;font-size:13px">Please come prepared with your self-assessment and goals. This discussion is a mandatory step before the manager review.</p>`
   ),
   meeting_reminder: (p) => wrapEmail(
@@ -253,7 +335,29 @@ export async function dispatchPendingNotifications(recipientId: string): Promise
             ?? '<p>You have a new notification in PMS.</p>'
         }
 
-        await sendNotificationEmail(notif.recipient.email, subject, html)
+        // Attach .ics calendar invite for meeting notifications
+        let attachments: EmailAttachment[] | undefined
+        if (notif.type === 'meeting_scheduled' && payload.scheduled_at) {
+          const startTime = new Date(payload.scheduled_at)
+          const durationMinutes = Number(payload.duration_minutes || 60)
+          const icsContent = generateIcsContent({
+            summary: `Performance Discussion: ${payload.employee_name ?? 'Review Meeting'}`,
+            description: `Review discussion meeting for ${payload.employee_name ?? 'employee'} — ${payload.cycle_name ?? 'Review Cycle'}.\n\nParticipants: Employee, Manager, and HRBP.\nPlease come prepared with your self-assessment and goals.`,
+            startTime,
+            durationMinutes,
+            organizerEmail: payload.organizer_email ?? fromAddress,
+            organizerName: payload.hrbp_name ?? 'HRBP',
+            attendeeEmails: [{ email: notif.recipient.email, name: notif.recipient.full_name }],
+            meetLink: payload.meet_link || undefined,
+          })
+          attachments = [{
+            filename: 'meeting-invite.ics',
+            content: icsContent,
+            contentType: 'text/calendar; method=REQUEST',
+          }]
+        }
+
+        await sendNotificationEmail(notif.recipient.email, subject, html, attachments)
       }
 
       // Send Slack DM

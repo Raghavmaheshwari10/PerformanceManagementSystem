@@ -139,8 +139,10 @@ export async function scheduleMeeting(_prev: ActionResult, formData: FormData): 
       employee_name: employee.full_name,
       cycle_name: cycle?.name ?? 'Review Cycle',
       scheduled_at: scheduledDate.toISOString(),
+      duration_minutes: String(durationMinutes),
       meet_link: meetLink ?? '',
       hrbp_name: hrbp?.full_name ?? 'HRBP',
+      organizer_email: hrbp?.email ?? user.email,
     }).catch(err => console.error('Failed to send meeting_scheduled notifications:', err))
 
     revalidatePath('/hrbp/meetings')
@@ -369,8 +371,10 @@ export async function rescheduleMeeting(_prev: ActionResult, formData: FormData)
       employee_name: meeting.employee.full_name,
       cycle_name: cycle?.name ?? 'Review Cycle',
       scheduled_at: scheduledDate.toISOString(),
+      duration_minutes: String(durationMinutes),
       meet_link: meetLink ?? '',
       hrbp_name: meeting.hrbp?.full_name ?? 'HRBP',
+      organizer_email: meeting.hrbp?.email ?? user.email,
     }).catch(err => console.error('Failed to send reschedule notifications:', err))
 
     revalidatePath('/hrbp/meetings')
