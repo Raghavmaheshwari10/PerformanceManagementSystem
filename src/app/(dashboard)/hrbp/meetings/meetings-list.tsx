@@ -360,148 +360,149 @@ function MomFormModal({ meetingId, employeeName, onClose }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 backdrop-blur-sm py-8" onClick={onClose}>
-      <div className="w-full max-w-2xl rounded-xl bg-white shadow-xl mx-4 my-auto" onClick={e => e.stopPropagation()}>
-        <div className="border-b border-slate-100 px-6 py-4">
-          <h3 className="text-base font-semibold text-slate-900">Minutes of Meeting (MOM)</h3>
-          <p className="text-sm text-slate-500 mt-0.5">Discussion with {employeeName}</p>
-        </div>
+    <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm" onClick={onClose}>
+      <div className="fixed inset-4 sm:inset-8 flex items-center justify-center pointer-events-none">
+        <div className="w-full max-w-2xl max-h-full flex flex-col rounded-xl bg-white shadow-xl pointer-events-auto" onClick={e => e.stopPropagation()}>
+          <div className="border-b border-slate-100 px-6 py-4 shrink-0">
+            <h3 className="text-base font-semibold text-slate-900">Minutes of Meeting (MOM)</h3>
+            <p className="text-sm text-slate-500 mt-0.5">Discussion with {employeeName}</p>
+          </div>
 
-        <form action={(formData) => {
-          // Inject action items JSON
-          formData.set('action_items', JSON.stringify(actionItems.filter(a => a.description.trim())))
-          action(formData)
-        }} className="flex flex-col max-h-[calc(100vh-10rem)]">
-          <input type="hidden" name="meeting_id" value={meetingId} />
+          <form action={(formData) => {
+            formData.set('action_items', JSON.stringify(actionItems.filter(a => a.description.trim())))
+            action(formData)
+          }} className="flex flex-col min-h-0 flex-1">
+            <input type="hidden" name="meeting_id" value={meetingId} />
 
-          <div className="px-6 py-4 space-y-5 overflow-y-auto flex-1">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Key Discussion Points <span className="text-red-500">*</span></label>
-              <textarea
-                name="key_discussion_points"
-                required
-                rows={3}
-                placeholder="Summarize the main topics discussed..."
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-              />
-            </div>
+            <div className="px-6 py-4 space-y-5 overflow-y-auto flex-1 min-h-0">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Key Discussion Points <span className="text-red-500">*</span></label>
+                <textarea
+                  name="key_discussion_points"
+                  required
+                  rows={3}
+                  placeholder="Summarize the main topics discussed..."
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Employee&apos;s Strengths Highlighted <span className="text-red-500">*</span></label>
-              <textarea
-                name="strengths_highlighted"
-                required
-                rows={2}
-                placeholder="Key strengths observed during the review period..."
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Employee&apos;s Strengths Highlighted <span className="text-red-500">*</span></label>
+                <textarea
+                  name="strengths_highlighted"
+                  required
+                  rows={2}
+                  placeholder="Key strengths observed during the review period..."
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Areas for Improvement Discussed <span className="text-red-500">*</span></label>
-              <textarea
-                name="areas_for_improvement"
-                required
-                rows={2}
-                placeholder="Improvement areas and development goals discussed..."
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Areas for Improvement Discussed <span className="text-red-500">*</span></label>
+                <textarea
+                  name="areas_for_improvement"
+                  required
+                  rows={2}
+                  placeholder="Improvement areas and development goals discussed..."
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                />
+              </div>
 
-            {/* Action Items */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Action Items</label>
-              <div className="space-y-2">
-                {actionItems.map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-2 rounded-lg border border-slate-200 p-3">
-                    <div className="flex-1 space-y-2">
-                      <input
-                        type="text"
-                        value={item.description}
-                        onChange={e => updateActionItem(idx, 'description', e.target.value)}
-                        placeholder="Action item description"
-                        className="w-full rounded border border-slate-200 px-2 py-1.5 text-sm"
-                      />
-                      <div className="flex gap-2">
+              {/* Action Items */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Action Items</label>
+                <div className="space-y-2">
+                  {actionItems.map((item, idx) => (
+                    <div key={idx} className="flex items-start gap-2 rounded-lg border border-slate-200 p-3">
+                      <div className="flex-1 space-y-2">
                         <input
                           type="text"
-                          value={item.owner}
-                          onChange={e => updateActionItem(idx, 'owner', e.target.value)}
-                          placeholder="Owner"
-                          className="flex-1 rounded border border-slate-200 px-2 py-1.5 text-sm"
+                          value={item.description}
+                          onChange={e => updateActionItem(idx, 'description', e.target.value)}
+                          placeholder="Action item description"
+                          className="w-full rounded border border-slate-200 px-2 py-1.5 text-sm"
                         />
-                        <input
-                          type="date"
-                          value={item.deadline}
-                          onChange={e => updateActionItem(idx, 'deadline', e.target.value)}
-                          className="rounded border border-slate-200 px-2 py-1.5 text-sm"
-                        />
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={item.owner}
+                            onChange={e => updateActionItem(idx, 'owner', e.target.value)}
+                            placeholder="Owner"
+                            className="flex-1 rounded border border-slate-200 px-2 py-1.5 text-sm"
+                          />
+                          <input
+                            type="date"
+                            value={item.deadline}
+                            onChange={e => updateActionItem(idx, 'deadline', e.target.value)}
+                            className="rounded border border-slate-200 px-2 py-1.5 text-sm"
+                          />
+                        </div>
                       </div>
+                      {actionItems.length > 1 && (
+                        <button type="button" onClick={() => removeActionItem(idx)} className="text-slate-400 hover:text-red-500 mt-1">
+                          <XCircle className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
-                    {actionItems.length > 1 && (
-                      <button type="button" onClick={() => removeActionItem(idx)} className="text-slate-400 hover:text-red-500 mt-1">
-                        <XCircle className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addActionItem}
-                  className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
-                >
-                  + Add action item
-                </button>
-              </div>
-            </div>
-
-            {/* Employee Agreement */}
-            <div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" name="employee_agreement" value="true" className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
-                <span className="text-sm text-slate-700">Employee agrees with the discussion points</span>
-              </label>
-            </div>
-
-            {/* Concerns (HRBP + Manager only) */}
-            <div className="rounded-lg bg-amber-50 border border-amber-200 p-4">
-              <div className="flex items-start gap-2 mb-2">
-                <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-xs font-medium text-amber-800">Confidential — HRBP & Manager Only</p>
-                  <p className="text-xs text-amber-600 mt-0.5">This section is NOT visible to the employee.</p>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addActionItem}
+                    className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                  >
+                    + Add action item
+                  </button>
                 </div>
               </div>
-              <textarea
-                name="concerns_raised"
-                rows={2}
-                placeholder="Any concerns raised during the meeting (optional)..."
-                className="w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
-              />
+
+              {/* Employee Agreement */}
+              <div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" name="employee_agreement" value="true" className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                  <span className="text-sm text-slate-700">Employee agrees with the discussion points</span>
+                </label>
+              </div>
+
+              {/* Concerns (HRBP + Manager only) */}
+              <div className="rounded-lg bg-amber-50 border border-amber-200 p-4">
+                <div className="flex items-start gap-2 mb-2">
+                  <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-xs font-medium text-amber-800">Confidential — HRBP & Manager Only</p>
+                    <p className="text-xs text-amber-600 mt-0.5">This section is NOT visible to the employee.</p>
+                  </div>
+                </div>
+                <textarea
+                  name="concerns_raised"
+                  rows={2}
+                  placeholder="Any concerns raised during the meeting (optional)..."
+                  className="w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+                />
+              </div>
+
+              {state.error && (
+                <div className="rounded-lg bg-red-50 border border-red-200 p-3 flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
+                  <p className="text-xs text-red-700">{state.error}</p>
+                </div>
+              )}
             </div>
 
-            {state.error && (
-              <div className="rounded-lg bg-red-50 border border-red-200 p-3 flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
-                <p className="text-xs text-red-700">{state.error}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Sticky footer — always visible */}
-          <div className="flex justify-end gap-2 px-6 py-4 border-t border-slate-100 bg-white rounded-b-xl shrink-0">
-            <button type="button" onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={pending}
-              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-            >
-              {pending ? 'Submitting...' : 'Submit MOM & Complete Meeting'}
-            </button>
-          </div>
-        </form>
+            {/* Sticky footer — always visible */}
+            <div className="flex justify-end gap-2 px-6 py-4 border-t border-slate-100 bg-white rounded-b-xl shrink-0">
+              <button type="button" onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={pending}
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+              >
+                {pending ? 'Submitting...' : 'Submit MOM & Complete Meeting'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   )
