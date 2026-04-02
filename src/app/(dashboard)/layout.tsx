@@ -103,7 +103,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             availableRoles={availableRoles}
           />
           <div className="flex flex-1 flex-col overflow-hidden gradient-mesh noise-overlay">
-            <header className="relative z-10 flex items-center justify-between bg-white border-b border-slate-200 px-6 py-3 lg:px-8">
+            <header className="relative z-30 flex items-center justify-between bg-white border-b border-slate-200 px-6 py-3 lg:px-8">
               <div className="hidden lg:flex items-center gap-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white text-sm font-bold shadow-md shadow-indigo-500/20">
                   {firstName[0]}
