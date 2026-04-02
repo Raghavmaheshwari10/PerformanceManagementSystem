@@ -262,6 +262,128 @@ export async function submitMeetingMinutes(_prev: ActionResult, formData: FormDa
 }
 
 /**
+ * Reschedule an existing meeting to a new date/time.
+ * Cancels old calendar event and creates a new one.
+ */
+export async function rescheduleMeeting(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  try {
+    const user = await requireRole(['hrbp'])
+
+    const meetingId = formData.get('meeting_id') as string
+    const scheduledAt = formData.get('scheduled_at') as string
+    const durationMinutes = Number(formData.get('duration_minutes') || 60)
+
+    if (!meetingId || !scheduledAt) {
+      return { data: null, error: 'Meeting ID and new time are required' }
+    }
+
+    const scheduledDate = new Date(scheduledAt)
+    if (isNaN(scheduledDate.getTime()) || scheduledDate < new Date()) {
+      return { data: null, error: 'Scheduled time must be in the future' }
+    }
+
+    const meeting = await prisma.reviewMeeting.findUnique({
+      where: { id: meetingId },
+      select: {
+        id: true, status: true, cycle_id: true, employee_id: true, manager_id: true,
+        calendar_event_id: true,
+        employee: { select: { full_name: true, email: true } },
+        manager: { select: { full_name: true, email: true } },
+        hrbp: { select: { id: true, full_name: true, email: true } },
+      },
+    })
+
+    if (!meeting) return { data: null, error: 'Meeting not found' }
+    if (meeting.status !== 'scheduled') return { data: null, error: 'Only scheduled meetings can be rescheduled' }
+
+    // Cancel old calendar event if exists
+    if (meeting.calendar_event_id && meeting.hrbp?.email) {
+      try {
+        await cancelCalendarEvent(meeting.calendar_event_id, meeting.hrbp.email)
+      } catch (calErr) {
+        console.error('Failed to cancel old calendar event (continuing):', calErr)
+      }
+    }
+
+    // Get cycle name
+    const cycle = await prisma.cycle.findUnique({ where: { id: meeting.cycle_id }, select: { name: true } })
+
+    // Create new calendar event
+    let meetLink: string | null = null
+    let calendarEventId: string | null = null
+
+    try {
+      const calendarResult = await createCalendarEvent({
+        summary: `Performance Discussion: ${meeting.employee.full_name} — ${cycle?.name ?? 'Review Cycle'}`,
+        description: `Rescheduled review discussion meeting for ${meeting.employee.full_name}.\n\nParticipants:\n- Employee: ${meeting.employee.full_name}\n- Manager: ${meeting.manager.full_name}\n- HRBP: ${meeting.hrbp?.full_name ?? 'HRBP'}\n\nThis meeting is part of the performance review process.`,
+        startTime: scheduledDate,
+        durationMinutes,
+        attendees: [
+          { email: meeting.employee.email, displayName: meeting.employee.full_name },
+          { email: meeting.manager.email, displayName: meeting.manager.full_name },
+          { email: meeting.hrbp?.email ?? user.email, displayName: meeting.hrbp?.full_name ?? 'HRBP' },
+        ],
+        organizerEmail: meeting.hrbp?.email ?? user.email,
+      })
+
+      if (calendarResult) {
+        meetLink = calendarResult.meetLink
+        calendarEventId = calendarResult.eventId
+      }
+    } catch (calendarErr) {
+      console.error('Google Calendar API error during reschedule (falling back):', calendarErr)
+    }
+
+    if (!meetLink) {
+      meetLink = generateFallbackMeetLink()
+    }
+
+    await prisma.reviewMeeting.update({
+      where: { id: meetingId },
+      data: {
+        scheduled_at: scheduledDate,
+        meet_link: meetLink,
+        calendar_event_id: calendarEventId,
+        updated_at: new Date(),
+      },
+    })
+
+    // Audit log
+    await prisma.auditLog.create({
+      data: {
+        cycle_id: meeting.cycle_id,
+        changed_by: user.id,
+        action: 'meeting_rescheduled',
+        entity_type: 'review_meeting',
+        entity_id: meetingId,
+        new_value: {
+          employee_id: meeting.employee_id,
+          scheduled_at: scheduledDate.toISOString(),
+          meet_link: meetLink,
+        },
+      },
+    })
+
+    // Notify employee + manager
+    notifyUsers([meeting.employee_id, meeting.manager_id], 'meeting_scheduled', {
+      employee_name: meeting.employee.full_name,
+      cycle_name: cycle?.name ?? 'Review Cycle',
+      scheduled_at: scheduledDate.toISOString(),
+      meet_link: meetLink ?? '',
+      hrbp_name: meeting.hrbp?.full_name ?? 'HRBP',
+    }).catch(err => console.error('Failed to send reschedule notifications:', err))
+
+    revalidatePath('/hrbp/meetings')
+    revalidatePath(`/manager/${meeting.employee_id}/review`)
+    revalidatePath('/employee')
+    return { data: null, error: null }
+  } catch (err) {
+    console.error('rescheduleMeeting error:', err)
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to reschedule meeting. Please try again.' }
+  }
+}
+
+/**
  * Cancel a scheduled meeting.
  */
 export async function cancelMeeting(_prev: ActionResult, formData: FormData): Promise<ActionResult> {

@@ -2,10 +2,10 @@
 
 import { useState, useActionState } from 'react'
 import { cn } from '@/lib/utils'
-import { scheduleMeeting, submitMeetingMinutes, cancelMeeting } from './actions'
+import { scheduleMeeting, submitMeetingMinutes, cancelMeeting, rescheduleMeeting } from './actions'
 import {
   CalendarPlus, Video, CheckCircle2, XCircle, Clock, FileText,
-  ChevronDown, ChevronRight, AlertCircle, Users, ExternalLink,
+  ChevronDown, ChevronRight, AlertCircle, Users, ExternalLink, RefreshCw,
 } from 'lucide-react'
 
 interface ActionItem {
@@ -71,6 +71,7 @@ const STATUS_BADGES: Record<string, { label: string; color: string; icon: React.
 export function MeetingsList({ data, hrbpId }: { data: CycleData[]; hrbpId: string }) {
   const [expandedCycle, setExpandedCycle] = useState<string | null>(data[0]?.cycle.id ?? null)
   const [scheduleFor, setScheduleFor] = useState<{ cycleId: string; employeeId: string; employeeName: string } | null>(null)
+  const [rescheduleFor, setRescheduleFor] = useState<{ meetingId: string; employeeName: string; currentTime: string } | null>(null)
   const [momFor, setMomFor] = useState<{ meetingId: string; employeeName: string } | null>(null)
   const [viewMom, setViewMom] = useState<{ minutes: MeetingMinutesData; employeeName: string } | null>(null)
 
@@ -179,12 +180,20 @@ export function MeetingsList({ data, hrbpId }: { data: CycleData[]; hrbpId: stri
                                 <CalendarPlus className="h-3 w-3" /> Schedule
                               </button>
                             ) : meetingStatus === 'scheduled' ? (
-                              <button
-                                onClick={() => setMomFor({ meetingId: emp.meeting!.id, employeeName: emp.full_name })}
-                                className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 transition-colors"
-                              >
-                                <FileText className="h-3 w-3" /> Add MOM
-                              </button>
+                              <>
+                                <button
+                                  onClick={() => setRescheduleFor({ meetingId: emp.meeting!.id, employeeName: emp.full_name, currentTime: emp.meeting!.scheduled_at })}
+                                  className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                                >
+                                  <RefreshCw className="h-3 w-3" /> Reschedule
+                                </button>
+                                <button
+                                  onClick={() => setMomFor({ meetingId: emp.meeting!.id, employeeName: emp.full_name })}
+                                  className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 transition-colors"
+                                >
+                                  <FileText className="h-3 w-3" /> Add MOM
+                                </button>
+                              </>
                             ) : meetingStatus === 'completed' && emp.meeting?.minutes ? (
                               <button
                                 onClick={() => setViewMom({ minutes: emp.meeting!.minutes!, employeeName: emp.full_name })}
@@ -212,6 +221,16 @@ export function MeetingsList({ data, hrbpId }: { data: CycleData[]; hrbpId: stri
           employeeId={scheduleFor.employeeId}
           employeeName={scheduleFor.employeeName}
           onClose={() => setScheduleFor(null)}
+        />
+      )}
+
+      {/* Reschedule Meeting Modal */}
+      {rescheduleFor && (
+        <RescheduleModal
+          meetingId={rescheduleFor.meetingId}
+          employeeName={rescheduleFor.employeeName}
+          currentTime={rescheduleFor.currentTime}
+          onClose={() => setRescheduleFor(null)}
         />
       )}
 
@@ -352,122 +371,125 @@ function MomFormModal({ meetingId, employeeName, onClose }: {
           // Inject action items JSON
           formData.set('action_items', JSON.stringify(actionItems.filter(a => a.description.trim())))
           action(formData)
-        }} className="px-6 py-4 space-y-5 max-h-[70vh] overflow-y-auto">
+        }} className="flex flex-col max-h-[calc(100vh-10rem)]">
           <input type="hidden" name="meeting_id" value={meetingId} />
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Key Discussion Points <span className="text-red-500">*</span></label>
-            <textarea
-              name="key_discussion_points"
-              required
-              rows={3}
-              placeholder="Summarize the main topics discussed..."
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-            />
-          </div>
+          <div className="px-6 py-4 space-y-5 overflow-y-auto flex-1">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Key Discussion Points <span className="text-red-500">*</span></label>
+              <textarea
+                name="key_discussion_points"
+                required
+                rows={3}
+                placeholder="Summarize the main topics discussed..."
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Employee&apos;s Strengths Highlighted <span className="text-red-500">*</span></label>
-            <textarea
-              name="strengths_highlighted"
-              required
-              rows={2}
-              placeholder="Key strengths observed during the review period..."
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Employee&apos;s Strengths Highlighted <span className="text-red-500">*</span></label>
+              <textarea
+                name="strengths_highlighted"
+                required
+                rows={2}
+                placeholder="Key strengths observed during the review period..."
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Areas for Improvement Discussed <span className="text-red-500">*</span></label>
-            <textarea
-              name="areas_for_improvement"
-              required
-              rows={2}
-              placeholder="Improvement areas and development goals discussed..."
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Areas for Improvement Discussed <span className="text-red-500">*</span></label>
+              <textarea
+                name="areas_for_improvement"
+                required
+                rows={2}
+                placeholder="Improvement areas and development goals discussed..."
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              />
+            </div>
 
-          {/* Action Items */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Action Items</label>
-            <div className="space-y-2">
-              {actionItems.map((item, idx) => (
-                <div key={idx} className="flex items-start gap-2 rounded-lg border border-slate-200 p-3">
-                  <div className="flex-1 space-y-2">
-                    <input
-                      type="text"
-                      value={item.description}
-                      onChange={e => updateActionItem(idx, 'description', e.target.value)}
-                      placeholder="Action item description"
-                      className="w-full rounded border border-slate-200 px-2 py-1.5 text-sm"
-                    />
-                    <div className="flex gap-2">
+            {/* Action Items */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Action Items</label>
+              <div className="space-y-2">
+                {actionItems.map((item, idx) => (
+                  <div key={idx} className="flex items-start gap-2 rounded-lg border border-slate-200 p-3">
+                    <div className="flex-1 space-y-2">
                       <input
                         type="text"
-                        value={item.owner}
-                        onChange={e => updateActionItem(idx, 'owner', e.target.value)}
-                        placeholder="Owner"
-                        className="flex-1 rounded border border-slate-200 px-2 py-1.5 text-sm"
+                        value={item.description}
+                        onChange={e => updateActionItem(idx, 'description', e.target.value)}
+                        placeholder="Action item description"
+                        className="w-full rounded border border-slate-200 px-2 py-1.5 text-sm"
                       />
-                      <input
-                        type="date"
-                        value={item.deadline}
-                        onChange={e => updateActionItem(idx, 'deadline', e.target.value)}
-                        className="rounded border border-slate-200 px-2 py-1.5 text-sm"
-                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={item.owner}
+                          onChange={e => updateActionItem(idx, 'owner', e.target.value)}
+                          placeholder="Owner"
+                          className="flex-1 rounded border border-slate-200 px-2 py-1.5 text-sm"
+                        />
+                        <input
+                          type="date"
+                          value={item.deadline}
+                          onChange={e => updateActionItem(idx, 'deadline', e.target.value)}
+                          className="rounded border border-slate-200 px-2 py-1.5 text-sm"
+                        />
+                      </div>
                     </div>
+                    {actionItems.length > 1 && (
+                      <button type="button" onClick={() => removeActionItem(idx)} className="text-slate-400 hover:text-red-500 mt-1">
+                        <XCircle className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
-                  {actionItems.length > 1 && (
-                    <button type="button" onClick={() => removeActionItem(idx)} className="text-slate-400 hover:text-red-500 mt-1">
-                      <XCircle className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={addActionItem}
-                className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
-              >
-                + Add action item
-              </button>
-            </div>
-          </div>
-
-          {/* Employee Agreement */}
-          <div>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" name="employee_agreement" value="true" className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
-              <span className="text-sm text-slate-700">Employee agrees with the discussion points</span>
-            </label>
-          </div>
-
-          {/* Concerns (HRBP + Manager only) */}
-          <div className="rounded-lg bg-amber-50 border border-amber-200 p-4">
-            <div className="flex items-start gap-2 mb-2">
-              <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-xs font-medium text-amber-800">Confidential — HRBP & Manager Only</p>
-                <p className="text-xs text-amber-600 mt-0.5">This section is NOT visible to the employee.</p>
+                ))}
+                <button
+                  type="button"
+                  onClick={addActionItem}
+                  className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                >
+                  + Add action item
+                </button>
               </div>
             </div>
-            <textarea
-              name="concerns_raised"
-              rows={2}
-              placeholder="Any concerns raised during the meeting (optional)..."
-              className="w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
-            />
+
+            {/* Employee Agreement */}
+            <div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" name="employee_agreement" value="true" className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                <span className="text-sm text-slate-700">Employee agrees with the discussion points</span>
+              </label>
+            </div>
+
+            {/* Concerns (HRBP + Manager only) */}
+            <div className="rounded-lg bg-amber-50 border border-amber-200 p-4">
+              <div className="flex items-start gap-2 mb-2">
+                <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-medium text-amber-800">Confidential — HRBP & Manager Only</p>
+                  <p className="text-xs text-amber-600 mt-0.5">This section is NOT visible to the employee.</p>
+                </div>
+              </div>
+              <textarea
+                name="concerns_raised"
+                rows={2}
+                placeholder="Any concerns raised during the meeting (optional)..."
+                className="w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+              />
+            </div>
+
+            {state.error && (
+              <div className="rounded-lg bg-red-50 border border-red-200 p-3 flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
+                <p className="text-xs text-red-700">{state.error}</p>
+              </div>
+            )}
           </div>
 
-          {state.error && (
-            <div className="rounded-lg bg-red-50 border border-red-200 p-3 flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
-              <p className="text-xs text-red-700">{state.error}</p>
-            </div>
-          )}
-
-          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+          {/* Sticky footer — always visible */}
+          <div className="flex justify-end gap-2 px-6 py-4 border-t border-slate-100 bg-white rounded-b-xl shrink-0">
             <button type="button" onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
               Cancel
             </button>
@@ -547,6 +569,94 @@ function ViewMomModal({ minutes, employeeName, onClose }: {
             </div>
           )}
         </div>
+      </div>
+    </div>
+  )
+}
+
+function RescheduleModal({ meetingId, employeeName, currentTime, onClose }: {
+  meetingId: string; employeeName: string; currentTime: string; onClose: () => void
+}) {
+  const [state, action, pending] = useActionState(rescheduleMeeting, INITIAL)
+
+  if (state.error === null && state.data === null && !pending && state !== INITIAL) {
+    setTimeout(onClose, 100)
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 backdrop-blur-sm py-8" onClick={onClose}>
+      <div className="w-full max-w-md rounded-xl bg-white shadow-xl mx-4 my-auto" onClick={e => e.stopPropagation()}>
+        <div className="border-b border-slate-100 px-6 py-4">
+          <h3 className="text-base font-semibold text-slate-900">Reschedule Meeting</h3>
+          <p className="text-sm text-slate-500 mt-0.5">For {employeeName}</p>
+        </div>
+
+        <form action={action} className="px-6 py-4 space-y-4">
+          <input type="hidden" name="meeting_id" value={meetingId} />
+
+          <div className="rounded-lg bg-slate-50 border border-slate-200 p-3">
+            <p className="text-xs text-slate-500">Currently scheduled</p>
+            <p className="text-sm font-medium text-slate-700 mt-0.5">
+              {new Date(currentTime).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}{' '}
+              at {new Date(currentTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">New Date & Time</label>
+            <input
+              type="datetime-local"
+              name="scheduled_at"
+              required
+              min={new Date().toISOString().slice(0, 16)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Duration (minutes)</label>
+            <select
+              name="duration_minutes"
+              defaultValue="60"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+            >
+              <option value="30">30 minutes</option>
+              <option value="45">45 minutes</option>
+              <option value="60">60 minutes</option>
+              <option value="90">90 minutes</option>
+            </select>
+          </div>
+
+          <div className="rounded-lg bg-blue-50 border border-blue-200 p-3">
+            <div className="flex items-start gap-2">
+              <RefreshCw className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+              <div className="text-xs text-blue-700">
+                <p className="font-medium">Old calendar event will be cancelled</p>
+                <p className="mt-0.5">A new Google Meet link and calendar invite will be generated.</p>
+              </div>
+            </div>
+          </div>
+
+          {state.error && (
+            <div className="rounded-lg bg-red-50 border border-red-200 p-3 flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
+              <p className="text-xs text-red-700">{state.error}</p>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={pending}
+              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {pending ? 'Rescheduling...' : 'Reschedule Meeting'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   )
