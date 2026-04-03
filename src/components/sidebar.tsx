@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import type { UserRole } from '@/lib/types'
@@ -14,7 +14,7 @@ import {
   Building2, FileBarChart, Settings2, BarChart3, Scale,
   ScrollText, BookOpen, HelpCircle, LogOut,
   Wallet, Bell, FileSpreadsheet, Menu, X, ChevronRight,
-  Mail, BadgeCheck, Video,
+  Mail, BadgeCheck, Video, PanelLeftClose, PanelLeftOpen,
 } from 'lucide-react'
 
 interface NavItem {
@@ -113,6 +113,8 @@ const ROLE_DISPLAY: Record<string, string> = {
   employee: 'Employee',
 }
 
+const STORAGE_KEY = 'pms-sidebar-collapsed'
+
 export function Sidebar({
   role, userName, isAlsoEmployee = false, availableRoles = []
 }: {
@@ -125,6 +127,19 @@ export function Sidebar({
   const router = useRouter()
   const [helpOpen, setHelpOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState(false)
+
+  // Persist collapsed state in localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored === 'true') setCollapsed(true)
+  }, [])
+
+  function toggleCollapsed() {
+    const next = !collapsed
+    setCollapsed(next)
+    localStorage.setItem(STORAGE_KEY, String(next))
+  }
 
   // Determine active view based on current path
   const activeView: UserRole = pathname.startsWith('/admin') ? 'admin'
@@ -142,7 +157,8 @@ export function Sidebar({
     router.push('/login')
   }
 
-  const sidebarContent = (
+  // ── Full (expanded) sidebar content ──
+  const expandedContent = (
     <>
       {/* Logo */}
       <div className="px-5 pt-6 pb-5">
@@ -152,10 +168,18 @@ export function Sidebar({
               <path d="M12 2v20M2 12h20M5.636 5.636l12.728 12.728M18.364 5.636L5.636 18.364" strokeLinecap="round"/>
             </svg>
           </div>
-          <div>
+          <div className="min-w-0 flex-1">
             <p className="text-[15px] font-bold text-slate-900 tracking-tight">PMS</p>
             <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">EMB Global</p>
           </div>
+          {/* Collapse button — desktop only */}
+          <button
+            onClick={toggleCollapsed}
+            className="hidden lg:flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            title="Collapse sidebar"
+          >
+            <PanelLeftClose className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
@@ -250,6 +274,105 @@ export function Sidebar({
     </>
   )
 
+  // ── Collapsed (icon-only) sidebar content ──
+  const collapsedContent = (
+    <>
+      {/* Logo icon + expand button */}
+      <div className="flex flex-col items-center pt-6 pb-4 gap-3">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 shadow-lg shadow-indigo-500/20">
+          <svg viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M12 2v20M2 12h20M5.636 5.636l12.728 12.728M18.364 5.636L5.636 18.364" strokeLinecap="round"/>
+          </svg>
+        </div>
+        <button
+          onClick={toggleCollapsed}
+          className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+          title="Expand sidebar"
+        >
+          <PanelLeftOpen className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Role Switcher — collapsed: show first letter */}
+      {availableRoles.length > 1 && (
+        <div className="flex flex-col items-center gap-1 mb-3 px-1">
+          {availableRoles.map(r => (
+            <button
+              key={r}
+              onClick={() => router.push(ROLE_HOME[r as UserRole])}
+              className={cn(
+                'flex h-8 w-8 items-center justify-center rounded-lg text-[11px] font-semibold transition-all',
+                currentRole === r
+                  ? 'bg-indigo-50 text-indigo-700'
+                  : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'
+              )}
+              title={ROLE_DISPLAY[r]}
+            >
+              {ROLE_DISPLAY[r][0]}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Nav — icon only with tooltips */}
+      <nav className="flex-1 overflow-y-auto px-2 space-y-0.5">
+        {visibleItems.map(item => {
+          const Icon = item.icon
+          const isActive = item.href !== '#help' &&
+            (pathname === item.href || (item.href !== '/admin' && item.href !== '/employee' && pathname.startsWith(item.href)))
+          const isExactActive = pathname === item.href
+
+          if (item.href === '#help') {
+            return (
+              <button
+                key="help"
+                onClick={() => setHelpOpen(true)}
+                className="flex w-full items-center justify-center rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                title={item.label}
+              >
+                <Icon className="h-[18px] w-[18px]" />
+              </button>
+            )
+          }
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'flex items-center justify-center rounded-lg p-2 transition-all',
+                (isActive || isExactActive)
+                  ? 'bg-indigo-50 text-indigo-700'
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+              )}
+              title={item.label}
+            >
+              <Icon className={cn(
+                'h-[18px] w-[18px]',
+                (isActive || isExactActive) ? 'text-indigo-600' : ''
+              )} />
+            </Link>
+          )
+        })}
+      </nav>
+
+      {/* Footer — collapsed */}
+      <div className="mt-auto flex flex-col items-center py-4 gap-2">
+        <div className="h-px w-8 bg-slate-100 mb-1" />
+        <button
+          onClick={handleSignOut}
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+          title="Sign out"
+        >
+          <LogOut className="h-[18px] w-[18px]" />
+        </button>
+        <div title={`${userName} (${role === 'hrbp' ? 'HRBP' : role.charAt(0).toUpperCase() + role.slice(1)})`}>
+          <UserAvatar name={userName} role={role} />
+        </div>
+      </div>
+    </>
+  )
+
   return (
     <>
       {/* Mobile hamburger */}
@@ -266,7 +389,7 @@ export function Sidebar({
         <div className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm lg:hidden" onClick={() => setMobileOpen(false)} />
       )}
 
-      {/* Mobile sidebar */}
+      {/* Mobile sidebar — always expanded */}
       <aside className={cn(
         'fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col bg-white border-r border-slate-200 shadow-xl transition-transform duration-300 lg:hidden',
         mobileOpen ? 'translate-x-0' : '-translate-x-full'
@@ -278,12 +401,15 @@ export function Sidebar({
         >
           <X className="h-4 w-4" />
         </button>
-        {sidebarContent}
+        {expandedContent}
       </aside>
 
-      {/* Desktop sidebar */}
-      <aside className="hidden lg:flex w-[260px] flex-col shrink-0 bg-white border-r border-slate-200">
-        {sidebarContent}
+      {/* Desktop sidebar — collapsible */}
+      <aside className={cn(
+        'hidden lg:flex flex-col shrink-0 bg-white border-r border-slate-200 transition-all duration-300',
+        collapsed ? 'w-[64px]' : 'w-[260px]'
+      )}>
+        {collapsed ? collapsedContent : expandedContent}
       </aside>
 
       <HelpPanel open={helpOpen} onClose={() => setHelpOpen(false)} />
