@@ -67,16 +67,16 @@ export default async function KraTemplatesPage({
           <div className="px-4 py-2 bg-muted/50 border-b">
             <h2 className="font-semibold text-sm">{label}</h2>
           </div>
-          <table className="w-full text-sm table-fixed">
+          <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
-                <th className="p-3 text-left w-[22%]">Title</th>
-                <th className="p-3 text-left w-[12%]">Category</th>
-                <th className="p-3 text-left w-[24%]">Description</th>
-                <th className="p-3 text-left w-[9%]">Weight</th>
-                <th className="p-3 text-left w-[13%]">Department</th>
-                <th className="p-3 text-left w-[10%]">Status</th>
-                <th className="p-3 text-right w-[10%]">Actions</th>
+                <th className="p-3 text-left">Title</th>
+                <th className="p-3 text-left">Category</th>
+                <th className="p-3 text-left">Description</th>
+                <th className="p-3 text-left">Weight</th>
+                <th className="p-3 text-left">Department</th>
+                <th className="p-3 text-left">Status</th>
+                <th className="p-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>

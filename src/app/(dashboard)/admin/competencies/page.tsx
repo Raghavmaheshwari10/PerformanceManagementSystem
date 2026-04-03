@@ -86,15 +86,15 @@ export default async function CompetenciesPage({
             </Badge>
             <span className="text-xs text-muted-foreground">{items.length} competenc{items.length === 1 ? 'y' : 'ies'}</span>
           </div>
-          <table className="w-full text-sm table-fixed">
+          <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
-                <th className="p-3 text-left w-[18%]">Name</th>
-                <th className="p-3 text-left w-[25%]">Description</th>
-                <th className="p-3 text-left w-[12%]">Scope</th>
-                <th className="p-3 text-left w-[22%]">Proficiency Levels</th>
-                <th className="p-3 text-left w-[7%]">Usage</th>
-                <th className="p-3 text-right w-[16%]">Actions</th>
+                <th className="p-3 text-left">Name</th>
+                <th className="p-3 text-left">Description</th>
+                <th className="p-3 text-left">Scope</th>
+                <th className="p-3 text-left">Proficiency Levels</th>
+                <th className="p-3 text-left">Usage</th>
+                <th className="p-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
