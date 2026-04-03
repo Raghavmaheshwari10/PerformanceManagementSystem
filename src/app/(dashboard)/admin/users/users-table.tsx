@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { updateUserRole, toggleUserActive, deleteUser, bulkUpdateDepartment, bulkUpdateRole, bulkToggleActive, bulkDeleteUsers, resendInvite } from './actions'
 import type { User } from '@/lib/types'
 import { ROLE_LABELS } from '@/lib/constants'
+import { Pencil, Trash2 } from 'lucide-react'
 
 const ROLES = ['employee', 'manager', 'hrbp', 'admin'] as const
 
@@ -231,7 +232,7 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
               <th className="p-3 text-left text-muted-foreground">Role</th>
               <th className="p-3 text-left text-muted-foreground">Status</th>
               <th className="p-3 text-left text-muted-foreground">Invite</th>
-              <th className="p-3 text-left text-muted-foreground">Actions</th>
+              <th className="p-3 text-right text-muted-foreground">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -301,15 +302,17 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
                   )}
                 </td>
                 <td className="p-3">
-                  <div className="flex items-center gap-2">
-                    <Link href={`/admin/users/${u.id}/edit`} className="text-xs text-primary hover:text-primary/80">
-                      Edit
+                  <div className="flex items-center justify-end gap-1">
+                    <Link href={`/admin/users/${u.id}/edit`}
+                      className="rounded p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                      title="Edit">
+                      <Pencil className="h-3.5 w-3.5" />
                     </Link>
                     <button
                       onClick={() => handleDeleteSingle(u.id, u.full_name)}
-                      className="text-xs text-destructive hover:text-destructive/80"
-                    >
-                      Delete
+                      className="rounded p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                      title="Delete">
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </td>

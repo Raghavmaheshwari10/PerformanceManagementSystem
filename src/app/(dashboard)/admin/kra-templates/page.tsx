@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { toggleKraTemplateActive, deleteKraTemplate } from './actions'
 import { KPI_CATEGORY_LABELS, KPI_CATEGORY_STYLES } from '@/lib/constants'
+import { Pencil, Trash2, Power } from 'lucide-react'
 
 export default async function KraTemplatesPage({
   searchParams,
@@ -75,7 +76,7 @@ export default async function KraTemplatesPage({
                 <th className="p-3 text-left w-[9%]">Weight</th>
                 <th className="p-3 text-left w-[13%]">Department</th>
                 <th className="p-3 text-left w-[10%]">Status</th>
-                <th className="p-3 text-left w-[12%]">Actions</th>
+                <th className="p-3 text-right w-[12%]">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -93,16 +94,27 @@ export default async function KraTemplatesPage({
                   <td className="p-3">
                     <form action={toggleKraTemplateActive.bind(null, t.id, t.is_active) as unknown as (fd: FormData) => Promise<void>}>
                       <button type="submit"
-                        className={`text-xs rounded-full px-2 py-0.5 font-medium ${t.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-muted text-muted-foreground'}`}>
-                        {t.is_active ? 'Active' : 'Inactive'}
+                        className={`rounded p-1.5 transition-colors ${t.is_active
+                          ? 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10'
+                          : 'text-muted-foreground hover:text-amber-400 hover:bg-amber-500/10'}`}
+                        title={t.is_active ? 'Deactivate' : 'Activate'}>
+                        <Power className="h-3.5 w-3.5" />
                       </button>
                     </form>
                   </td>
                   <td className="p-3">
-                    <div className="flex items-center gap-2">
-                      <Link href={`/admin/kra-templates/${t.id}/edit`} className="text-xs text-primary hover:underline">Edit</Link>
+                    <div className="flex items-center justify-end gap-1">
+                      <Link href={`/admin/kra-templates/${t.id}/edit`}
+                        className="rounded p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                        title="Edit">
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Link>
                       <form action={deleteKraTemplate.bind(null, t.id) as unknown as (fd: FormData) => Promise<void>}>
-                        <button type="submit" className="text-xs text-destructive hover:underline">Delete</button>
+                        <button type="submit"
+                          className="rounded p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                          title="Delete">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
                       </form>
                     </div>
                   </td>

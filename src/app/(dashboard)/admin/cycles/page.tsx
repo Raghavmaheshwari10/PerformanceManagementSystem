@@ -161,7 +161,7 @@ export default async function AdminCyclesPage() {
               <th className="p-3 text-left text-muted-foreground">Status</th>
               <th className="p-3 text-left text-muted-foreground">Scope</th>
               <th className="p-3 text-left text-muted-foreground">Year</th>
-              <th className="p-3 text-left text-muted-foreground">Actions</th>
+              <th className="p-3 text-right text-muted-foreground">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -190,7 +190,7 @@ export default async function AdminCyclesPage() {
                   </td>
                   <td className="p-3 text-muted-foreground">{cycle.year}</td>
                   <td className="p-3">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-end gap-2">
                       {next && (
                         <div data-tour="advance-btn">
                           <form action={advanceCycleStatus.bind(null, cycle.id, cycle.status) as unknown as (fd: FormData) => Promise<void>}>
