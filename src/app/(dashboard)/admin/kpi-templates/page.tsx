@@ -65,14 +65,14 @@ export default async function KpiTemplatesPage({
           <table className="w-full text-sm table-fixed">
             <thead>
               <tr className="border-b bg-muted/30">
-                <th className="p-3 text-left w-[22%]">Title</th>
+                <th className="p-3 text-left w-[24%]">Title</th>
                 <th className="p-3 text-left w-[12%]">Category</th>
-                <th className="p-3 text-left w-[13%]">Department</th>
-                <th className="p-3 text-left w-[9%]">Unit</th>
-                <th className="p-3 text-left w-[9%]">Target</th>
+                <th className="p-3 text-left w-[14%]">Department</th>
+                <th className="p-3 text-left w-[10%]">Unit</th>
+                <th className="p-3 text-left w-[10%]">Target</th>
                 <th className="p-3 text-left w-[9%]">Weight</th>
                 <th className="p-3 text-left w-[10%]">Status</th>
-                <th className="p-3 text-right w-[16%]">Actions</th>
+                <th className="p-3 text-right w-[11%]">Actions</th>
               </tr>
             </thead>
             <tbody>
