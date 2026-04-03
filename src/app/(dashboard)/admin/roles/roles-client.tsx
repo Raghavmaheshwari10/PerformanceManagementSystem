@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useActionState } from 'react'
 import { createRoleSlug, updateRoleSlug, toggleRoleSlug, deleteRoleSlug } from './actions'
-import { Plus, Pencil, Trash2, X, Check, Power } from 'lucide-react'
+import { Plus, Pencil, Trash2, X, Check } from 'lucide-react'
 import type { ActionResult } from '@/lib/types'
 
 interface RoleSlugRow {
@@ -73,13 +73,16 @@ export function RolesClient({ roles }: { roles: RoleSlugRow[] }) {
                     <td className="p-3 text-center tabular-nums">{role.kpi_count}</td>
                     <td className="p-3 text-center tabular-nums">{role.kra_count}</td>
                     <td className="p-3 text-center">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                        role.is_active
-                          ? 'bg-emerald-500/20 text-emerald-400'
-                          : 'bg-muted/50 text-muted-foreground'
-                      }`}>
+                      <button
+                        onClick={() => startTransition(async () => { await toggleRoleSlug(role.id) })}
+                        disabled={isPending}
+                        className={`text-xs rounded-full px-2 py-0.5 font-medium transition-colors ${
+                          role.is_active
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50'
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        }`}>
                         {role.is_active ? 'Active' : 'Inactive'}
-                      </span>
+                      </button>
                     </td>
                     <td className="p-3">
                       <div className="flex items-center justify-end gap-1">
@@ -89,14 +92,6 @@ export function RolesClient({ roles }: { roles: RoleSlugRow[] }) {
                           title="Edit"
                         >
                           <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          onClick={() => startTransition(async () => { await toggleRoleSlug(role.id) })}
-                          disabled={isPending}
-                          className="rounded p-1.5 text-muted-foreground hover:text-amber-400 hover:bg-amber-500/10 transition-colors"
-                          title={role.is_active ? 'Deactivate' : 'Activate'}
-                        >
-                          <Power className="h-3.5 w-3.5" />
                         </button>
                         <button
                           onClick={() => {

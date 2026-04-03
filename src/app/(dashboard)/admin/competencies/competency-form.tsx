@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useEffect, useState } from 'react'
-import { createCompetency } from './actions'
+import { createCompetency, updateCompetency } from './actions'
 import { SubmitButton } from '@/components/submit-button'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/lib/toast'
@@ -9,21 +9,39 @@ import type { ActionResult } from '@/lib/types'
 
 const INITIAL: ActionResult = { data: null, error: null }
 
+interface CompetencyDefaults {
+  id?: string
+  name: string
+  description: string | null
+  category: string
+  department_id: string | null
+  role_slug_id: string | null
+  is_active?: boolean
+  proficiency_levels: Array<{ band: string; label: string; description: string }> | null
+}
+
 interface Props {
   departments?: { id: string; name: string }[]
   roleOptions?: { value: string; label: string }[]
+  defaultValues?: CompetencyDefaults
+  /** If provided, form is in edit mode using this bound action */
+  editAction?: (prev: ActionResult, fd: FormData) => Promise<ActionResult>
 }
 
-export function CompetencyForm({ departments = [], roleOptions = [] }: Props) {
-  const [state, action] = useActionState(createCompetency, INITIAL)
+export function CompetencyForm({ departments = [], roleOptions = [], defaultValues, editAction }: Props) {
+  const isEdit = !!editAction
+  const action = editAction ?? createCompetency
+  const [state, formAction] = useActionState(action, INITIAL)
   const { toast } = useToast()
-  const [category, setCategory] = useState('core')
-  const [profLevels, setProfLevels] = useState<{ band: string; label: string; description: string }[]>([])
+  const [category, setCategory] = useState(defaultValues?.category ?? 'core')
+  const [profLevels, setProfLevels] = useState<{ band: string; label: string; description: string }[]>(
+    defaultValues?.proficiency_levels ?? []
+  )
 
   useEffect(() => {
     if (state === INITIAL) return
     if (state.error) toast.error(state.error)
-    else toast.success('Competency created.')
+    else toast.success(isEdit ? 'Competency updated.' : 'Competency created.')
   }, [state])
 
   function addProfLevel() {
@@ -35,13 +53,18 @@ export function CompetencyForm({ departments = [], roleOptions = [] }: Props) {
   }
 
   return (
-    <form action={action} className="space-y-4">
+    <form action={formAction} className="space-y-4">
       {state.error && <p className="rounded bg-destructive/10 px-3 py-2 text-sm text-destructive">{state.error}</p>}
+
+      {isEdit && defaultValues?.is_active !== undefined && (
+        <input type="hidden" name="is_active" value={String(defaultValues.is_active)} />
+      )}
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
           <Label htmlFor="name">Name *</Label>
-          <input id="name" name="name" required className="w-full rounded border bg-background px-3 py-1.5 text-sm" placeholder="e.g. Leadership" />
+          <input id="name" name="name" required defaultValue={defaultValues?.name ?? ''}
+            className="w-full rounded border bg-background px-3 py-1.5 text-sm" placeholder="e.g. Leadership" />
         </div>
         <div className="space-y-1">
           <Label htmlFor="category">Category</Label>
@@ -56,7 +79,7 @@ export function CompetencyForm({ departments = [], roleOptions = [] }: Props) {
 
       <div className="space-y-1">
         <Label htmlFor="description">Description</Label>
-        <textarea id="description" name="description" rows={2}
+        <textarea id="description" name="description" rows={2} defaultValue={defaultValues?.description ?? ''}
           className="w-full rounded border bg-background px-3 py-1.5 text-sm" placeholder="What this competency measures..." />
       </div>
 
@@ -64,7 +87,7 @@ export function CompetencyForm({ departments = [], roleOptions = [] }: Props) {
         {category === 'functional' && (
           <div className="space-y-1">
             <Label htmlFor="department_id">Department</Label>
-            <select id="department_id" name="department_id"
+            <select id="department_id" name="department_id" defaultValue={defaultValues?.department_id ?? ''}
               className="w-full rounded border bg-background px-3 py-1.5 text-sm">
               <option value="">— All departments —</option>
               {departments.map(d => (
@@ -76,7 +99,7 @@ export function CompetencyForm({ departments = [], roleOptions = [] }: Props) {
         {category === 'leadership' && (
           <div className="space-y-1">
             <Label htmlFor="role_slug_id">Role</Label>
-            <select id="role_slug_id" name="role_slug_id"
+            <select id="role_slug_id" name="role_slug_id" defaultValue={defaultValues?.role_slug_id ?? ''}
               className="w-full rounded border bg-background px-3 py-1.5 text-sm">
               <option value="">— All roles —</option>
               {roleOptions.map(r => (
@@ -122,7 +145,9 @@ export function CompetencyForm({ departments = [], roleOptions = [] }: Props) {
         ))}
       </div>
 
-      <SubmitButton pendingLabel="Creating...">Add Competency</SubmitButton>
+      <SubmitButton pendingLabel={isEdit ? 'Saving...' : 'Creating...'}>
+        {isEdit ? 'Save Changes' : 'Add Competency'}
+      </SubmitButton>
     </form>
   )
 }

@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { toggleTemplateActive, deleteKpiTemplate } from './actions'
 import { UNIT_LABELS, KPI_CATEGORY_LABELS, KPI_CATEGORY_STYLES } from '@/lib/constants'
-import { Pencil, Trash2, Power } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 
 export default async function KpiTemplatesPage({
   searchParams,
@@ -91,11 +91,10 @@ export default async function KpiTemplatesPage({
                   <td className="p-3">
                     <form action={toggleTemplateActive.bind(null, t.id, t.is_active) as unknown as (fd: FormData) => Promise<void>}>
                       <button type="submit"
-                        className={`rounded p-1.5 transition-colors ${t.is_active
-                          ? 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10'
-                          : 'text-muted-foreground hover:text-amber-400 hover:bg-amber-500/10'}`}
-                        title={t.is_active ? 'Deactivate' : 'Activate'}>
-                        <Power className="h-3.5 w-3.5" />
+                        className={`text-xs rounded-full px-2 py-0.5 font-medium transition-colors ${t.is_active
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50'
+                          : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
+                        {t.is_active ? 'Active' : 'Inactive'}
                       </button>
                     </form>
                   </td>

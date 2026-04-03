@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { COMPETENCY_CATEGORY_LABELS } from '@/lib/constants'
-import { Trash2, Power } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 
 const CATEGORY_STYLES: Record<string, string> = {
   core: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
@@ -148,22 +148,24 @@ export default async function CompetenciesPage({
                       <div className="flex items-center justify-end gap-1">
                         <form action={toggleCompetencyActive.bind(null, c.id, c.is_active) as unknown as (fd: FormData) => Promise<void>}>
                           <button type="submit"
-                            className={`rounded p-1.5 transition-colors ${c.is_active
-                              ? 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10'
-                              : 'text-muted-foreground hover:text-amber-400 hover:bg-amber-500/10'}`}
-                            title={c.is_active ? 'Deactivate' : 'Activate'}>
-                            <Power className="h-3.5 w-3.5" />
+                            className={`text-xs rounded-full px-2 py-0.5 font-medium transition-colors ${c.is_active
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50'
+                              : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
+                            {c.is_active ? 'Active' : 'Inactive'}
                           </button>
                         </form>
-                        {c._count.review_questions === 0 && (
-                          <form action={deleteCompetency.bind(null, c.id)}>
-                            <button type="submit"
-                              className="rounded p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                              title="Delete">
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </form>
-                        )}
+                        <Link href={`/admin/competencies/${c.id}/edit`}
+                          className="rounded p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                          title="Edit">
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Link>
+                        <form action={deleteCompetency.bind(null, c.id)}>
+                          <button type="submit"
+                            className="rounded p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                            title="Delete">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </form>
                       </div>
                     </td>
                   </tr>
