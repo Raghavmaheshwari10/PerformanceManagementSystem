@@ -3,11 +3,14 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { validateEmail } from '@/lib/validate'
+import { sendInviteEmail } from '@/lib/email'
 import { revalidatePath } from 'next/cache'
+import crypto from 'crypto'
 import type { ActionResult } from '@/lib/types'
 
 export interface UploadSummary {
   added: number
+  invited: number
   updated: number
   skipped: number
   skippedReasons: string[]
@@ -102,7 +105,7 @@ export async function uploadUsersWithMapping(
 
   // Read column mappings from formData (map_fieldName → csvColumnHeader)
   const colMap: Record<string, string> = {}
-  for (const key of ['zimyo_id', 'email', 'full_name', 'department', 'designation', 'manager_email', 'variable_pay']) {
+  for (const key of ['emp_code', 'zimyo_id', 'email', 'full_name', 'department', 'designation', 'manager_email', 'variable_pay']) {
     const val = formData.get(`map_${key}`) as string
     if (val) colMap[key] = val
   }
@@ -113,10 +116,13 @@ export async function uploadUsersWithMapping(
   const rows = parseCsvText(csvText)
   if (rows.length === 0) return { data: null, error: 'CSV is empty or could not be parsed.' }
 
-  let added = 0, updated = 0, skipped = 0
+  let added = 0, updated = 0, skipped = 0, invited = 0
   const skippedReasons: string[] = []
   const emailToId = new Map<string, string>()
   const validRows: { original: Record<string, string>; mapped: Record<string, string> }[] = []
+  const newlyCreatedEmails: { email: string; name: string; token: string }[] = []
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'
 
   for (const row of rows) {
     const mapped: Record<string, string> = {}
@@ -136,6 +142,7 @@ export async function uploadUsersWithMapping(
       designation: mapped.designation || null,
       synced_at: new Date(),
     }
+    if (mapped.emp_code) userData.emp_code = mapped.emp_code
     if (mapped.zimyo_id) userData.zimyo_id = mapped.zimyo_id
     if (mapped.variable_pay) {
       const pay = parseFloat(mapped.variable_pay.replace(/[^0-9.]/g, ''))
@@ -161,14 +168,22 @@ export async function uploadUsersWithMapping(
       })
       updated++
     } else {
+      // Generate invite token for new users
+      const invite_token = crypto.randomBytes(32).toString('hex')
+      const invite_token_expires_at = new Date(Date.now() + 72 * 60 * 60 * 1000) // 72hr expiry
+
       const newUser = await prisma.user.create({
         data: {
           ...(userData as Parameters<typeof prisma.user.create>[0]['data']),
           is_active: true,
           zimyo_id: (userData.zimyo_id as string | undefined) ?? `manual_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+          invite_token,
+          invite_token_expires_at,
+          invited_at: new Date(),
         },
       })
       emailToId.set(mapped.email, newUser.id)
+      newlyCreatedEmails.push({ email: mapped.email, name: mapped.full_name || mapped.email, token: invite_token })
       added++
     }
     validRows.push({ original: row, mapped })
@@ -189,17 +204,29 @@ export async function uploadUsersWithMapping(
     }
   }
 
+  // Send invite emails to newly created users
+  for (const { email, name, token } of newlyCreatedEmails) {
+    const inviteUrl = `${appUrl}/login/accept-invite?token=${token}`
+    try {
+      await sendInviteEmail(email, inviteUrl, name)
+      invited++
+    } catch (err) {
+      console.error(`Failed to send invite email to ${email}:`, err)
+      skippedReasons.push(`Invite email failed for ${email}`)
+    }
+  }
+
   await prisma.auditLog.create({
     data: {
       changed_by: user.id,
       action: 'csv_upload',
       entity_type: 'user',
-      new_value: { added, updated, skipped, source },
+      new_value: { added, updated, skipped, invited, source },
     },
   })
 
   revalidatePath('/admin/users')
-  return { data: { added, updated, skipped, skippedReasons }, error: null }
+  return { data: { added, updated, skipped, invited, skippedReasons }, error: null }
 }
 
 // Alias for backward compat

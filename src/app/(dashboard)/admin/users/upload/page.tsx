@@ -13,7 +13,8 @@ import type { ActionResult } from '@/lib/types'
 // ── constants ─────────────────────────────────────────────────────────────────
 
 const TARGET_FIELDS = [
-  { key: 'zimyo_id',      label: 'Employee ID',          required: false },
+  { key: 'emp_code',      label: 'Employee Code',        required: false },
+  { key: 'zimyo_id',      label: 'Employee ID (Zimyo)',  required: false },
   { key: 'email',         label: 'Email',                required: true  },
   { key: 'full_name',     label: 'Full Name',            required: true  },
   { key: 'department',    label: 'Department',           required: false },
@@ -23,7 +24,7 @@ const TARGET_FIELDS = [
 ]
 
 const INITIAL: ActionResult<UploadSummary> = {
-  data: { added: 0, updated: 0, skipped: 0, skippedReasons: [] },
+  data: { added: 0, updated: 0, skipped: 0, invited: 0, skippedReasons: [] },
   error: null,
 }
 
@@ -51,6 +52,7 @@ function parseHeaders(text: string): { headers: string[]; previewRows: string[][
 function autoDetect(headers: string[]): Record<string, string> {
   const lower = headers.map(h => h.toLowerCase().replace(/[\s_-]+/g, '_'))
   const aliases: Record<string, string[]> = {
+    emp_code:      ['emp_code', 'employee_code', 'emp_no', 'employee_no', 'employee_number'],
     zimyo_id:      ['zimyo_id', 'employee_id', 'emp_id', 'staff_id', 'id'],
     email:         ['email', 'email_address', 'work_email', 'e_mail'],
     full_name:     ['full_name', 'name', 'employee_name', 'staff_name', 'fullname'],
@@ -71,11 +73,11 @@ function autoDetect(headers: string[]): Record<string, string> {
 
 // ── CSV template ─────────────────────────────────────────────────────────────
 
-const CSV_TEMPLATE_HEADERS = ['email', 'full_name', 'department', 'designation', 'manager_email', 'employee_id', 'variable_pay']
+const CSV_TEMPLATE_HEADERS = ['emp_code', 'email', 'full_name', 'department', 'designation', 'manager_email', 'variable_pay']
 const CSV_TEMPLATE_SAMPLE = [
-  'john.doe@company.com,John Doe,Engineering,Senior Engineer,jane.smith@company.com,EMP001,50000',
-  'jane.smith@company.com,Jane Smith,Engineering,Engineering Manager,,EMP002,75000',
-  'alex.kumar@company.com,Alex Kumar,Sales,Sales Executive,jane.smith@company.com,EMP003,40000',
+  'EMP001,john.doe@company.com,John Doe,Engineering,Senior Engineer,jane.smith@company.com,50000',
+  'EMP002,jane.smith@company.com,Jane Smith,Engineering,Engineering Manager,,75000',
+  'EMP003,alex.kumar@company.com,Alex Kumar,Sales,Sales Executive,jane.smith@company.com,40000',
 ]
 
 function downloadCsvTemplate() {
@@ -104,8 +106,13 @@ export default function UploadUsersPage() {
   const [sheetUrl,    setSheetUrl]    = useState('')
   const [fetching,    setFetching]    = useState(false)
   const [fetchError,  setFetchError]  = useState('')
+  const [showResults, setShowResults] = useState(false)
 
-  const [state, action] = useActionState(uploadUsersWithMapping, INITIAL)
+  const [state, action] = useActionState(async (...args: Parameters<typeof uploadUsersWithMapping>) => {
+    const result = await uploadUsersWithMapping(...args)
+    if (!result.error) setShowResults(true)
+    return result
+  }, INITIAL)
 
   // ── source handlers ────────────────────────────────────────────────────────
 
@@ -136,13 +143,12 @@ export default function UploadUsersPage() {
   }
 
   function reset() {
-    setStage('source'); setCsvText(''); setHeaders([]); setMapping({}); setSheetUrl(''); setFetchError('')
+    setStage('source'); setCsvText(''); setHeaders([]); setMapping({}); setSheetUrl(''); setFetchError(''); setShowResults(false)
   }
 
   // ── done stage ─────────────────────────────────────────────────────────────
 
-  const hasResults = state.data && (state.data.added > 0 || state.data.updated > 0 || state.data.skipped > 0)
-  if (hasResults) {
+  if (showResults && state.data) {
     return (
       <div className="max-w-lg space-y-6">
         <div className="flex items-center justify-between">
@@ -152,7 +158,7 @@ export default function UploadUsersPage() {
           </Link>
         </div>
         <div className="rounded-lg border p-4 space-y-4">
-          <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="grid grid-cols-4 gap-3 text-center">
             <div className="rounded-md bg-green-50 dark:bg-green-950/30 p-3">
               <p className="text-3xl font-bold text-green-700 dark:text-green-400">{state.data!.added}</p>
               <p className="text-xs text-green-600 dark:text-green-500 mt-1">Created</p>
@@ -160,6 +166,10 @@ export default function UploadUsersPage() {
             <div className="rounded-md bg-blue-50 dark:bg-blue-950/30 p-3">
               <p className="text-3xl font-bold text-blue-700 dark:text-blue-400">{state.data!.updated}</p>
               <p className="text-xs text-blue-600 dark:text-blue-500 mt-1">Updated</p>
+            </div>
+            <div className="rounded-md bg-purple-50 dark:bg-purple-950/30 p-3">
+              <p className="text-3xl font-bold text-purple-700 dark:text-purple-400">{state.data!.invited}</p>
+              <p className="text-xs text-purple-600 dark:text-purple-500 mt-1">Invited</p>
             </div>
             <div className="rounded-md bg-amber-50 dark:bg-amber-950/30 p-3">
               <p className="text-3xl font-bold text-amber-700 dark:text-amber-400">{state.data!.skipped}</p>
