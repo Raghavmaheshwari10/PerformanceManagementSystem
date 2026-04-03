@@ -9,17 +9,21 @@ export default async function AdminRolesPage() {
     orderBy: [{ sort_order: 'asc' }, { label: 'asc' }],
   })
 
-  // Count template usage for each slug
+  // Count template usage for each role slug by ID
   const [kpiCounts, kraCounts] = await Promise.all([
-    prisma.kpiTemplate.groupBy({ by: ['role_slug'], _count: true }),
-    prisma.kraTemplate.groupBy({ by: ['role_slug'], _count: true }),
+    prisma.kpiTemplate.groupBy({ by: ['role_slug_id'], _count: true }),
+    prisma.kraTemplate.groupBy({ by: ['role_slug_id'], _count: true }),
   ])
 
-  const kpiMap = Object.fromEntries(kpiCounts.map(c => [c.role_slug, c._count]))
+  const kpiMap = Object.fromEntries(
+    kpiCounts
+      .filter(c => c.role_slug_id != null)
+      .map(c => [c.role_slug_id!, c._count])
+  )
   const kraMap = Object.fromEntries(
     kraCounts
-      .filter(c => c.role_slug != null)
-      .map(c => [c.role_slug!, c._count])
+      .filter(c => c.role_slug_id != null)
+      .map(c => [c.role_slug_id!, c._count])
   )
 
   const roles = rolesRaw.map(r => ({
@@ -28,8 +32,8 @@ export default async function AdminRolesPage() {
     label: r.label,
     sort_order: r.sort_order,
     is_active: r.is_active,
-    kpi_count: kpiMap[r.slug] ?? 0,
-    kra_count: kraMap[r.slug] ?? 0,
+    kpi_count: kpiMap[r.id] ?? 0,
+    kra_count: kraMap[r.id] ?? 0,
   }))
 
   return (

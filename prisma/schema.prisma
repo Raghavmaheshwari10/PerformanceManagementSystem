@@ -153,6 +153,10 @@ model RoleSlug {
   is_active  Boolean  @default(true)
   created_at DateTime @default(now()) @db.Timestamptz(6)
 
+  kpi_templates KpiTemplate[]
+  kra_templates KraTemplate[]
+  competencies  Competency[]
+
   @@map("role_slugs")
 }
 
@@ -165,7 +169,9 @@ model Department {
   users           User[]
   hrbp_departments HrbpDepartment[]
   cycle_departments CycleDepartment[]
+  kpi_templates   KpiTemplate[]
   kra_templates   KraTemplate[]
+  competencies    Competency[]
   aop_targets     AopTarget[]
 
   @@map("departments")
@@ -370,7 +376,8 @@ model Kra {
 
 model KpiTemplate {
   id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  role_slug       String
+  role_slug_id    String?  @db.Uuid
+  department_id   String?  @db.Uuid
   title           String
   description     String?
   unit            String   @default("percent")
@@ -382,8 +389,12 @@ model KpiTemplate {
   is_active       Boolean  @default(true)
   created_at      DateTime @default(now()) @db.Timestamptz(6)
 
+  role_slug    RoleSlug?    @relation(fields: [role_slug_id], references: [id], onDelete: SetNull)
+  department   Department?  @relation(fields: [department_id], references: [id], onDelete: SetNull)
   kra_template KraTemplate? @relation(fields: [kra_template_id], references: [id], onDelete: SetNull)
 
+  @@index([role_slug_id], name: "idx_kpi_templates_role")
+  @@index([department_id], name: "idx_kpi_templates_dept")
   @@index([kra_template_id], name: "idx_kpi_templates_kra")
   @@map("kpi_templates")
 }
@@ -393,18 +404,19 @@ model KraTemplate {
   title         String
   description   String?
   category      String   @default("performance")
-  role_slug     String?
+  role_slug_id  String?  @db.Uuid
   department_id String?  @db.Uuid
   weight        Decimal? @db.Decimal(5, 2)
   sort_order    Int      @default(0)
   is_active     Boolean  @default(true)
   created_at    DateTime @default(now()) @db.Timestamptz(6)
 
+  role_slug     RoleSlug?     @relation(fields: [role_slug_id], references: [id], onDelete: SetNull)
   department    Department?   @relation(fields: [department_id], references: [id])
   kpi_templates KpiTemplate[]
   kras          Kra[]
 
-  @@index([role_slug], name: "idx_kra_templates_role")
+  @@index([role_slug_id], name: "idx_kra_templates_role")
   @@index([department_id], name: "idx_kra_templates_dept")
   @@map("kra_templates")
 }
@@ -427,6 +439,7 @@ model Review {
 
   @@unique([cycle_id, employee_id])
   @@index([cycle_id, employee_id], name: "idx_reviews_cycle_employee")
+  @@index([cycle_id, status], name: "idx_reviews_cycle_status")
   @@map("reviews")
 }
 
@@ -464,6 +477,7 @@ model Appraisal {
   @@unique([cycle_id, employee_id])
   @@index([cycle_id, employee_id], name: "idx_appraisals_cycle_employee")
   @@index([cycle_id, manager_id], name: "idx_appraisals_cycle_manager")
+  @@index([cycle_id, locked_at], name: "idx_appraisals_cycle_locked")
   @@map("appraisals")
 }
 
@@ -503,6 +517,7 @@ model Notification {
   recipient User @relation(fields: [recipient_id], references: [id])
 
   @@index([status], name: "idx_notifications_status")
+  @@index([recipient_id, dismissed_at, created_at], name: "idx_notifications_recipient_active")
   @@map("notifications")
 }
 
@@ -621,13 +636,24 @@ model PeerReviewRequest {
 }
 
 model Competency {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String   @unique
-  description String?
-  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String   @unique
+  description       String?
+  category          String   @default("core") // core, functional, leadership
+  department_id     String?  @db.Uuid         // null = org-wide (core), set = functional
+  role_slug_id      String?  @db.Uuid         // null = all roles, set = leadership/role-specific
+  proficiency_levels Json?                    // [{band, label, description}]
+  sort_order        Int      @default(0)
+  is_active         Boolean  @default(true)
+  created_at        DateTime @default(now()) @db.Timestamptz(6)
 
+  department       Department?      @relation(fields: [department_id], references: [id], onDelete: SetNull)
+  role_slug        RoleSlug?        @relation(fields: [role_slug_id], references: [id], onDelete: SetNull)
   review_questions ReviewQuestion[]
 
+  @@index([category], name: "idx_competencies_category")
+  @@index([department_id], name: "idx_competencies_dept")
+  @@index([role_slug_id], name: "idx_competencies_role")
   @@map("competencies")
 }
 

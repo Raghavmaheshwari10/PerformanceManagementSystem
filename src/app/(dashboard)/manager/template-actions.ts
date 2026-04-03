@@ -7,14 +7,14 @@ import { revalidatePath } from 'next/cache'
 import type { ActionResult } from '@/lib/types'
 
 export async function applyKpiTemplate(
-  roleSlug: string,
+  roleSlugId: string,
   cycleId: string,
   employeeId: string,
 ): Promise<ActionResult> {
   const user = await requireRole(['manager', 'admin'])
 
   try {
-    const count = await applyKpiTemplateDb(roleSlug, cycleId, employeeId, user.id)
+    const count = await applyKpiTemplateDb(roleSlugId, cycleId, employeeId, user.id)
     revalidatePath(`/manager/${employeeId}/kpis`)
     if (count === 0) {
       return { data: null, error: `No KPI templates found for this role. Create templates in Admin → KPI Templates first.` }
@@ -26,14 +26,14 @@ export async function applyKpiTemplate(
 }
 
 export async function applyKraTemplate(
-  roleSlug: string,
+  roleSlugId: string,
   cycleId: string,
   employeeId: string,
 ): Promise<ActionResult> {
   await requireRole(['manager', 'admin'])
 
   try {
-    const count = await applyKraTemplateDb(roleSlug, cycleId, employeeId)
+    const count = await applyKraTemplateDb(roleSlugId, cycleId, employeeId)
     revalidatePath(`/manager/${employeeId}/kpis`)
     if (count === 0) {
       return { data: null, error: `No KRA templates found for this role. Create templates in Admin → KRA Templates first.` }

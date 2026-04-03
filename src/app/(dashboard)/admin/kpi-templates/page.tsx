@@ -3,9 +3,13 @@ import { requireRole } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
-import { toggleTemplateActive } from './actions'
-import { toTitleCase } from '@/lib/constants'
-import type { KpiTemplate } from '@/lib/types'
+import { toggleTemplateActive, deleteKpiTemplate } from './actions'
+
+const CATEGORY_STYLES: Record<string, string> = {
+  performance: 'bg-primary/15 text-primary',
+  behaviour: 'bg-amber-500/15 text-amber-400',
+  learning: 'bg-emerald-500/15 text-emerald-400',
+}
 
 const CATEGORY_LABELS: Record<string, string> = {
   performance: 'Performance',
@@ -21,20 +25,22 @@ export default async function KpiTemplatesPage({
   await requireRole(['admin'])
   const { category } = await searchParams
 
-  const [templates, roleSlugs] = await Promise.all([
-    prisma.kpiTemplate.findMany({
-      where: category ? { category } : undefined,
-      orderBy: [{ role_slug: 'asc' }, { sort_order: 'asc' }],
-    }),
-    prisma.roleSlug.findMany({
-      select: { slug: true, label: true },
-    }),
-  ])
+  const templates = await prisma.kpiTemplate.findMany({
+    where: category ? { category } : undefined,
+    include: {
+      role_slug: { select: { id: true, label: true } },
+      department: { select: { id: true, name: true } },
+    },
+    orderBy: [{ role_slug_id: 'asc' }, { sort_order: 'asc' }],
+  })
 
-  const roleLabels = Object.fromEntries(roleSlugs.map(r => [r.slug, r.label]))
-
-  const grouped = (templates as unknown as KpiTemplate[]).reduce<Record<string, KpiTemplate[]>>((acc, t) => {
-    acc[t.role_slug] = [...(acc[t.role_slug] ?? []), t]
+  // Group by role (using role_slug_id or 'unassigned')
+  const grouped = templates.reduce<Record<string, { label: string; items: typeof templates }>>((acc, t) => {
+    const key = t.role_slug_id ?? 'unassigned'
+    if (!acc[key]) {
+      acc[key] = { label: t.role_slug?.label ?? 'Unassigned', items: [] }
+    }
+    acc[key].items.push(t)
     return acc
   }, {})
 
@@ -61,30 +67,34 @@ export default async function KpiTemplatesPage({
         ))}
       </div>
 
-      {Object.entries(grouped).map(([slug, items]) => (
-        <div key={slug} className="rounded-lg border">
+      {Object.entries(grouped).map(([key, { label, items }]) => (
+        <div key={key} className="glass rounded-lg border overflow-hidden">
           <div className="px-4 py-2 bg-muted/50 border-b">
-            <h2 className="font-semibold text-sm">{roleLabels[slug] ?? toTitleCase(slug)}</h2>
+            <h2 className="font-semibold text-sm">{label}</h2>
           </div>
-          <table className="w-full text-sm">
+          <table className="w-full text-sm table-fixed">
             <thead>
               <tr className="border-b bg-muted/30">
-                <th className="p-3 text-left">Title</th>
-                <th className="p-3 text-left">Category</th>
-                <th className="p-3 text-left">Unit</th>
-                <th className="p-3 text-left">Target</th>
-                <th className="p-3 text-left">Weight</th>
-                <th className="p-3 text-left">Status</th>
-                <th className="p-3 text-left">Actions</th>
+                <th className="p-3 text-left w-[22%]">Title</th>
+                <th className="p-3 text-left w-[12%]">Category</th>
+                <th className="p-3 text-left w-[13%]">Department</th>
+                <th className="p-3 text-left w-[9%]">Unit</th>
+                <th className="p-3 text-left w-[9%]">Target</th>
+                <th className="p-3 text-left w-[9%]">Weight</th>
+                <th className="p-3 text-left w-[10%]">Status</th>
+                <th className="p-3 text-left w-[16%]">Actions</th>
               </tr>
             </thead>
             <tbody>
               {items.map(t => (
-                <tr key={t.id} className="border-t">
-                  <td className="p-3 font-medium">{t.title}</td>
+                <tr key={t.id} className="border-t hover:bg-muted/30 transition-colors">
+                  <td className="p-3 font-medium truncate">{t.title}</td>
                   <td className="p-3">
-                    <Badge variant="outline">{CATEGORY_LABELS[t.category] ?? t.category}</Badge>
+                    <Badge className={CATEGORY_STYLES[t.category] ?? 'bg-muted text-muted-foreground'}>
+                      {CATEGORY_LABELS[t.category] ?? t.category}
+                    </Badge>
                   </td>
+                  <td className="p-3 text-muted-foreground truncate">{t.department?.name ?? '—'}</td>
                   <td className="p-3 text-muted-foreground">{t.unit}</td>
                   <td className="p-3 text-muted-foreground">{t.target != null ? String(t.target) : '—'}</td>
                   <td className="p-3 text-muted-foreground">{t.weight ? `${t.weight}%` : '—'}</td>
@@ -97,7 +107,12 @@ export default async function KpiTemplatesPage({
                     </form>
                   </td>
                   <td className="p-3">
-                    <Link href={`/admin/kpi-templates/${t.id}/edit`} className="text-xs text-primary hover:underline">Edit</Link>
+                    <div className="flex items-center gap-2">
+                      <Link href={`/admin/kpi-templates/${t.id}/edit`} className="text-xs text-primary hover:underline">Edit</Link>
+                      <form action={deleteKpiTemplate.bind(null, t.id) as unknown as (fd: FormData) => Promise<void>}>
+                        <button type="submit" className="text-xs text-destructive hover:underline">Delete</button>
+                      </form>
+                    </div>
                   </td>
                 </tr>
               ))}

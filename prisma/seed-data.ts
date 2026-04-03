@@ -168,10 +168,13 @@ async function main() {
     { title: 'Process Improvement', category: 'behaviour', weight: 5, sort_order: 6 },
   ]
 
+  // Lookup role slug ID for software_engineer
+  const swEngRole = await prisma.roleSlug.findUnique({ where: { slug: 'software_engineer' } })
+
   for (const t of kraTemplateData) {
     // Use findFirst + create pattern since there's no unique on title
     const existing = await prisma.kraTemplate.findFirst({
-      where: { title: t.title, role_slug: 'software_engineer' },
+      where: { title: t.title, role_slug_id: swEngRole?.id },
     })
     if (!existing) {
       await prisma.kraTemplate.create({
@@ -179,7 +182,7 @@ async function main() {
           title: t.title,
           description: `${t.title} KRA for software engineers`,
           category: t.category,
-          role_slug: 'software_engineer',
+          role_slug_id: swEngRole?.id,
           department_id: engineering.id,
           weight: t.weight,
           sort_order: t.sort_order,

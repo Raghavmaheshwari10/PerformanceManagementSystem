@@ -8,6 +8,7 @@ import { advanceCycleStatus } from '../actions'
 import { getNextStatus } from '@/lib/cycle-machine'
 import { CYCLE_STATUS_LABELS } from '@/lib/constants'
 import { getScopedEmployeeWhere } from '@/lib/cycle-helpers'
+import { DeleteCycleButton } from './delete-cycle-button'
 import type { Cycle } from '@/lib/types'
 
 interface CycleProgress {
@@ -54,6 +55,7 @@ export default async function AdminCyclesPage() {
   await requireRole(['admin'])
 
   const allCycles = await prisma.cycle.findMany({
+    take: 50, // Paginate — avoid loading unbounded cycles
     orderBy: { created_at: 'desc' },
     include: { departments: { include: { department: true } } },
   })
@@ -188,15 +190,18 @@ export default async function AdminCyclesPage() {
                   </td>
                   <td className="p-3 text-muted-foreground">{cycle.year}</td>
                   <td className="p-3">
-                    {next && (
-                      <div data-tour="advance-btn">
-                        <form action={advanceCycleStatus.bind(null, cycle.id, cycle.status) as unknown as (fd: FormData) => Promise<void>}>
-                          <Button variant="outline" size="sm" type="submit">
-                            Advance to {CYCLE_STATUS_LABELS[next]}
-                          </Button>
-                        </form>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {next && (
+                        <div data-tour="advance-btn">
+                          <form action={advanceCycleStatus.bind(null, cycle.id, cycle.status) as unknown as (fd: FormData) => Promise<void>}>
+                            <Button variant="outline" size="sm" type="submit">
+                              Advance to {CYCLE_STATUS_LABELS[next]}
+                            </Button>
+                          </form>
+                        </div>
+                      )}
+                      <DeleteCycleButton cycleId={cycle.id} cycleName={cycle.name} />
+                    </div>
                   </td>
                 </tr>
               )

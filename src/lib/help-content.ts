@@ -87,7 +87,7 @@ export const HELP_CONTENT: Record<string, PageHelp> = {
     summary: [
       'Templates are reusable KPI definitions managers can add to employees.',
       'Set a template as Inactive to hide it from managers without deleting it.',
-      'Category and role_slug help managers find relevant templates quickly.',
+      'Category and role help managers find relevant templates quickly.',
       'Weight on templates is a suggestion — managers can adjust per employee.',
     ],
     articles: [],

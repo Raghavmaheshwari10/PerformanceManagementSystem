@@ -1,19 +1,20 @@
 import { prisma } from '@/lib/prisma'
 
 export interface RoleOption {
-  value: string
+  value: string // UUID id
   label: string
+  slug: string  // original slug for display
 }
 
 /**
  * Fetches active role slugs from the database, formatted for select dropdowns.
- * Falls back to empty array if no roles are defined yet.
+ * Returns the UUID id as the value (for FK references).
  */
 export async function fetchRoleOptions(): Promise<RoleOption[]> {
   const roles = await prisma.roleSlug.findMany({
     where: { is_active: true },
     orderBy: [{ sort_order: 'asc' }, { label: 'asc' }],
-    select: { slug: true, label: true },
+    select: { id: true, slug: true, label: true },
   })
-  return roles.map(r => ({ value: r.slug, label: r.label }))
+  return roles.map(r => ({ value: r.id, label: r.label, slug: r.slug }))
 }

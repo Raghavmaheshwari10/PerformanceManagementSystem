@@ -140,13 +140,15 @@ export interface AuditLog {
 
 export interface KpiTemplate {
   id: string
-  role_slug: string
+  role_slug_id: string | null
+  department_id: string | null
   title: string
   description: string | null
   unit: "percent" | "number" | "boolean" | "rating"
   target: number | null
   weight: number | null
   category: "performance" | "behaviour" | "learning"
+  kra_template_id: string | null
   sort_order: number
   is_active: boolean
   created_at: string
@@ -157,7 +159,7 @@ export interface KraTemplate {
   title: string
   description: string | null
   category: string
-  role_slug: string | null
+  role_slug_id: string | null
   department_id: string | null
   weight: number | null
   sort_order: number

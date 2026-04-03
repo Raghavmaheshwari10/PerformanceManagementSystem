@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   title: "Performance Management System | EMB Global",
   description:
     "Performance Management System for EMB Global — manage appraisal cycles, KRAs, KPIs, ratings, and reviews across all employees and departments.",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({

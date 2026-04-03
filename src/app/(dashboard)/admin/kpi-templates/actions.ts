@@ -8,7 +8,8 @@ import type { ActionResult } from '@/lib/types'
 
 function parseTemplateForm(formData: FormData) {
   return {
-    role_slug: (formData.get('role_slug') as string).trim(),
+    role_slug_id: (formData.get('role_slug_id') as string)?.trim() || null,
+    department_id: (formData.get('department_id') as string)?.trim() || null,
     title: (formData.get('title') as string).trim(),
     description: (formData.get('description') as string | null)?.trim() || null,
     unit: (formData.get('unit') as string) || 'rating',
@@ -25,7 +26,6 @@ export async function createKpiTemplate(_prev: ActionResult, formData: FormData)
   const user = await requireRole(['admin'])
   const data = parseTemplateForm(formData)
 
-  if (!data.role_slug) return { data: null, error: 'Role slug is required' }
   if (!data.title) return { data: null, error: 'Title is required' }
 
   try {
@@ -36,7 +36,7 @@ export async function createKpiTemplate(_prev: ActionResult, formData: FormData)
         action: 'kpi_template_created',
         entity_type: 'kpi_template',
         entity_id: template.id,
-        new_value: { title: data.title, role_slug: data.role_slug, category: data.category },
+        new_value: { title: data.title, role_slug_id: data.role_slug_id, category: data.category },
       },
     })
   } catch (e) {
@@ -51,7 +51,6 @@ export async function updateKpiTemplate(id: string, _prev: ActionResult, formDat
   const user = await requireRole(['admin'])
   const data = parseTemplateForm(formData)
 
-  if (!data.role_slug) return { data: null, error: 'Role slug is required' }
   if (!data.title) return { data: null, error: 'Title is required' }
 
   try {
@@ -62,7 +61,7 @@ export async function updateKpiTemplate(id: string, _prev: ActionResult, formDat
         action: 'kpi_template_updated',
         entity_type: 'kpi_template',
         entity_id: id,
-        new_value: { title: data.title, role_slug: data.role_slug, category: data.category },
+        new_value: { title: data.title, role_slug_id: data.role_slug_id, category: data.category },
       },
     })
   } catch (e) {
@@ -86,6 +85,21 @@ export async function toggleTemplateActive(id: string, current: boolean): Promis
       entity_type: 'kpi_template',
       entity_id: id,
       new_value: { is_active: !current },
+    },
+  })
+  revalidatePath('/admin/kpi-templates')
+}
+
+export async function deleteKpiTemplate(id: string): Promise<void> {
+  const user = await requireRole(['admin'])
+  await prisma.kpiTemplate.delete({ where: { id } })
+  await prisma.auditLog.create({
+    data: {
+      changed_by: user.id,
+      action: 'kpi_template_deleted',
+      entity_type: 'kpi_template',
+      entity_id: id,
+      new_value: {},
     },
   })
   revalidatePath('/admin/kpi-templates')

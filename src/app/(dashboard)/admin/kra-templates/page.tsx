@@ -4,8 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { toggleKraTemplateActive, deleteKraTemplate } from './actions'
-import { toTitleCase } from '@/lib/constants'
-import type { KraTemplate } from '@/lib/types'
 
 const CATEGORY_STYLES: Record<string, string> = {
   performance: 'bg-primary/15 text-primary',
@@ -27,24 +25,22 @@ export default async function KraTemplatesPage({
   await requireRole(['admin'])
   const { category } = await searchParams
 
-  const [templates, roleSlugs] = await Promise.all([
-    prisma.kraTemplate.findMany({
-      where: category ? { category } : undefined,
-      include: { department: true },
-      orderBy: [{ role_slug: 'asc' }, { sort_order: 'asc' }],
-    }),
-    prisma.roleSlug.findMany({
-      select: { slug: true, label: true },
-    }),
-  ])
+  const templates = await prisma.kraTemplate.findMany({
+    where: category ? { category } : undefined,
+    include: {
+      role_slug: { select: { id: true, label: true } },
+      department: { select: { id: true, name: true } },
+    },
+    orderBy: [{ role_slug_id: 'asc' }, { sort_order: 'asc' }],
+  })
 
-  const roleLabels = Object.fromEntries(roleSlugs.map(r => [r.slug, r.label]))
-
-  const grouped = (templates as unknown as (KraTemplate & { department?: { name: string } | null })[]).reduce<
-    Record<string, (KraTemplate & { department?: { name: string } | null })[]>
-  >((acc, t) => {
-    const key = t.role_slug ?? 'unassigned'
-    acc[key] = [...(acc[key] ?? []), t]
+  // Group by role
+  const grouped = templates.reduce<Record<string, { label: string; items: typeof templates }>>((acc, t) => {
+    const key = t.role_slug_id ?? 'unassigned'
+    if (!acc[key]) {
+      acc[key] = { label: t.role_slug?.label ?? 'Unassigned', items: [] }
+    }
+    acc[key].items.push(t)
     return acc
   }, {})
 
@@ -76,35 +72,35 @@ export default async function KraTemplatesPage({
         ))}
       </div>
 
-      {Object.entries(grouped).map(([slug, items]) => (
-        <div key={slug} className="glass rounded-lg border">
+      {Object.entries(grouped).map(([key, { label, items }]) => (
+        <div key={key} className="glass rounded-lg border overflow-hidden">
           <div className="px-4 py-2 bg-muted/50 border-b">
-            <h2 className="font-semibold text-sm">{roleLabels[slug] ?? toTitleCase(slug)}</h2>
+            <h2 className="font-semibold text-sm">{label}</h2>
           </div>
-          <table className="w-full text-sm">
+          <table className="w-full text-sm table-fixed">
             <thead>
               <tr className="border-b bg-muted/30">
-                <th className="p-3 text-left">Title</th>
-                <th className="p-3 text-left">Category</th>
-                <th className="p-3 text-left">Description</th>
-                <th className="p-3 text-left">Weight</th>
-                <th className="p-3 text-left">Department</th>
-                <th className="p-3 text-left">Status</th>
-                <th className="p-3 text-left">Actions</th>
+                <th className="p-3 text-left w-[22%]">Title</th>
+                <th className="p-3 text-left w-[12%]">Category</th>
+                <th className="p-3 text-left w-[22%]">Description</th>
+                <th className="p-3 text-left w-[9%]">Weight</th>
+                <th className="p-3 text-left w-[13%]">Department</th>
+                <th className="p-3 text-left w-[10%]">Status</th>
+                <th className="p-3 text-left w-[12%]">Actions</th>
               </tr>
             </thead>
             <tbody>
               {items.map(t => (
                 <tr key={t.id} className="border-t hover:bg-muted/30 transition-colors">
-                  <td className="p-3 font-medium">{t.title}</td>
+                  <td className="p-3 font-medium truncate">{t.title}</td>
                   <td className="p-3">
                     <Badge className={CATEGORY_STYLES[t.category] ?? 'bg-muted text-muted-foreground'}>
                       {CATEGORY_LABELS[t.category] ?? t.category}
                     </Badge>
                   </td>
-                  <td className="p-3 text-muted-foreground max-w-[200px] truncate">{t.description ?? '—'}</td>
+                  <td className="p-3 text-muted-foreground truncate">{t.description ?? '—'}</td>
                   <td className="p-3 text-muted-foreground">{t.weight != null ? `${t.weight}%` : '—'}</td>
-                  <td className="p-3 text-muted-foreground">{t.department?.name ?? '—'}</td>
+                  <td className="p-3 text-muted-foreground truncate">{t.department?.name ?? '—'}</td>
                   <td className="p-3">
                     <form action={toggleKraTemplateActive.bind(null, t.id, t.is_active) as unknown as (fd: FormData) => Promise<void>}>
                       <button type="submit"
@@ -113,11 +109,13 @@ export default async function KraTemplatesPage({
                       </button>
                     </form>
                   </td>
-                  <td className="p-3 flex gap-2">
-                    <Link href={`/admin/kra-templates/${t.id}/edit`} className="text-xs text-primary hover:underline">Edit</Link>
-                    <form action={deleteKraTemplate.bind(null, t.id) as unknown as (fd: FormData) => Promise<void>}>
-                      <button type="submit" className="text-xs text-destructive hover:underline">Delete</button>
-                    </form>
+                  <td className="p-3">
+                    <div className="flex items-center gap-2">
+                      <Link href={`/admin/kra-templates/${t.id}/edit`} className="text-xs text-primary hover:underline">Edit</Link>
+                      <form action={deleteKraTemplate.bind(null, t.id) as unknown as (fd: FormData) => Promise<void>}>
+                        <button type="submit" className="text-xs text-destructive hover:underline">Delete</button>
+                      </form>
+                    </div>
                   </td>
                 </tr>
               ))}

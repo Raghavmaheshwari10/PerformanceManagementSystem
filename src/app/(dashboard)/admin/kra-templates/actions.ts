@@ -11,7 +11,7 @@ function parseKraTemplateForm(formData: FormData) {
     title: (formData.get('title') as string).trim(),
     description: (formData.get('description') as string | null)?.trim() || null,
     category: formData.get('category') as string,
-    role_slug: (formData.get('role_slug') as string | null)?.trim() || null,
+    role_slug_id: (formData.get('role_slug_id') as string | null)?.trim() || null,
     department_id: (formData.get('department_id') as string | null)?.trim() || null,
     weight: formData.get('weight') ? Number(formData.get('weight')) : null,
     sort_order: Number(formData.get('sort_order') || 0),

@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
  * Returns the number of KPIs created.
  */
 export async function applyKpiTemplate(
-  roleSlug: string,
+  roleSlugId: string,
   cycleId: string,
   employeeId: string,
   currentUserId: string,
@@ -19,7 +19,7 @@ export async function applyKpiTemplate(
   const managerId = employee?.manager_id ?? currentUserId
 
   const templates = await prisma.kpiTemplate.findMany({
-    where: { role_slug: roleSlug, is_active: true },
+    where: { role_slug_id: roleSlugId, is_active: true },
     include: { kra_template: { select: { title: true } } },
     orderBy: { sort_order: 'asc' },
   })

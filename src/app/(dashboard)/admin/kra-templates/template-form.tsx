@@ -37,8 +37,8 @@ export function KraTemplateForm({ action, defaultValues = {}, departments, roleO
           <Input id="title" name="title" defaultValue={defaultValues.title} required />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="role_slug">Role Slug</Label>
-          <select id="role_slug" name="role_slug" defaultValue={defaultValues.role_slug ?? ''}
+          <Label htmlFor="role_slug_id">Role</Label>
+          <select id="role_slug_id" name="role_slug_id" defaultValue={defaultValues.role_slug_id ?? ''}
             className="w-full rounded-md border bg-background px-3 py-1.5 text-sm">
             <option value="">— No role —</option>
             {roleOptions.map(r => (

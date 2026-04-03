@@ -5,12 +5,12 @@ import { prisma } from '@/lib/prisma'
  * Atomic: batches existence check and createMany inside a transaction.
  */
 export async function applyKraTemplate(
-  roleSlug: string,
+  roleSlugId: string,
   cycleId: string,
   employeeId: string
 ): Promise<number> {
   const templates = await prisma.kraTemplate.findMany({
-    where: { role_slug: roleSlug, is_active: true },
+    where: { role_slug_id: roleSlugId, is_active: true },
     orderBy: { sort_order: 'asc' },
   })
 

@@ -9,12 +9,18 @@ if (typeof WebSocket === "undefined") {
   neonConfig.webSocketConstructor = require("ws");
 }
 
+// NeonDB fetch-based pooling timeout (applies to all requests)
+neonConfig.fetchConnectionCache = true;
+
 function createPrismaClient() {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
     throw new Error("Missing required environment variable: DATABASE_URL");
   }
-  // PrismaNeon accepts PoolConfig (not a Pool instance)
+
+  // PrismaNeon uses NeonDB's HTTP-based pooling (neon serverless driver).
+  // Connection pooling is handled at the Neon proxy level, not in-app.
+  // Ensure DATABASE_URL uses the pooled endpoint (-pooler.*.neon.tech).
   const adapter = new PrismaNeon({ connectionString });
   return new PrismaClient({ adapter });
 }

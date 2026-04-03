@@ -331,6 +331,79 @@ export async function setEmployeeStatusOverride(
   return { data: null, error: null }
 }
 
+/**
+ * Delete a cycle and all its related data. Admin only.
+ * Manually deletes child records that don't have onDelete: Cascade.
+ */
+export async function deleteCycle(cycleId: string): Promise<ActionResult> {
+  const user = await requireRole(['admin'])
+
+  const cycle = await prisma.cycle.findUnique({
+    where: { id: cycleId },
+    select: { id: true, name: true, status: true },
+  })
+
+  if (!cycle) {
+    return { data: null, error: 'Cycle not found' }
+  }
+
+  try {
+    // Delete in dependency order (children first)
+    // 1. ReviewResponse depends on Review
+    await prisma.reviewResponse.deleteMany({
+      where: { review: { cycle_id: cycleId } },
+    })
+
+    // 2. MeetingMinutes depends on ReviewMeeting
+    await prisma.meetingMinutes.deleteMany({
+      where: { meeting: { cycle_id: cycleId } },
+    })
+
+    // 3. GoalUpdate depends on Goal
+    await prisma.goalUpdate.deleteMany({
+      where: { goal: { cycle_id: cycleId } },
+    })
+
+    // 4. Direct cycle children (no cascade set)
+    await Promise.all([
+      prisma.reviewMeeting.deleteMany({ where: { cycle_id: cycleId } }),
+      prisma.review.deleteMany({ where: { cycle_id: cycleId } }),
+      prisma.appraisal.deleteMany({ where: { cycle_id: cycleId } }),
+      prisma.kpi.deleteMany({ where: { cycle_id: cycleId } }),
+      prisma.kra.deleteMany({ where: { cycle_id: cycleId } }),
+      prisma.goal.deleteMany({ where: { cycle_id: cycleId } }),
+      prisma.peerReviewRequest.deleteMany({ where: { cycle_id: cycleId } }),
+      prisma.auditLog.deleteMany({ where: { cycle_id: cycleId } }),
+    ])
+
+    // 5. CycleDepartment and CycleEmployee have cascade, but delete explicitly for safety
+    await Promise.all([
+      prisma.cycleDepartment.deleteMany({ where: { cycle_id: cycleId } }),
+      prisma.cycleEmployee.deleteMany({ where: { cycle_id: cycleId } }),
+    ])
+
+    // 6. Delete the cycle itself
+    await prisma.cycle.delete({ where: { id: cycleId } })
+
+    // Audit log (separate from cycle, no cycle_id reference)
+    await prisma.auditLog.create({
+      data: {
+        changed_by: user.id,
+        action: 'cycle_deleted',
+        entity_type: 'cycle',
+        entity_id: cycleId,
+        old_value: { name: cycle.name, status: cycle.status },
+      },
+    })
+  } catch (e) {
+    console.error('Failed to delete cycle:', e)
+    return { data: null, error: e instanceof Error ? e.message : 'Failed to delete cycle' }
+  }
+
+  revalidatePath('/admin/cycles')
+  return { data: null, error: null }
+}
+
 // ─── Transition Notification Helper ──────────────────────────────────
 
 const STATUS_TO_NOTIFICATION: Partial<Record<CycleStatus, { type: NotificationType; roles: ('employee' | 'manager')[] }>> = {

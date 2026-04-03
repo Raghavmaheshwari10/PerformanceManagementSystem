@@ -1,6 +1,7 @@
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { cache } from 'react'
 import type { UserRole } from '@prisma/client'
 
 // Full DB user type — use this when you need all user fields
@@ -8,9 +9,11 @@ export type AppUser = Awaited<ReturnType<typeof getCurrentUser>>
 
 /**
  * Returns the full user record from DB.
+ * Cached per-request via React `cache()` — multiple calls in the same
+ * render tree (layout + page + components) only hit DB once.
  * Redirects to /login if not authenticated.
  */
-export async function getCurrentUser() {
+export const getCurrentUser = cache(async () => {
   const session = await auth()
   if (!session?.user?.id) redirect('/login')
 
@@ -19,7 +22,7 @@ export async function getCurrentUser() {
   })
   if (!user || !user.is_active) redirect('/login')
   return user
-}
+})
 
 /**
  * Returns the current user and verifies they have one of the allowed roles.

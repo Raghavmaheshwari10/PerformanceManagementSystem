@@ -93,8 +93,8 @@ export async function deleteRoleSlug(id: string): Promise<ActionResult> {
 
   // Check if used by any templates
   const [kpiCount, kraCount] = await Promise.all([
-    prisma.kpiTemplate.count({ where: { role_slug: role.slug } }),
-    prisma.kraTemplate.count({ where: { role_slug: role.slug } }),
+    prisma.kpiTemplate.count({ where: { role_slug_id: role.id } }),
+    prisma.kraTemplate.count({ where: { role_slug_id: role.id } }),
   ])
 
   if (kpiCount > 0 || kraCount > 0) {

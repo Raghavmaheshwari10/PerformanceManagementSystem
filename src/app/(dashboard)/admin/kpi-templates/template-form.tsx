@@ -15,10 +15,15 @@ interface RoleOption {
   label: string
 }
 
+interface DeptOption {
+  id: string
+  name: string
+}
+
 interface KraTemplateOption {
   id: string
   title: string
-  role_slug: string | null
+  role_slug_id: string | null
   category: string
 }
 
@@ -27,12 +32,13 @@ interface Props {
   defaultValues?: Partial<KpiTemplate> & { kra_template_id?: string | null }
   kraTemplates?: KraTemplateOption[]
   roleOptions?: RoleOption[]
+  departments?: DeptOption[]
 }
 
-export function TemplateForm({ action, defaultValues = {}, kraTemplates = [], roleOptions = [] }: Props) {
+export function TemplateForm({ action, defaultValues = {}, kraTemplates = [], roleOptions = [], departments = [] }: Props) {
   const [state, formAction] = useActionState(action, INITIAL)
   const [category, setCategory] = useState<string>(defaultValues.category ?? 'performance')
-  const [roleSlug, setRoleSlug] = useState<string>(defaultValues.role_slug ?? '')
+  const [roleSlugId, setRoleSlugId] = useState<string>(defaultValues.role_slug_id ?? '')
 
   const isPerformance = category === 'performance'
 
@@ -44,19 +50,30 @@ export function TemplateForm({ action, defaultValues = {}, kraTemplates = [], ro
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label htmlFor="role_slug">Role <span className="text-destructive">*</span></Label>
-          <select id="role_slug" name="role_slug" value={roleSlug} onChange={e => setRoleSlug(e.target.value)} required
+          <Label htmlFor="role_slug_id">Role</Label>
+          <select id="role_slug_id" name="role_slug_id" value={roleSlugId} onChange={e => setRoleSlugId(e.target.value)}
             className="w-full rounded-md border bg-background px-3 py-1.5 text-sm">
-            <option value="">— Select role —</option>
+            <option value="">— No role —</option>
             {roleOptions.map(r => (
               <option key={r.value} value={r.value}>{r.label}</option>
             ))}
           </select>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="title">Title <span className="text-destructive">*</span></Label>
-          <Input id="title" name="title" defaultValue={defaultValues.title} required />
+          <Label htmlFor="department_id">Department</Label>
+          <select id="department_id" name="department_id" defaultValue={defaultValues.department_id ?? ''}
+            className="w-full rounded-md border bg-background px-3 py-1.5 text-sm">
+            <option value="">— None —</option>
+            {departments.map(d => (
+              <option key={d.id} value={d.id}>{d.name}</option>
+            ))}
+          </select>
         </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="title">Title <span className="text-destructive">*</span></Label>
+        <Input id="title" name="title" defaultValue={defaultValues.title} required />
       </div>
 
       {kraTemplates.length > 0 && (
@@ -66,7 +83,7 @@ export function TemplateForm({ action, defaultValues = {}, kraTemplates = [], ro
             className="w-full rounded-md border bg-background px-3 py-1.5 text-sm">
             <option value="">— None (unassigned) —</option>
             {kraTemplates
-              .filter(k => !roleSlug || !k.role_slug || k.role_slug === roleSlug)
+              .filter(k => !roleSlugId || !k.role_slug_id || k.role_slug_id === roleSlugId)
               .map(k => (
                 <option key={k.id} value={k.id}>{k.title} ({k.category})</option>
               ))}
