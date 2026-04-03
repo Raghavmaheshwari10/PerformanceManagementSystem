@@ -163,11 +163,7 @@ export function Sidebar({
       {/* Logo */}
       <div className="px-5 pt-6 pb-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 shadow-lg shadow-indigo-500/20">
-            <svg viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 2v20M2 12h20M5.636 5.636l12.728 12.728M18.364 5.636L5.636 18.364" strokeLinecap="round"/>
-            </svg>
-          </div>
+          <img src="/icon.svg" alt="PMS" className="h-9 w-9 rounded-xl" />
           <div className="min-w-0 flex-1">
             <p className="text-[15px] font-bold text-slate-900 tracking-tight">PMS</p>
             <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">EMB Global</p>
@@ -279,11 +275,7 @@ export function Sidebar({
     <>
       {/* Logo icon + expand button */}
       <div className="flex flex-col items-center pt-6 pb-4 gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 shadow-lg shadow-indigo-500/20">
-          <svg viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 2v20M2 12h20M5.636 5.636l12.728 12.728M18.364 5.636L5.636 18.364" strokeLinecap="round"/>
-          </svg>
-        </div>
+        <img src="/icon.svg" alt="PMS" className="h-9 w-9 rounded-xl" />
         <button
           onClick={toggleCollapsed}
           className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"

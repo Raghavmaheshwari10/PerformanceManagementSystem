@@ -98,11 +98,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
         {/* Content */}
         <div className="relative z-10">
           <div className="flex items-center gap-3">
-            <div className="grid size-9 place-items-center rounded-lg border border-white/15 bg-white/5 backdrop-blur-sm">
-              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="size-5">
-                <path d="M12 2v20M2 12h20M5.636 5.636l12.728 12.728M18.364 5.636L5.636 18.364" strokeLinecap="round" />
-              </svg>
-            </div>
+            <img src="/icon.svg" alt="PMS" className="size-9 rounded-lg" />
             <span className="text-sm font-medium tracking-wide text-white/90">PMS</span>
           </div>
         </div>
