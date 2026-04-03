@@ -33,8 +33,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'MIS Targets',  href: '/employee/mis',          icon: BarChart3 },
     { label: 'Feedback',     href: '/employee/feedback',     icon: MessageSquare },
     { label: 'Profile',      href: '/employee/profile',      icon: UserCircle },
-    { label: 'Docs',         href: '/docs',                  icon: BookOpen,    section: 'divider' },
-    { label: 'Help',         href: '#help',                  icon: HelpCircle },
+    { label: 'Help',         href: '#help',                  icon: HelpCircle,  section: 'divider' },
   ],
   manager: [
     { label: 'My Team',      href: '/manager',           icon: Users2 },
@@ -42,7 +41,6 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Team Reports', href: '/manager/reports',   icon: FileBarChart },
     { label: 'MIS Tracking', href: '/manager/mis',       icon: BarChart3 },
     { label: 'My Review',    href: '/manager/my-review', icon: ClipboardCheck, section: 'divider' },
-    { label: 'Docs',         href: '/docs',              icon: BookOpen },
     { label: 'Help',         href: '#help',              icon: HelpCircle },
   ],
   hrbp: [
