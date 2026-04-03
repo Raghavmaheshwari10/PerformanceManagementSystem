@@ -17,7 +17,7 @@ const TARGET_FIELDS = [
   { key: 'zimyo_id',      label: 'Employee ID (Zimyo)',  required: false },
   { key: 'email',         label: 'Email',                required: true  },
   { key: 'full_name',     label: 'Full Name',            required: true  },
-  { key: 'role',          label: 'Role',                 required: false, hint: 'employee, manager, hrbp, admin' },
+  { key: 'role',          label: 'Role',                 required: false, hint: 'Employee, Manager, HRBP, Admin' },
   { key: 'department',    label: 'Department',           required: false },
   { key: 'designation',   label: 'Designation / Title',  required: false },
   { key: 'manager_email', label: 'Manager Email',        required: false },
@@ -77,9 +77,9 @@ function autoDetect(headers: string[]): Record<string, string> {
 
 const CSV_TEMPLATE_HEADERS = ['emp_code', 'email', 'full_name', 'role', 'department', 'designation', 'manager_email', 'variable_pay']
 const CSV_TEMPLATE_SAMPLE = [
-  'EMP001,john.doe@company.com,John Doe,employee,Engineering,Senior Engineer,jane.smith@company.com,50000',
-  'EMP002,jane.smith@company.com,Jane Smith,manager,Engineering,Engineering Manager,,75000',
-  'EMP003,alex.kumar@company.com,Alex Kumar,employee,Sales,Sales Executive,jane.smith@company.com,40000',
+  'EMP001,john.doe@company.com,John Doe,Employee,Engineering,Senior Engineer,jane.smith@company.com,50000',
+  'EMP002,jane.smith@company.com,Jane Smith,Manager,Engineering,Engineering Manager,,75000',
+  'EMP003,alex.kumar@company.com,Alex Kumar,HRBP,Sales,Sales Executive,jane.smith@company.com,40000',
 ]
 
 function downloadCsvTemplate() {
@@ -180,7 +180,7 @@ export default function UploadUsersPage() {
           </div>
           {state.data!.skippedReasons.length > 0 && (
             <div className="space-y-1">
-              <p className="text-sm font-medium text-amber-700 dark:text-amber-400">Skip reasons:</p>
+              <p className="text-sm font-medium text-amber-700 dark:text-amber-400">Warnings &amp; notes:</p>
               <ul className="space-y-0.5 max-h-40 overflow-y-auto">
                 {state.data!.skippedReasons.map((r, i) => (
                   <li key={i} className="text-xs text-muted-foreground">• {r}</li>
@@ -337,9 +337,14 @@ export default function UploadUsersPage() {
             <Label htmlFor="file">CSV File</Label>
             <Input id="file" type="file" accept=".csv,.tsv" onChange={handleFileChange} />
           </div>
-          <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground space-y-1">
-            <p className="font-medium text-foreground">Any column order works</p>
-            <p>Commonly recognised columns: <code>email</code>, <code>full_name</code>, <code>department</code>, <code>designation</code>, <code>manager_email</code>, <code>variable_pay</code></p>
+          <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground space-y-2">
+            <p className="font-medium text-foreground">Import notes</p>
+            <ul className="space-y-1 list-disc pl-3.5">
+              <li>Any column order works — you&apos;ll map columns in the next step</li>
+              <li><strong>Role</strong> must be one of: <code>Employee</code>, <code>Manager</code>, <code>HRBP</code>, <code>Admin</code> (invalid roles default to Employee)</li>
+              <li><strong>Department</strong> — if a department doesn&apos;t exist yet, it will be auto-created</li>
+              <li><strong>Manager Email</strong> — must match an existing user&apos;s email (already in system or in the same import)</li>
+            </ul>
           </div>
         </div>
       )}
@@ -365,9 +370,15 @@ export default function UploadUsersPage() {
           <Button onClick={handleFetchSheet} disabled={!sheetUrl || fetching}>
             {fetching ? 'Fetching sheet…' : 'Fetch & Map Columns →'}
           </Button>
-          <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground space-y-1">
+          <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground space-y-2">
             <p className="font-medium text-foreground">How to share your sheet</p>
             <p>File → Share → General access → <strong>Anyone with the link</strong> → Viewer</p>
+            <hr className="border-border/50" />
+            <ul className="space-y-1 list-disc pl-3.5">
+              <li><strong>Role</strong> must be one of: <code>Employee</code>, <code>Manager</code>, <code>HRBP</code>, <code>Admin</code> (invalid roles default to Employee)</li>
+              <li><strong>Department</strong> — if a department doesn&apos;t exist yet, it will be auto-created</li>
+              <li><strong>Manager Email</strong> — must match an existing user&apos;s email</li>
+            </ul>
           </div>
         </div>
       )}

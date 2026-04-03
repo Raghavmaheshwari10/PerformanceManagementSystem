@@ -147,6 +147,8 @@ export async function uploadUsersWithMapping(
       const roleLower = mapped.role.toLowerCase().trim()
       if (VALID_ROLES.includes(roleLower as typeof VALID_ROLES[number])) {
         userData.role = roleLower
+      } else {
+        skippedReasons.push(`Invalid role "${mapped.role}" for ${mapped.email} — defaulting to "employee". Valid: Employee, Manager, HRBP, Admin`)
       }
     }
     if (mapped.emp_code) userData.emp_code = mapped.emp_code
@@ -156,10 +158,16 @@ export async function uploadUsersWithMapping(
       if (!isNaN(pay)) userData.variable_pay = pay
     }
 
-    // Handle department lookup by name if provided
+    // Handle department lookup by name if provided — auto-create if not found
     if (mapped.department) {
-      const dept = await prisma.department.findFirst({ where: { name: mapped.department } })
-      if (dept) userData.department_id = dept.id
+      let dept = await prisma.department.findFirst({
+        where: { name: { equals: mapped.department, mode: 'insensitive' } },
+      })
+      if (!dept) {
+        dept = await prisma.department.create({ data: { name: mapped.department } })
+        skippedReasons.push(`Department "${mapped.department}" didn't exist — auto-created`)
+      }
+      userData.department_id = dept.id
     }
 
     const existing = await prisma.user.findUnique({

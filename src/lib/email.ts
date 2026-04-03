@@ -17,7 +17,7 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string): Prom
     html: `
       <p>Hello,</p>
       <p>You requested a password reset. Click the link below to set a new password:</p>
-      <p><a href="${resetUrl}" style="background:#000;color:#fff;padding:10px 20px;text-decoration:none;border-radius:4px;display:inline-block">Reset Password</a></p>
+      <p><a href="${resetUrl}" style="background:#16a34a;color:#fff;padding:10px 20px;text-decoration:none;border-radius:4px;display:inline-block">Reset Password</a></p>
       <p>This link expires in 1 hour.</p>
       <p>If you did not request this, you can safely ignore this email.</p>
     `,
