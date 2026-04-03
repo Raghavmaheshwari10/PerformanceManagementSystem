@@ -25,16 +25,79 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string): Prom
 }
 
 export async function sendInviteEmail(to: string, inviteUrl: string, fullName: string): Promise<void> {
+  const firstName = fullName.split(' ')[0]
   await resend.emails.send({
     from: fromAddress,
     to,
-    subject: 'You\'ve been invited to PMS — Set up your account',
+    subject: `Welcome to PMS, ${firstName}! Set up your account`,
     html: `
-      <p>Hello ${fullName},</p>
-      <p>You've been invited to the PMS Performance Management System. Click below to set your password and get started:</p>
-      <p><a href="${inviteUrl}" style="background:#4f46e5;color:#fff;padding:12px 24px;text-decoration:none;border-radius:6px;display:inline-block;font-weight:600">Set Up Your Account</a></p>
-      <p>This invitation link expires in 72 hours.</p>
-      <p>If you have questions, contact your HR administrator.</p>
+      <!DOCTYPE html>
+      <html>
+      <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+      <body style="margin:0;padding:0;background-color:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8fafc;padding:40px 20px;">
+          <tr><td align="center">
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+              <!-- Header -->
+              <tr>
+                <td style="background:linear-gradient(135deg,#1a3a2a 0%,#2d5a3f 100%);padding:32px 40px;text-align:center;">
+                  <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:-0.3px;">PMS</h1>
+                  <p style="margin:4px 0 0;color:rgba(255,255,255,0.7);font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;">EMB Global</p>
+                </td>
+              </tr>
+              <!-- Body -->
+              <tr>
+                <td style="padding:36px 40px 20px;">
+                  <h2 style="margin:0 0 8px;color:#1e293b;font-size:20px;font-weight:700;">Welcome, ${firstName}!</h2>
+                  <p style="margin:0 0 24px;color:#64748b;font-size:14px;line-height:1.6;">
+                    You've been invited to the <strong>Performance Management System</strong>. Set up your account to access your dashboard, review cycles, goals, and more.
+                  </p>
+                  <!-- CTA Button -->
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr><td align="center" style="padding:8px 0 28px;">
+                      <a href="${inviteUrl}" style="display:inline-block;background:#16a34a;color:#ffffff;padding:14px 36px;font-size:15px;font-weight:600;text-decoration:none;border-radius:8px;letter-spacing:0.2px;">
+                        Set Up Your Account
+                      </a>
+                    </td></tr>
+                  </table>
+                  <!-- Details -->
+                  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border-radius:8px;margin-bottom:24px;">
+                    <tr><td style="padding:16px 20px;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td style="padding:4px 0;color:#94a3b8;font-size:12px;font-weight:600;width:100px;">Email</td>
+                          <td style="padding:4px 0;color:#334155;font-size:13px;">${to}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding:4px 0;color:#94a3b8;font-size:12px;font-weight:600;">Name</td>
+                          <td style="padding:4px 0;color:#334155;font-size:13px;">${fullName}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding:4px 0;color:#94a3b8;font-size:12px;font-weight:600;">Expires</td>
+                          <td style="padding:4px 0;color:#334155;font-size:13px;">72 hours from now</td>
+                        </tr>
+                      </table>
+                    </td></tr>
+                  </table>
+                  <p style="margin:0;color:#94a3b8;font-size:12px;line-height:1.5;">
+                    If you didn't expect this invitation, you can safely ignore this email.<br/>
+                    Need help? Contact your HR administrator.
+                  </p>
+                </td>
+              </tr>
+              <!-- Footer -->
+              <tr>
+                <td style="padding:20px 40px 28px;border-top:1px solid #f1f5f9;">
+                  <p style="margin:0;color:#cbd5e1;font-size:11px;text-align:center;">
+                    PMS &mdash; Performance Management System &bull; EMB Global
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td></tr>
+        </table>
+      </body>
+      </html>
     `,
   })
 }

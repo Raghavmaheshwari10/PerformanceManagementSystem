@@ -105,7 +105,7 @@ export async function uploadUsersWithMapping(
 
   // Read column mappings from formData (map_fieldName → csvColumnHeader)
   const colMap: Record<string, string> = {}
-  for (const key of ['emp_code', 'zimyo_id', 'email', 'full_name', 'department', 'designation', 'manager_email', 'variable_pay']) {
+  for (const key of ['emp_code', 'zimyo_id', 'email', 'full_name', 'role', 'department', 'designation', 'manager_email', 'variable_pay']) {
     const val = formData.get(`map_${key}`) as string
     if (val) colMap[key] = val
   }
@@ -136,11 +136,18 @@ export async function uploadUsersWithMapping(
       continue
     }
 
+    const VALID_ROLES = ['employee', 'manager', 'hrbp', 'admin'] as const
     const userData: Record<string, unknown> = {
       email: mapped.email,
       full_name: mapped.full_name || mapped.email,
       designation: mapped.designation || null,
       synced_at: new Date(),
+    }
+    if (mapped.role) {
+      const roleLower = mapped.role.toLowerCase().trim()
+      if (VALID_ROLES.includes(roleLower as typeof VALID_ROLES[number])) {
+        userData.role = roleLower
+      }
     }
     if (mapped.emp_code) userData.emp_code = mapped.emp_code
     if (mapped.zimyo_id) userData.zimyo_id = mapped.zimyo_id

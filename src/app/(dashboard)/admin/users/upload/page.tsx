@@ -17,6 +17,7 @@ const TARGET_FIELDS = [
   { key: 'zimyo_id',      label: 'Employee ID (Zimyo)',  required: false },
   { key: 'email',         label: 'Email',                required: true  },
   { key: 'full_name',     label: 'Full Name',            required: true  },
+  { key: 'role',          label: 'Role',                 required: false, hint: 'employee, manager, hrbp, admin' },
   { key: 'department',    label: 'Department',           required: false },
   { key: 'designation',   label: 'Designation / Title',  required: false },
   { key: 'manager_email', label: 'Manager Email',        required: false },
@@ -56,8 +57,9 @@ function autoDetect(headers: string[]): Record<string, string> {
     zimyo_id:      ['zimyo_id', 'employee_id', 'emp_id', 'staff_id', 'id'],
     email:         ['email', 'email_address', 'work_email', 'e_mail'],
     full_name:     ['full_name', 'name', 'employee_name', 'staff_name', 'fullname'],
+    role:          ['role', 'user_role', 'access_level', 'permission'],
     department:    ['department', 'dept', 'team', 'division', 'business_unit'],
-    designation:   ['designation', 'title', 'job_title', 'position', 'role'],
+    designation:   ['designation', 'title', 'job_title', 'position'],
     manager_email: ['manager_email', 'reporting_manager_email', 'reporting_manager', 'manager'],
     variable_pay:  ['variable_pay', 'variable', 'bonus', 'incentive', 'ctc'],
   }
@@ -73,11 +75,11 @@ function autoDetect(headers: string[]): Record<string, string> {
 
 // ── CSV template ─────────────────────────────────────────────────────────────
 
-const CSV_TEMPLATE_HEADERS = ['emp_code', 'email', 'full_name', 'department', 'designation', 'manager_email', 'variable_pay']
+const CSV_TEMPLATE_HEADERS = ['emp_code', 'email', 'full_name', 'role', 'department', 'designation', 'manager_email', 'variable_pay']
 const CSV_TEMPLATE_SAMPLE = [
-  'EMP001,john.doe@company.com,John Doe,Engineering,Senior Engineer,jane.smith@company.com,50000',
-  'EMP002,jane.smith@company.com,Jane Smith,Engineering,Engineering Manager,,75000',
-  'EMP003,alex.kumar@company.com,Alex Kumar,Sales,Sales Executive,jane.smith@company.com,40000',
+  'EMP001,john.doe@company.com,John Doe,employee,Engineering,Senior Engineer,jane.smith@company.com,50000',
+  'EMP002,jane.smith@company.com,Jane Smith,manager,Engineering,Engineering Manager,,75000',
+  'EMP003,alex.kumar@company.com,Alex Kumar,employee,Sales,Sales Executive,jane.smith@company.com,40000',
 ]
 
 function downloadCsvTemplate() {
@@ -225,6 +227,7 @@ export default function UploadUsersPage() {
                 <div>
                   <span className="text-sm font-medium">{field.label}</span>
                   {field.required && <span className="ml-1 text-destructive text-xs">*</span>}
+                  {'hint' in field && field.hint && <p className="text-[10px] text-muted-foreground mt-0.5">{field.hint}</p>}
                 </div>
                 <select
                   name={`map_${field.key}`}
