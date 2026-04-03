@@ -59,9 +59,18 @@ export const PEER_REVIEW_STATUS_LABELS: Record<string, string> = {
   submitted: 'Submitted',
 }
 
-/** Convert underscore_separated slugs to Title Case */
+/** Convert underscore_separated slugs to Title Case, with acronym handling */
+const UPPERCASE_WORDS: Record<string, string> = {
+  hrbp: 'HRBP', kpi: 'KPI', kra: 'KRA', kpis: 'KPIs', kras: 'KRAs',
+  csv: 'CSV', mis: 'MIS', aop: 'AOP', api: 'API', hr: 'HR', id: 'ID',
+  mom: 'MOM', sme: 'SME',
+}
+
 export function toTitleCase(str: string): string {
-  return str.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+  return str.replace(/_/g, ' ').replace(/\b\w+/g, word => {
+    const lower = word.toLowerCase()
+    return UPPERCASE_WORDS[lower] ?? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+  })
 }
 
 /** Format a KPI value with the correct unit suffix.
