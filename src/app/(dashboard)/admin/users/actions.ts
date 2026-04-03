@@ -8,7 +8,7 @@ import { redirect } from 'next/navigation'
 import type { ActionResult, UserRole } from '@/lib/types'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
-import { sendInviteEmail, notifyUsers } from '@/lib/email'
+import { sendInviteEmail, sendPasswordResetEmail, notifyUsers } from '@/lib/email'
 import { freezeEmployeeCycles } from '@/lib/cycle-helpers'
 
 export async function triggerZimyoSync(): Promise<{ error?: string }> {
@@ -251,17 +251,63 @@ export async function updateUser(_prev: ActionResult | null, formData: FormData)
 
 export async function sendMagicLink(_prev: ActionResult<{ link: string }> | null, formData: FormData): Promise<ActionResult<{ link: string }>> {
   await requireRole(['admin'])
-  // Magic link generation requires Supabase Auth admin API.
-  // With Auth.js (NextAuth), users log in via credentials or OAuth.
-  // This feature is no longer available after the Supabase migration.
-  return { data: null, error: 'Magic links are not supported with the current auth provider. Use the password reset flow instead.' }
+  const userId = formData.get('user_id') as string
+  if (!userId) return { data: null, error: 'User ID is required.' }
+
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, full_name: true } })
+  if (!user) return { data: null, error: 'User not found.' }
+
+  // Generate an invite token so the user can set their password
+  const invite_token = crypto.randomBytes(32).toString('hex')
+  const invite_token_expires_at = new Date(Date.now() + 72 * 60 * 60 * 1000)
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { invite_token, invite_token_expires_at, invited_at: new Date() },
+  })
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://pms.emb.global'
+  const link = `${appUrl}/login/accept-invite?token=${invite_token}`
+
+  // Also send the invite email
+  try {
+    await sendInviteEmail(user.email, link, user.full_name)
+  } catch {
+    // Link is still generated even if email fails
+  }
+
+  revalidatePath('/admin/users')
+  return { data: { link }, error: null }
 }
 
 export async function sendPasswordReset(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   await requireRole(['admin'])
-  // Password reset via email requires an email provider configured in Auth.js.
-  // For now, admins can set a new password directly via the admin panel.
-  return { data: null, error: 'Email-based password reset is not configured. Please set the password directly.' }
+  const userId = formData.get('user_id') as string
+  if (!userId) return { data: null, error: 'User ID is required.' }
+
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, full_name: true } })
+  if (!user) return { data: null, error: 'User not found.' }
+
+  // Generate a reset token
+  const reset_token = crypto.randomBytes(32).toString('hex')
+  const reset_token_expires_at = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { reset_token, reset_token_expires_at },
+  })
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://pms.emb.global'
+  const resetUrl = `${appUrl}/login/reset-password?token=${reset_token}`
+
+  try {
+    await sendPasswordResetEmail(user.email, resetUrl)
+  } catch (err) {
+    return { data: null, error: `Failed to send reset email: ${err}` }
+  }
+
+  revalidatePath('/admin/users')
+  return { data: null, error: null }
 }
 
 export async function updateUserRole(userId: string, role: string): Promise<void> {

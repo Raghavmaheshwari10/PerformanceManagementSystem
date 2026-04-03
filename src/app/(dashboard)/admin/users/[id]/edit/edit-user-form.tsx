@@ -151,25 +151,28 @@ export function EditUserForm({ user, departments, managers, assignedDeptIds }: P
       <div className="rounded-lg border p-5 space-y-3">
         <h2 className="text-sm font-semibold">Auth Controls</h2>
         {(magicState?.error || resetState?.error) && (
-          <div className="text-sm text-destructive">
+          <div className="text-sm text-destructive rounded-md bg-destructive/10 px-3 py-2">
             {magicState?.error || resetState?.error}
           </div>
         )}
         {magicState?.data?.link && (
-          <div className="space-y-1">
-            <p className="text-sm text-green-600">Login link generated — copy and share it with the user:</p>
-            <div className="rounded border bg-muted/40 px-3 py-2 text-xs break-all select-all font-mono">
+          <div className="space-y-1.5">
+            <p className="text-sm text-green-600 font-medium">Invite link generated &amp; email sent!</p>
+            <p className="text-xs text-muted-foreground">Copy this link to share directly (expires in 72 hours):</p>
+            <div className="rounded-md border bg-muted/40 px-3 py-2 text-xs break-all select-all font-mono cursor-text">
               {magicState.data.link}
             </div>
           </div>
         )}
         {(resetState?.data !== undefined && resetState?.data === null && !resetState?.error) && (
-          <p className="text-sm text-green-600">Password reset email sent to {user.email}!</p>
+          <p className="text-sm text-green-600 font-medium bg-green-50 dark:bg-green-950/30 rounded-md px-3 py-2">
+            Password reset email sent to {user.email}
+          </p>
         )}
         <div className="flex gap-2">
           <form action={magicAction}>
             <input type="hidden" name="user_id" value={user.id} />
-            <SubmitButton variant="outline" size="sm">Generate Login Link</SubmitButton>
+            <SubmitButton variant="outline" size="sm">Generate Invite Link</SubmitButton>
           </form>
           <form action={resetAction}>
             <input type="hidden" name="user_id" value={user.id} />
@@ -177,7 +180,8 @@ export function EditUserForm({ user, departments, managers, assignedDeptIds }: P
           </form>
         </div>
         <p className="text-xs text-muted-foreground">
-          Send Password Reset will email a reset link to {user.email}.
+          <strong>Generate Invite Link</strong> — creates a 72hr invite link and emails it to {user.email}.<br/>
+          <strong>Send Password Reset</strong> — sends a 1hr password reset link to {user.email}.
         </p>
       </div>
     </div>
