@@ -251,6 +251,7 @@ export default function DocsPage() {
             Each quarter, a <strong>review cycle</strong> is created and progresses through seven stages — from KPI setting
             through to published payouts. Cycles can be scoped to specific departments, and each department advances
             through stages independently. The system enforces role-based access at every step and maintains a full audit trail.
+            The sidebar can be collapsed to icon-only mode for more workspace — your preference is saved automatically.
           </p>
 
           <Table
@@ -279,7 +280,7 @@ export default function DocsPage() {
             rows={[
               [<Tag key="e" color="default">Employee</Tag>,  'Individual contributors',     'View KRAs/KPIs, submit self-review, track goals, send feedback, view MIS targets, view final payout'],
               [<Tag key="m" color="default">Manager</Tag>,   'Team leads with direct reports', 'Define KRAs/KPIs, approve goals, submit manager ratings + competency assessment, link KPIs to MIS, view team reports'],
-              [<Tag key="h" color="amber">HRBP</Tag>,        'HR Business Partners',        'Override ratings, calibrate with bell curve, lock/publish cycles, export payroll, view department reports'],
+              [<Tag key="h" color="amber">HRBP</Tag>,        'HR Business Partners (multi-department)', 'Override ratings, calibrate with bell curve, lock/publish cycles, export payroll, view department reports. Can be assigned to multiple departments.'],
               [<Tag key="a" color="blue">Admin</Tag>,        'System administrators',       'Create cycles, manage users, configure templates/roles/departments, MIS settings, feature flags, payout config'],
             ]}
           />
@@ -417,9 +418,10 @@ export default function DocsPage() {
             Admins can pre-configure KRA and KPI templates for quick setup:
           </p>
           <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 ml-2">
-            <li><strong>KRA Templates</strong> — Defined per role slug and/or department. Managers click &quot;KRA Template&quot; to auto-create KRAs.</li>
-            <li><strong>KPI Templates</strong> — Linked to KRA templates. Can include suggested weights, targets, and units.</li>
-            <li><strong>Role Slugs</strong> — Dynamic roles (e.g., &quot;Senior Engineer&quot;, &quot;Data Analyst&quot;) managed at <Code>/admin/roles</Code>. Templates are filtered by role.</li>
+            <li><strong>KRA Templates</strong> — Defined per role and/or department. Managers click &quot;KRA Template&quot; to auto-create KRAs. Categories: Performance, Behaviour, Learning.</li>
+            <li><strong>KPI Templates</strong> — Defined per role and/or department. Include suggested weights, targets, units (Percent, Number, Currency, Rating, Boolean), and categories.</li>
+            <li><strong>Role Slugs</strong> — Dynamic roles (e.g., &quot;Senior Engineer&quot;, &quot;Data Analyst&quot;) managed at <Code>/admin/roles</Code>. Each role has a unique UUID and label. Templates are filtered by role.</li>
+            <li><strong>Department Scoping</strong> — Both KRA and KPI templates can be scoped to specific departments. When a manager applies templates, only templates matching the employee&apos;s department (or unscoped templates) are shown.</li>
           </ul>
 
           <Warn>
@@ -472,9 +474,35 @@ export default function DocsPage() {
             behavioral competencies.
           </p>
 
+          <SubHeading>3-Tier Competency Model</SubHeading>
+          <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
+            Competencies are organized into three categories, each serving a different scope:
+          </p>
+          <Table
+            headers={['Category', 'Scope', 'Description', 'Example']}
+            rows={[
+              [<Tag key="core" color="blue">Core</Tag>,           'Org-wide',              'Universal competencies expected of every employee',                    'Communication, Teamwork, Integrity'],
+              [<Tag key="func" color="amber">Functional</Tag>,     'Department-specific',   'Technical or domain competencies scoped to a department',              'Data Analysis (for Analytics dept), Sales Technique (for Sales dept)'],
+              [<Tag key="lead" color="purple">Leadership</Tag>,    'Role/band-specific',    'Leadership and strategic competencies for specific role levels',       'Strategic Thinking (for Senior Engineers), People Management (for Team Leads)'],
+            ]}
+          />
+
+          <SubHeading>Proficiency Levels</SubHeading>
+          <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
+            Each competency can define proficiency levels — expected behaviors at different career bands. For example, a &quot;Communication&quot; competency might have:
+          </p>
+          <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 ml-2">
+            <li><strong>L1 — Developing</strong>: Communicates clearly in team settings</li>
+            <li><strong>L2 — Proficient</strong>: Presents ideas effectively to cross-functional stakeholders</li>
+            <li><strong>L3 — Advanced</strong>: Drives strategic communication across the organization</li>
+          </ul>
+          <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+            Proficiency levels help managers calibrate their ratings against role-appropriate expectations.
+          </p>
+
           <SubHeading>How it works</SubHeading>
           <ol className="list-decimal list-inside text-sm text-muted-foreground space-y-2 ml-2">
-            <li><strong>Admin builds competencies</strong> at <Code>/admin/competencies</Code> — e.g., &quot;Leadership&quot;, &quot;Communication&quot;, &quot;Problem Solving&quot;</li>
+            <li><strong>Admin builds competencies</strong> at <Code>/admin/competencies</Code> — sets category (Core/Functional/Leadership), optional department or role scope, description, and proficiency levels</li>
             <li><strong>Admin creates a review template</strong> at <Code>/admin/review-templates</Code> — adds questions linked to competencies (rating, text, or mixed answer types)</li>
             <li><strong>Admin attaches template to cycle</strong> — when creating a cycle, select a review template and set the competency weight (e.g., 20%)</li>
             <li><strong>Manager rates competencies</strong> during <Code>manager_review</Code> — for each question, selects a 1-5 rating and optionally adds text comments</li>
@@ -487,6 +515,18 @@ export default function DocsPage() {
 Example: Ratings of 4, 3, 5 across 3 questions
   Average = 4.0
   Score = ((4.0 - 1) / 4) × 100 = 75%`}</CodeBlock>
+
+          <SubHeading>Competency Library Management</SubHeading>
+          <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
+            The Competency Library at <Code>/admin/competencies</Code> provides full CRUD management:
+          </p>
+          <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 ml-2">
+            <li><strong>Filter by category</strong> — View All, Core, Functional, or Leadership competencies</li>
+            <li><strong>Table view</strong> — Grouped by category with columns for Name, Description, Scope, Proficiency Levels, Usage (linked review questions), and Actions</li>
+            <li><strong>Edit competencies</strong> — Click the pencil icon to edit name, description, category, scope, and proficiency levels</li>
+            <li><strong>Toggle active/inactive</strong> — Deactivate competencies without deleting them</li>
+            <li><strong>Delete competencies</strong> — Remove competencies that are no longer needed</li>
+          </ul>
 
           <Note>
             If a cycle has <Code>competency_weight = 0</Code> or no review template is attached, competency assessment is
@@ -644,9 +684,11 @@ Zero competency (competency_weight = 0):
               <li>Monitor per-department pipeline progress with visual stepper and readiness stats</li>
               <li>Send reminder notifications when deadlines approach</li>
               <li>Optionally hold back or advance individual employees with status overrides</li>
-              <li>Manage users at <Code>/admin/users</Code>: create users, set roles, variable pay, activate/deactivate, bulk import via CSV or Google Sheets</li>
-              <li>Configure role slugs at <Code>/admin/roles</Code> for use in KPI/KRA templates</li>
-              <li>Manage KPI/KRA templates for quick setup by managers</li>
+              <li>Manage users at <Code>/admin/users</Code>: create users, set roles, variable pay, activate/deactivate, bulk import via CSV (with downloadable template) or Google Sheets</li>
+              <li>Configure role slugs at <Code>/admin/roles</Code> for use in KPI/KRA templates — each role has a UUID and display label</li>
+              <li>Manage KPI/KRA templates for quick setup by managers — templates can be scoped by role and/or department</li>
+              <li>Manage the 3-tier Competency Library at <Code>/admin/competencies</Code> — Core (org-wide), Functional (department), Leadership (role/band)</li>
+              <li>Delete cycles in draft status if no longer needed</li>
               <li>Build review templates with competency questions at <Code>/admin/review-templates</Code></li>
               <li>Manage MIS targets and sync settings at <Code>/admin/mis</Code></li>
               <li>Configure payout multipliers at <Code>/admin/payout-config</Code></li>
@@ -742,13 +784,13 @@ payout_amount = snapshotted_variable_pay × rating_multiplier × proration_facto
             headers={['Page', 'Path', 'Purpose']}
             rows={[
               ['Dashboard',         <Code key="d">/admin</Code>,                    'Overview of cycles, user counts, and system health'],
-              ['Cycles',            <Code key="c">/admin/cycles</Code>,              'Create and manage review cycles with department scoping'],
-              ['Users',             <Code key="u">/admin/users</Code>,               'Manage users — create, edit, bulk import (CSV/Google Sheets), Zimyo sync, activate/deactivate'],
+              ['Cycles',            <Code key="c">/admin/cycles</Code>,              'Create, manage, and delete review cycles with department scoping'],
+              ['Users',             <Code key="u">/admin/users</Code>,               'Manage users — create, edit, bulk import (CSV with downloadable template/Google Sheets), Zimyo sync, activate/deactivate'],
               ['Departments',       <Code key="dp">/admin/departments</Code>,        'Create, rename, and delete departments'],
-              ['Roles',             <Code key="r">/admin/roles</Code>,               'Manage role slugs used in KPI/KRA templates (e.g., Senior Engineer, Data Analyst)'],
-              ['KPI Templates',     <Code key="kpi">/admin/kpi-templates</Code>,     'Pre-built KPI templates organized by role for quick manager setup'],
-              ['KRA Templates',     <Code key="kra">/admin/kra-templates</Code>,     'Pre-built KRA templates by role/department for KRA creation'],
-              ['Competencies',      <Code key="comp">/admin/competencies</Code>,     'Library of behavioral competencies (Leadership, Communication, etc.)'],
+              ['Roles',             <Code key="r">/admin/roles</Code>,               'Manage role slugs (UUID-based) used in KPI/KRA templates — create, edit, toggle active/inactive, delete'],
+              ['KPI Templates',     <Code key="kpi">/admin/kpi-templates</Code>,     'Pre-built KPI templates by role and department — filterable by category (Performance/Behaviour/Learning)'],
+              ['KRA Templates',     <Code key="kra">/admin/kra-templates</Code>,     'Pre-built KRA templates by role and department — filterable by category (Performance/Behaviour/Learning)'],
+              ['Competencies',      <Code key="comp">/admin/competencies</Code>,     '3-tier competency library (Core/Functional/Leadership) with proficiency levels, department/role scoping, edit/delete'],
               ['Review Templates',  <Code key="rt">/admin/review-templates</Code>,   'Build competency assessment questionnaires to attach to cycles'],
               ['MIS Integration',   <Code key="mis">/admin/mis</Code>,               'AOP targets, monthly actuals, CSV import, sync logs'],
               ['MIS Settings',      <Code key="miss">/admin/mis/settings</Code>,     'Configure MIS API connection, department mapping, scoring thresholds'],

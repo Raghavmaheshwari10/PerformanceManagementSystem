@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useActionState } from 'react'
+import { useState, useActionState, useCallback } from 'react'
 import { fetchSheetPreview, uploadUsersWithMapping, type UploadSummary } from './actions'
 import { SubmitButton } from '@/components/submit-button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import { Download } from 'lucide-react'
 import type { ActionResult } from '@/lib/types'
 
 // ── constants ─────────────────────────────────────────────────────────────────
@@ -66,6 +67,26 @@ function autoDetect(headers: string[]): Record<string, string> {
     }
   }
   return mapping
+}
+
+// ── CSV template ─────────────────────────────────────────────────────────────
+
+const CSV_TEMPLATE_HEADERS = ['email', 'full_name', 'department', 'designation', 'manager_email', 'employee_id', 'variable_pay']
+const CSV_TEMPLATE_SAMPLE = [
+  'john.doe@company.com,John Doe,Engineering,Senior Engineer,jane.smith@company.com,EMP001,50000',
+  'jane.smith@company.com,Jane Smith,Engineering,Engineering Manager,,EMP002,75000',
+  'alex.kumar@company.com,Alex Kumar,Sales,Sales Executive,jane.smith@company.com,EMP003,40000',
+]
+
+function downloadCsvTemplate() {
+  const content = [CSV_TEMPLATE_HEADERS.join(','), ...CSV_TEMPLATE_SAMPLE].join('\n')
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'user_import_template.csv'
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 // ── main component ────────────────────────────────────────────────────────────
@@ -282,8 +303,23 @@ export default function UploadUsersPage() {
       {source === 'csv' && (
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Upload any CSV file — you'll map the columns to the right fields in the next step.
+            Upload any CSV file — you&apos;ll map the columns to the right fields in the next step.
           </p>
+
+          {/* Download template */}
+          <div className="rounded-lg border bg-muted/20 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Need a template?</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Download a pre-filled CSV template with sample data and all supported columns.</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={downloadCsvTemplate} className="gap-1.5 shrink-0">
+                <Download className="h-3.5 w-3.5" />
+                Download Template
+              </Button>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="file">CSV File</Label>
             <Input id="file" type="file" accept=".csv,.tsv" onChange={handleFileChange} />

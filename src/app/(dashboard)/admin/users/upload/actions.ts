@@ -135,7 +135,6 @@ export async function uploadUsersWithMapping(
       full_name: mapped.full_name || mapped.email,
       designation: mapped.designation || null,
       synced_at: new Date(),
-      data_source: 'manual',
     }
     if (mapped.zimyo_id) userData.zimyo_id = mapped.zimyo_id
     if (mapped.variable_pay) {
