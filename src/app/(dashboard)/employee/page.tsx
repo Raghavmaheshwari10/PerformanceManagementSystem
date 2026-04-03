@@ -4,7 +4,7 @@ import { requireRole } from '@/lib/auth'
 import { getVisibleCycleForUser, getStatusForEmployee } from '@/lib/cycle-helpers'
 import { CycleStatusBadge } from '@/components/cycle-status-badge'
 import { DeadlineBanner } from '@/components/deadline-banner'
-import { formatKpiValue } from '@/lib/constants'
+import { formatKpiValue, KPI_CATEGORY_LABELS, KRA_CATEGORY_STYLES as KRA_CAT_STYLES } from '@/lib/constants'
 import { SelfReviewForm } from './self-review-form'
 import { PayoutBreakdown } from '@/components/payout-breakdown'
 import { CycleTimeline } from '@/components/cycle-timeline'
@@ -249,11 +249,7 @@ export default async function EmployeeReviewPage() {
   }
   const ungroupedKpis = kpisByKra.get(null) ?? []
 
-  const KRA_CATEGORY_STYLES: Record<string, { bg: string; text: string }> = {
-    performance: { bg: 'bg-blue-500/20', text: 'text-blue-400' },
-    behaviour:   { bg: 'bg-amber-500/20', text: 'text-amber-400' },
-    learning:    { bg: 'bg-emerald-500/20', text: 'text-emerald-400' },
-  }
+  const KRA_CATEGORY_STYLES = KRA_CAT_STYLES
 
   // Fetch meeting info for employee (filtered view — no concerns_raised)
   const meetingRecord = await prisma.reviewMeeting.findUnique({
@@ -535,8 +531,8 @@ export default async function EmployeeReviewPage() {
                       <div className="flex items-center gap-2">
                         <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold uppercase text-primary tracking-wide">KRA</span>
                         <h3 className="font-semibold text-sm">{kra.title}</h3>
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${catStyle.bg} ${catStyle.text}`}>
-                          {kra.category}
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${catStyle.bg} ${catStyle.text}`}>
+                          {KPI_CATEGORY_LABELS[kra.category] ?? kra.category}
                         </span>
                       </div>
                       <span className="shrink-0 rounded-full bg-muted/50 px-2 py-0.5 text-xs font-semibold tabular-nums">

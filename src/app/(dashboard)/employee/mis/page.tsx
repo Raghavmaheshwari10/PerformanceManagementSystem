@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
-import { toTitleCase } from '@/lib/constants'
+import { toTitleCase, UNIT_LABELS } from '@/lib/constants'
 import type { AopTarget, MisActual } from '@prisma/client'
 
 /* ── Category styling ── */
@@ -214,7 +214,7 @@ export default async function EmployeeMisPage(props: {
                         {toTitleCase(target.category)}
                       </span>
                       <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                        {target.unit}{target.currency ? ` (${target.currency})` : ''}
+                        {UNIT_LABELS[target.unit] ?? target.unit}{target.currency ? ` (${target.currency})` : ''}
                       </span>
                     </div>
                   </div>

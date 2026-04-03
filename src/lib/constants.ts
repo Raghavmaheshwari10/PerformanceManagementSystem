@@ -85,3 +85,65 @@ export const CYCLE_STATUS_LABELS: Record<CycleStatus, string> = {
   locked: 'Locked',
   published: 'Published',
 }
+
+// ── KPI / KRA shared labels ──
+
+export const UNIT_LABELS: Record<string, string> = {
+  percent: 'Percent',
+  number: 'Number',
+  rating: 'Rating',
+  currency: 'Currency',
+  count: 'Count',
+  boolean: 'Boolean',
+  text: 'Text',
+  days: 'Days',
+  hours: 'Hours',
+  score: 'Score',
+}
+
+export const KPI_CATEGORY_LABELS: Record<string, string> = {
+  performance: 'Performance',
+  behaviour: 'Behaviour',
+  learning: 'Learning',
+}
+
+export const KPI_CATEGORY_STYLES: Record<string, string> = {
+  performance: 'bg-primary/15 text-primary',
+  behaviour: 'bg-amber-500/15 text-amber-400',
+  learning: 'bg-emerald-500/15 text-emerald-400',
+}
+
+export const KRA_CATEGORY_STYLES: Record<string, { bg: string; text: string }> = {
+  performance: { bg: 'bg-blue-500/20', text: 'text-blue-400' },
+  behaviour:   { bg: 'bg-amber-500/20', text: 'text-amber-400' },
+  learning:    { bg: 'bg-emerald-500/20', text: 'text-emerald-400' },
+}
+
+export const COMPETENCY_CATEGORY_LABELS: Record<string, string> = {
+  core: 'Core',
+  functional: 'Functional',
+  leadership: 'Leadership',
+}
+
+export const MIS_SYNC_STATUS_LABELS: Record<string, string> = {
+  success: 'Successful',
+  failed: 'Failed',
+  partial: 'Partial',
+  pending: 'Pending',
+  running: 'Running',
+}
+
+export const MIS_LEVEL_LABELS: Record<string, string> = {
+  individual: 'Individual',
+  department: 'Department',
+  organization: 'Organization',
+  team: 'Team',
+}
+
+export const MIS_CATEGORY_LABELS: Record<string, string> = {
+  financial: 'Financial',
+  operational: 'Operational',
+  people: 'People',
+  customer: 'Customer',
+  quality: 'Quality',
+}

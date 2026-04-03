@@ -9,12 +9,9 @@ import { KpiTemplatePicker } from '@/components/kpi-template-picker'
 import { KraTemplatePicker } from '@/components/kra-template-picker'
 import { fetchRoleOptions } from '@/lib/db/role-slugs'
 import { KpiRow } from './kpi-row'
+import { KPI_CATEGORY_LABELS, KPI_CATEGORY_STYLES } from '@/lib/constants'
 
-const CATEGORY_STYLES: Record<string, string> = {
-  performance: 'bg-primary/15 text-primary',
-  behaviour: 'bg-amber-500/15 text-amber-400',
-  learning: 'bg-emerald-500/15 text-emerald-400',
-}
+const CATEGORY_STYLES = KPI_CATEGORY_STYLES
 
 export default async function KpiSettingPage({
   params, searchParams,
@@ -232,7 +229,7 @@ export default async function KpiSettingPage({
                 </span>
                 <h2 className="text-lg font-semibold">{kra.title}</h2>
                 <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${catStyle}`}>
-                  {kra.category}
+                  {KPI_CATEGORY_LABELS[kra.category] ?? kra.category}
                 </span>
                 {kra.weight != null && (
                   <span className="rounded-full bg-muted/50 px-2.5 py-0.5 text-xs font-medium text-muted-foreground">

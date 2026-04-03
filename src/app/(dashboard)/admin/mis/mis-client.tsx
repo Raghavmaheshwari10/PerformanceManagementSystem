@@ -5,6 +5,7 @@ import { TargetForm } from './target-form'
 import { ActualsForm } from './actuals-form'
 import { deleteTarget } from './actions'
 import { Plus, Pencil, Trash2, BarChart3, ChevronDown, ChevronRight } from 'lucide-react'
+import { MIS_CATEGORY_LABELS, MIS_LEVEL_LABELS, UNIT_LABELS } from '@/lib/constants'
 
 interface Department { id: string; name: string }
 interface Employee { id: string; full_name: string; email: string; department_id: string | null }
@@ -145,15 +146,15 @@ export function MisClient({ targets, departments, employees, fiscalYear }: MisCl
                       </td>
                       <td className="p-3 font-medium">{t.metric_name}</td>
                       <td className="p-3">
-                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${CATEGORY_BADGE[t.category] ?? 'bg-muted/50'}`}>
-                          {t.category}
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${CATEGORY_BADGE[t.category] ?? 'bg-muted/50'}`}>
+                          {MIS_CATEGORY_LABELS[t.category] ?? t.category}
                         </span>
                       </td>
-                      <td className="p-3 text-muted-foreground capitalize">{t.level}</td>
+                      <td className="p-3 text-muted-foreground">{MIS_LEVEL_LABELS[t.level] ?? t.level}</td>
                       <td className="p-3 text-muted-foreground">
                         {t.employee_name ?? t.department_name ?? '—'}
                       </td>
-                      <td className="p-3 text-right tabular-nums">{t.annual_target.toLocaleString('en-IN')} {t.unit}</td>
+                      <td className="p-3 text-right tabular-nums">{t.annual_target.toLocaleString('en-IN')} {UNIT_LABELS[t.unit] ?? t.unit}</td>
                       <td className="p-3 text-right tabular-nums">{t.ytd_actual.toLocaleString('en-IN')}</td>
                       <td className="p-3 text-right tabular-nums">{achievement.toFixed(1)}%</td>
                       <td className="p-3 text-center">{ragBadge(achievement, t.red_threshold, t.amber_threshold)}</td>

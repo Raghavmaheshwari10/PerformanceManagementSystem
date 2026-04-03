@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
-import { toTitleCase } from '@/lib/constants'
+import { toTitleCase, MIS_SYNC_STATUS_LABELS } from '@/lib/constants'
 import Link from 'next/link'
 import { SyncButton } from './sync-button'
 import { MisClient } from './mis-client'
@@ -96,7 +96,7 @@ export default async function AdminMisPage(props: {
           </p>
           {lastSync && (
             <p className={`text-xs mt-0.5 ${lastSync.status === 'success' ? 'text-emerald-400' : lastSync.status === 'failed' ? 'text-red-400' : 'text-amber-400'}`}>
-              {lastSync.status} — {lastSync.records_synced} synced, {lastSync.records_failed} failed
+              {MIS_SYNC_STATUS_LABELS[lastSync.status] ?? lastSync.status} — {lastSync.records_synced} synced, {lastSync.records_failed} failed
             </p>
           )}
         </div>
@@ -150,7 +150,7 @@ export default async function AdminMisPage(props: {
                           : log.status === 'running' ? 'bg-blue-500/20 text-blue-400'
                           : 'bg-amber-500/20 text-amber-400'
                         }`}>
-                          {log.status}
+                          {MIS_SYNC_STATUS_LABELS[log.status] ?? log.status}
                         </span>
                       </td>
                       <td className="p-3 text-right">{log.records_synced}</td>

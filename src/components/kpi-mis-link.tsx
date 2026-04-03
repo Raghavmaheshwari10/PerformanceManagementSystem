@@ -10,6 +10,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { linkKpiToMis, unlinkKpiFromMis, getAvailableTargets } from '@/app/(dashboard)/manager/mis-mapping-actions'
+import { MIS_CATEGORY_LABELS, UNIT_LABELS } from '@/lib/constants'
 
 const CATEGORY_BADGE: Record<string, string> = {
   financial: 'bg-emerald-500/15 text-emerald-400',
@@ -151,7 +152,7 @@ export function KpiMisLink({ kpiId, kpiTitle, employeeId, currentMapping }: Prop
                 <option value="">Select a target...</option>
                 {targets.map(t => (
                   <option key={t.id} value={t.id}>
-                    {t.metric_name} [{t.category}] — {t.annual_target} {t.unit}
+                    {t.metric_name} [{MIS_CATEGORY_LABELS[t.category] ?? t.category}] — {t.annual_target} {UNIT_LABELS[t.unit] ?? t.unit}
                   </option>
                 ))}
               </select>
@@ -181,9 +182,9 @@ export function KpiMisLink({ kpiId, kpiTitle, employeeId, currentMapping }: Prop
                 </p>
                 <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                   <span className={`rounded-full px-2 py-0.5 ${CATEGORY_BADGE[targets.find(t => t.id === selectedTarget)?.category ?? ''] ?? 'bg-muted/50 text-muted-foreground'}`}>
-                    {targets.find(t => t.id === selectedTarget)?.category}
+                    {MIS_CATEGORY_LABELS[targets.find(t => t.id === selectedTarget)?.category ?? ''] ?? targets.find(t => t.id === selectedTarget)?.category}
                   </span>
-                  <span>Target: {targets.find(t => t.id === selectedTarget)?.annual_target} {targets.find(t => t.id === selectedTarget)?.unit}</span>
+                  <span>Target: {targets.find(t => t.id === selectedTarget)?.annual_target} {UNIT_LABELS[targets.find(t => t.id === selectedTarget)?.unit ?? ''] ?? targets.find(t => t.id === selectedTarget)?.unit}</span>
                 </div>
               </div>
             )}

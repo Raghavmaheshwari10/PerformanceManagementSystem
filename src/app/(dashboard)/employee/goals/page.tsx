@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { GOAL_STATUS_LABELS } from '@/lib/constants'
+import { GOAL_STATUS_LABELS, UNIT_LABELS } from '@/lib/constants'
 import { GoalForm } from './goal-form'
 
 const STATUS_COLORS: Record<string, string> = {
@@ -81,7 +81,7 @@ export default async function EmployeeGoalsPage() {
                               />
                             </div>
                             <p className="text-xs text-muted-foreground">
-                              {String(goal.current_value)}/{String(goal.target_value)} {goal.unit} ({progress}%)
+                              {String(goal.current_value)}/{String(goal.target_value)} {UNIT_LABELS[goal.unit ?? ''] ?? goal.unit} ({progress}%)
                             </p>
                           </div>
                         )}

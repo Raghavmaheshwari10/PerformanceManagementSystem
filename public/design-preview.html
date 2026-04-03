@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMS Design Options — Pick Your Style</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: #111; color: #fff; }
+
+  .header { text-align: center; padding: 60px 20px 40px; }
+  .header h1 { font-family: 'Sora', sans-serif; font-size: 2.5rem; font-weight: 700; margin-bottom: 8px; }
+  .header p { color: #888; font-size: 1rem; }
+
+  .options { display: flex; gap: 32px; padding: 0 40px 80px; max-width: 1600px; margin: 0 auto; }
+  @media (max-width: 1200px) { .options { flex-direction: column; } }
+
+  .option { flex: 1; border-radius: 16px; overflow: hidden; border: 1px solid #333; }
+  .option-label { padding: 20px 24px; border-bottom: 1px solid #333; }
+  .option-label h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; }
+  .option-label p { color: #888; font-size: 0.8rem; }
+  .option-label .tag { display: inline-block; font-size: 0.65rem; padding: 2px 8px; border-radius: 99px; margin-right: 4px; font-weight: 600; }
+
+  .preview { padding: 0; }
+
+  /* ═══ OPTION A: Linear ═══ */
+  .opt-a { background: #0A0A0A; }
+  .opt-a .option-label { background: #0A0A0A; border-color: #1a1a1a; }
+  .opt-a .tag { background: #1e1e2e; color: #818cf8; }
+  .opt-a .preview { padding: 16px; }
+
+  .opt-a .dash { display: flex; gap: 12px; }
+  .opt-a .sidebar-a { width: 180px; background: #0f0f0f; border: 1px solid #1a1a1a; border-radius: 10px; padding: 14px 12px; font-size: 0.72rem; }
+  .opt-a .sidebar-a .logo { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.85rem; margin-bottom: 16px; color: #fff; }
+  .opt-a .sidebar-a .nav-item { padding: 7px 10px; border-radius: 6px; color: #666; margin-bottom: 2px; cursor: pointer; transition: all 0.15s; }
+  .opt-a .sidebar-a .nav-item:hover { color: #aaa; background: #141414; }
+  .opt-a .sidebar-a .nav-item.active { color: #fff; background: #1a1a2e; border: 1px solid #252540; }
+
+  .opt-a .main-a { flex: 1; }
+  .opt-a .topbar { font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600; color: #fff; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .opt-a .topbar .badge { font-size: 0.6rem; background: #1e293b; color: #818cf8; padding: 3px 10px; border-radius: 99px; font-weight: 500; }
+
+  .opt-a .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .opt-a .card { background: #111; border: 1px solid #1a1a1a; border-radius: 10px; padding: 16px; }
+  .opt-a .card .label { font-size: 0.65rem; color: #555; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .opt-a .card .value { font-family: 'Inter', sans-serif; font-size: 1.6rem; font-weight: 700; color: #fff; }
+  .opt-a .card .sub { font-size: 0.65rem; color: #444; margin-top: 4px; }
+  .opt-a .card .bar { height: 3px; background: #1a1a1a; border-radius: 2px; margin-top: 10px; overflow: hidden; }
+  .opt-a .card .bar-fill { height: 100%; border-radius: 2px; background: #818cf8; }
+
+  /* ═══ OPTION B: Notion ═══ */
+  .opt-b { background: #FAFAF9; }
+  .opt-b .option-label { background: #FAFAF9; border-color: #e8e5e0; color: #1a1a1a; }
+  .opt-b .option-label p { color: #888; }
+  .opt-b .tag { background: #f0edea; color: #6d5cae; }
+  .opt-b .preview { padding: 16px; }
+
+  .opt-b .dash { display: flex; gap: 12px; }
+  .opt-b .sidebar-b { width: 180px; background: #f5f3f0; border-radius: 10px; padding: 14px 12px; font-size: 0.72rem; }
+  .opt-b .sidebar-b .logo { font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.85rem; margin-bottom: 16px; color: #1a1a1a; }
+  .opt-b .sidebar-b .nav-item { padding: 7px 10px; border-radius: 6px; color: #777; margin-bottom: 2px; cursor: pointer; transition: all 0.15s; }
+  .opt-b .sidebar-b .nav-item:hover { color: #333; background: #ebe8e4; }
+  .opt-b .sidebar-b .nav-item.active { color: #1a1a1a; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.06); font-weight: 500; }
+
+  .opt-b .main-b { flex: 1; }
+  .opt-b .topbar { font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600; color: #1a1a1a; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .opt-b .topbar .badge { font-size: 0.6rem; background: #ede9fe; color: #7c3aed; padding: 3px 10px; border-radius: 99px; font-weight: 500; }
+
+  .opt-b .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .opt-b .card { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03); }
+  .opt-b .card .label { font-size: 0.65rem; color: #999; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .opt-b .card .value { font-family: 'DM Sans', sans-serif; font-size: 1.6rem; font-weight: 700; color: #1a1a1a; }
+  .opt-b .card .sub { font-size: 0.65rem; color: #aaa; margin-top: 4px; }
+  .opt-b .card .bar { height: 4px; background: #f0ede8; border-radius: 2px; margin-top: 10px; overflow: hidden; }
+  .opt-b .card .bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+
+  /* ═══ OPTION C: Stripe/Supabase ═══ */
+  .opt-c { background: #fafafa; }
+  .opt-c .option-label { background: #fafafa; border-color: #e5e7eb; color: #111; }
+  .opt-c .option-label p { color: #888; }
+  .opt-c .tag { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; }
+  .opt-c .preview { padding: 16px; }
+
+  .opt-c .dash { display: flex; gap: 12px; }
+  .opt-c .sidebar-c { width: 180px; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px 12px; font-size: 0.72rem; }
+  .opt-c .sidebar-c .logo { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 0.85rem; margin-bottom: 16px; color: #111; }
+  .opt-c .sidebar-c .nav-item { padding: 7px 10px; border-radius: 6px; color: #666; margin-bottom: 2px; cursor: pointer; transition: all 0.15s; }
+  .opt-c .sidebar-c .nav-item:hover { color: #333; background: #f5f5f5; }
+  .opt-c .sidebar-c .nav-item.active { color: #4f46e5; background: #eef2ff; font-weight: 500; border-left: 3px solid #4f46e5; padding-left: 7px; }
+
+  .opt-c .main-c { flex: 1; }
+  .opt-c .topbar { font-family: 'Sora', sans-serif; font-size: 0.9rem; font-weight: 600; color: #111; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .opt-c .topbar .badge { font-size: 0.6rem; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; padding: 3px 10px; border-radius: 99px; font-weight: 500; }
+
+  .opt-c .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .opt-c .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; transition: all 0.2s; position: relative; overflow: hidden; }
+  .opt-c .card:hover { border-color: #c7d2fe; box-shadow: 0 4px 20px rgba(79,70,229,0.08); transform: translateY(-2px); }
+  .opt-c .card .label { font-size: 0.65rem; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .opt-c .card .value { font-family: 'Sora', sans-serif; font-size: 1.6rem; font-weight: 700; color: #111; }
+  .opt-c .card .sub { font-size: 0.65rem; color: #aaa; margin-top: 4px; }
+  .opt-c .card .bar { height: 4px; background: #f1f5f9; border-radius: 2px; margin-top: 10px; overflow: hidden; }
+  .opt-c .card .bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, #4f46e5, #7c3aed, #a78bfa); }
+  .opt-c .card .accent-line { position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #4f46e5, #7c3aed); opacity: 0; transition: opacity 0.2s; }
+  .opt-c .card:hover .accent-line { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>PMS — Design Direction</h1>
+  <p>Compare 3 visual approaches. Pick the one that feels right.</p>
+</div>
+
+<div class="options">
+
+  <!-- OPTION A: Linear -->
+  <div class="option opt-a">
+    <div class="option-label">
+      <div><span class="tag">Linear</span><span class="tag">Raycast</span><span class="tag">Vercel</span></div>
+      <h2 style="margin-top:10px">A — Precision & Density</h2>
+      <p>Monochrome. Subtle borders. Power-user focused. Information-dense.</p>
+    </div>
+    <div class="preview">
+      <div class="dash">
+        <div class="sidebar-a">
+          <div class="logo">PMS</div>
+          <div class="nav-item active">Dashboard</div>
+          <div class="nav-item">Cycles</div>
+          <div class="nav-item">Users</div>
+          <div class="nav-item">KPI Templates</div>
+          <div class="nav-item">Settings</div>
+        </div>
+        <div class="main-a">
+          <div class="topbar">
+            <span>Admin Dashboard</span>
+            <span class="badge">Q1 2026 — KPI Setting</span>
+          </div>
+          <div class="cards">
+            <div class="card">
+              <div class="label">Active Users</div>
+              <div class="value">13</div>
+              <div class="sub">4 departments</div>
+            </div>
+            <div class="card">
+              <div class="label">Self Reviews</div>
+              <div class="value">67%</div>
+              <div class="bar"><div class="bar-fill" style="width:67%"></div></div>
+            </div>
+            <div class="card">
+              <div class="label">Manager Reviews</div>
+              <div class="value">42%</div>
+              <div class="bar"><div class="bar-fill" style="width:42%; background:#22c55e"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION B: Notion -->
+  <div class="option opt-b">
+    <div class="option-label">
+      <div><span class="tag">Notion</span><span class="tag">Coda</span><span class="tag">Lattice</span></div>
+      <h2 style="margin-top:10px">B — Warm & Approachable</h2>
+      <p>Warm whites. Soft shadows. Generous whitespace. People-friendly.</p>
+    </div>
+    <div class="preview">
+      <div class="dash">
+        <div class="sidebar-b">
+          <div class="logo">PMS</div>
+          <div class="nav-item active">Dashboard</div>
+          <div class="nav-item">Cycles</div>
+          <div class="nav-item">Users</div>
+          <div class="nav-item">KPI Templates</div>
+          <div class="nav-item">Settings</div>
+        </div>
+        <div class="main-b">
+          <div class="topbar">
+            <span>Admin Dashboard</span>
+            <span class="badge">Q1 2026 — KPI Setting</span>
+          </div>
+          <div class="cards">
+            <div class="card">
+              <div class="label">Active Users</div>
+              <div class="value">13</div>
+              <div class="sub">4 departments</div>
+            </div>
+            <div class="card">
+              <div class="label">Self Reviews</div>
+              <div class="value">67%</div>
+              <div class="bar"><div class="bar-fill" style="width:67%"></div></div>
+            </div>
+            <div class="card">
+              <div class="label">Manager Reviews</div>
+              <div class="value">42%</div>
+              <div class="bar"><div class="bar-fill" style="width:42%; background: linear-gradient(90deg, #10b981, #34d399)"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION C: Stripe -->
+  <div class="option opt-c">
+    <div class="option-label">
+      <div><span class="tag">Stripe</span><span class="tag">Supabase</span><span class="tag">Clerk</span></div>
+      <h2 style="margin-top:10px">C — Bold & Vibrant</h2>
+      <p>Gradient accents. Elevated cards. Hover animations. Premium feel.</p>
+    </div>
+    <div class="preview">
+      <div class="dash">
+        <div class="sidebar-c">
+          <div class="logo">PMS</div>
+          <div class="nav-item active">Dashboard</div>
+          <div class="nav-item">Cycles</div>
+          <div class="nav-item">Users</div>
+          <div class="nav-item">KPI Templates</div>
+          <div class="nav-item">Settings</div>
+        </div>
+        <div class="main-c">
+          <div class="topbar">
+            <span>Admin Dashboard</span>
+            <span class="badge">Q1 2026 — KPI Setting</span>
+          </div>
+          <div class="cards">
+            <div class="card">
+              <div class="accent-line"></div>
+              <div class="label">Active Users</div>
+              <div class="value">13</div>
+              <div class="sub">4 departments</div>
+            </div>
+            <div class="card">
+              <div class="accent-line"></div>
+              <div class="label">Self Reviews</div>
+              <div class="value">67%</div>
+              <div class="bar"><div class="bar-fill" style="width:67%"></div></div>
+            </div>
+            <div class="card">
+              <div class="accent-line"></div>
+              <div class="label">Manager Reviews</div>
+              <div class="value">42%</div>
+              <div class="bar"><div class="bar-fill" style="width:42%; background: linear-gradient(90deg, #10b981, #34d399)"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

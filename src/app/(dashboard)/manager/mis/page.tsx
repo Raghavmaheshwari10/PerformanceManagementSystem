@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
+import { UNIT_LABELS } from '@/lib/constants'
 import Link from 'next/link'
 
 function ragBadge(achievement: number, red: number, amber: number) {
@@ -152,7 +153,7 @@ export default async function ManagerMisPage(props: {
                           return (
                             <tr key={t.id} className="border-b border-border">
                               <td className="p-3 font-medium">{t.metric_name}</td>
-                              <td className="p-3 text-right">{annual.toLocaleString('en-IN')} {t.unit}</td>
+                              <td className="p-3 text-right">{annual.toLocaleString('en-IN')} {UNIT_LABELS[t.unit] ?? t.unit}</td>
                               <td className="p-3 text-right">{ytd.toLocaleString('en-IN')}</td>
                               <td className="p-3 text-right">{ach.toFixed(1)}%</td>
                               <td className="p-3 text-center">

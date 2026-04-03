@@ -4,18 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { toggleTemplateActive, deleteKpiTemplate } from './actions'
-
-const CATEGORY_STYLES: Record<string, string> = {
-  performance: 'bg-primary/15 text-primary',
-  behaviour: 'bg-amber-500/15 text-amber-400',
-  learning: 'bg-emerald-500/15 text-emerald-400',
-}
-
-const CATEGORY_LABELS: Record<string, string> = {
-  performance: 'Performance',
-  behaviour: 'Behaviour',
-  learning: 'Learning',
-}
+import { UNIT_LABELS, KPI_CATEGORY_LABELS, KPI_CATEGORY_STYLES } from '@/lib/constants'
 
 export default async function KpiTemplatesPage({
   searchParams,
@@ -90,12 +79,12 @@ export default async function KpiTemplatesPage({
                 <tr key={t.id} className="border-t hover:bg-muted/30 transition-colors">
                   <td className="p-3 font-medium truncate">{t.title}</td>
                   <td className="p-3">
-                    <Badge className={CATEGORY_STYLES[t.category] ?? 'bg-muted text-muted-foreground'}>
-                      {CATEGORY_LABELS[t.category] ?? t.category}
+                    <Badge className={KPI_CATEGORY_STYLES[t.category] ?? 'bg-muted text-muted-foreground'}>
+                      {KPI_CATEGORY_LABELS[t.category] ?? t.category}
                     </Badge>
                   </td>
                   <td className="p-3 text-muted-foreground truncate">{t.department?.name ?? '—'}</td>
-                  <td className="p-3 text-muted-foreground">{t.unit}</td>
+                  <td className="p-3 text-muted-foreground">{UNIT_LABELS[t.unit] ?? t.unit}</td>
                   <td className="p-3 text-muted-foreground">{t.target != null ? String(t.target) : '—'}</td>
                   <td className="p-3 text-muted-foreground">{t.weight ? `${t.weight}%` : '—'}</td>
                   <td className="p-3">

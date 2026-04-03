@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
+import { UNIT_LABELS } from '@/lib/constants'
 import Link from 'next/link'
 
 function ragBadge(achievement: number, red: number, amber: number) {
@@ -133,7 +134,7 @@ export default async function HrbpMisPage(props: {
                         <p className="text-xs font-medium text-muted-foreground">{t.metric_name}</p>
                         {ragBadge(ach, Number(t.red_threshold), Number(t.amber_threshold))}
                       </div>
-                      <p className="text-lg font-semibold">{ytd.toLocaleString('en-IN')} <span className="text-sm text-muted-foreground">/ {annual.toLocaleString('en-IN')} {t.unit}</span></p>
+                      <p className="text-lg font-semibold">{ytd.toLocaleString('en-IN')} <span className="text-sm text-muted-foreground">/ {annual.toLocaleString('en-IN')} {UNIT_LABELS[t.unit] ?? t.unit}</span></p>
                       <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all ${
@@ -173,7 +174,7 @@ export default async function HrbpMisPage(props: {
                           <tr key={t.id} className="border-b border-white/5">
                             <td className="p-3 font-medium">{idx === 0 ? empName : ''}</td>
                             <td className="p-3 text-white/70">{t.metric_name}</td>
-                            <td className="p-3 text-right">{annual.toLocaleString('en-IN')} {t.unit}</td>
+                            <td className="p-3 text-right">{annual.toLocaleString('en-IN')} {UNIT_LABELS[t.unit] ?? t.unit}</td>
                             <td className="p-3 text-right">{ytd.toLocaleString('en-IN')}</td>
                             <td className="p-3 text-right">{ach.toFixed(1)}%</td>
                             <td className="p-3 text-center">

@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc:*)",
+      "Bash(xargs grep:*)",
+      "Bash(npx prisma:*)",
+      "Bash(npx dotenv:*)",
+      "Bash(find 'C:\\\\Users\\\\Raghav Maheshwari\\\\Performance-System-hRMS\\\\.claude\\\\worktrees\\\\charming-bouman' -type f \\\\\\(-name .env* -o -name *.env \\\\\\))",
+      "Bash(ls \"C:/Users/Raghav Maheshwari/Performance-System-hRMS/.claude/worktrees/charming-bouman/src/app/\\(dashboard\\)/employee/peer-reviews/\")",
+      "Bash(npx next:*)",
+      "Bash(where python3:*)",
+      "Bash(where python:*)",
+      "Bash(python3 scripts/search.py \"SaaS dashboard HR performance management modern glassmorphism\" --design-system -p \"hRMS\")",
+      "Bash(find src:*)",
+      "Bash(grep -n \"bg-white p-4\" src/app/*/admin/email-templates/template-editor.tsx)",
+      "WebSearch",
+      "Bash(grep -r 'Submit a' /c/Users/Raghav Maheshwari/Performance-System-hRMS/.claude/worktrees/charming-bouman/src --include=*.tsx --include=*.ts)",
+      "Bash(grep -l \"export\" src/lib/*.ts)",
+      "Bash(ls -la \"C:\\\\Users\\\\Raghav Maheshwari\\\\Performance-System-hRMS\\\\.claude\\\\worktrees\\\\charming-bouman/src/app/\\(dashboard\\)/admin/payout-config/\")",
+      "Bash(find /c/Users/Raghav Maheshwari/Performance-System-hRMS/.claude/worktrees/charming-bouman -name *email* -type f)",
+      "Bash(find /c/Users/Raghav Maheshwari/Performance-System-hRMS/.claude/worktrees/charming-bouman -name *notification* -type f)",
+      "Bash(DIRECT_URL=\"postgresql://neondb_owner:npg_3rsxNhD9VRIo@ep-icy-bird-a4pfrwbf.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require\" DATABASE_URL=\"postgresql://neondb_owner:npg_3rsxNhD9VRIo@ep-icy-bird-a4pfrwbf-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require\" npx prisma db push)",
+      "Bash(DIRECT_URL=\"postgresql://neondb_owner:npg_3rsxNhD9VRIo@ep-icy-bird-a4pfrwbf.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require\" DATABASE_URL=\"postgresql://neondb_owner:npg_3rsxNhD9VRIo@ep-icy-bird-a4pfrwbf-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require\" npx prisma db push --accept-data-loss)",
+      "Bash(DIRECT_URL=\"postgresql://neondb_owner:npg_3rsxNhD9VRIo@ep-icy-bird-a4pfrwbf.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require\" DATABASE_URL=\"postgresql://neondb_owner:npg_3rsxNhD9VRIo@ep-icy-bird-a4pfrwbf-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require\" npx tsx -e \":*)",
+      "Bash(DIRECT_URL=\"postgresql://neondb_owner:npg_3rsxNhD9VRIo@ep-icy-bird-a4pfrwbf.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require\" node -e \":*)",
+      "Bash(find /c/Users/Raghav Maheshwari/Performance-System-hRMS/.claude/worktrees/charming-bouman/src -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))"
+    ]
+  }
+}

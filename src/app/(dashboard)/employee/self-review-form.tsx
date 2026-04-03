@@ -6,7 +6,7 @@ import { SubmitButton } from '@/components/submit-button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { RatingPillSelector, STANDARD_RATING_OPTIONS } from '@/components/rating-pill-selector'
-import { RATING_TIERS } from '@/lib/constants'
+import { RATING_TIERS, KPI_CATEGORY_LABELS, KRA_CATEGORY_STYLES as KRA_CAT_STYLES_IMPORT } from '@/lib/constants'
 import { useToast } from '@/lib/toast'
 import type { ActionResult, Kpi, Kra, Review, ReviewQuestionWithCompetency } from '@/lib/types'
 
@@ -32,11 +32,7 @@ interface SelfReviewFormProps {
 
 const STAR_LABELS = ['Poor', 'Below Average', 'Average', 'Good', 'Excellent']
 
-const KRA_CATEGORY_STYLES: Record<string, { bg: string; text: string }> = {
-  performance: { bg: 'bg-blue-500/20', text: 'text-blue-400' },
-  behaviour:   { bg: 'bg-amber-500/20', text: 'text-amber-400' },
-  learning:    { bg: 'bg-emerald-500/20', text: 'text-emerald-400' },
-}
+const KRA_CATEGORY_STYLES = KRA_CAT_STYLES_IMPORT
 
 export function SelfReviewForm({ cycleId, review, kpis, kras, questions = [], existingResponses = {} }: SelfReviewFormProps) {
   const [submitState, submitAction] = useActionState(submitSelfReview, INITIAL)
@@ -124,8 +120,8 @@ export function SelfReviewForm({ cycleId, review, kpis, kras, questions = [], ex
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold uppercase text-primary tracking-wide">KRA</span>
                         <h4 className="font-semibold text-sm">{kra.title}</h4>
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${catStyle.bg} ${catStyle.text}`}>
-                          {kra.category}
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${catStyle.bg} ${catStyle.text}`}>
+                          {KPI_CATEGORY_LABELS[kra.category] ?? kra.category}
                         </span>
                         {kra.weight && (
                           <span className="rounded-full bg-muted/50 px-2 py-0.5 text-xs font-semibold tabular-nums">
