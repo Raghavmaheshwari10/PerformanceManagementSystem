@@ -13,7 +13,7 @@ import {
   UserCircle, LayoutDashboard, CalendarClock, UserCog,
   Building2, FileBarChart, Settings2, BarChart3, Scale,
   ScrollText, BookOpen, HelpCircle, LogOut,
-  Wallet, Bell, FileSpreadsheet, Menu, X, ChevronRight,
+  Wallet, Bell, FileSpreadsheet, Menu, X,
   Mail, BadgeCheck, Video, PanelLeftClose, PanelLeftOpen,
 } from 'lucide-react'
 
@@ -22,6 +22,7 @@ interface NavItem {
   href: string
   icon: React.ElementType
   requireAlsoEmployee?: boolean
+  section?: string
 }
 
 const NAV_ITEMS: Record<UserRole, NavItem[]> = {
@@ -31,9 +32,8 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Goals',        href: '/employee/goals',        icon: Target },
     { label: 'MIS Targets',  href: '/employee/mis',          icon: BarChart3 },
     { label: 'Feedback',     href: '/employee/feedback',     icon: MessageSquare },
-    // { label: 'Peer Reviews', href: '/employee/peer-reviews', icon: Users2 }, // Hidden — feature disabled
     { label: 'Profile',      href: '/employee/profile',      icon: UserCircle },
-    { label: 'Docs',         href: '/docs',                  icon: BookOpen },
+    { label: 'Docs',         href: '/docs',                  icon: BookOpen,    section: 'divider' },
     { label: 'Help',         href: '#help',                  icon: HelpCircle },
   ],
   manager: [
@@ -41,7 +41,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Team Payouts', href: '/manager/payouts',   icon: Wallet },
     { label: 'Team Reports', href: '/manager/reports',   icon: FileBarChart },
     { label: 'MIS Tracking', href: '/manager/mis',       icon: BarChart3 },
-    { label: 'My Review',    href: '/manager/my-review', icon: ClipboardCheck },
+    { label: 'My Review',    href: '/manager/my-review', icon: ClipboardCheck, section: 'divider' },
     { label: 'Docs',         href: '/docs',              icon: BookOpen },
     { label: 'Help',         href: '#help',              icon: HelpCircle },
   ],
@@ -54,28 +54,28 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Reports',      href: '/hrbp/reports',      icon: BarChart3 },
     { label: 'MIS Overview', href: '/hrbp/mis',          icon: BarChart3 },
     { label: 'Audit Log',    href: '/hrbp/audit-log',    icon: ScrollText },
-    { label: 'My Review',    href: '/hrbp/my-review',    icon: ClipboardCheck, requireAlsoEmployee: true },
+    { label: 'My Review',    href: '/hrbp/my-review',    icon: ClipboardCheck, requireAlsoEmployee: true, section: 'divider' },
     { label: 'Docs',         href: '/docs',              icon: BookOpen },
     { label: 'Help',         href: '#help',              icon: HelpCircle },
   ],
   admin: [
     { label: 'Dashboard',        href: '/admin',                  icon: LayoutDashboard },
     { label: 'Cycles',           href: '/admin/cycles',           icon: CalendarClock },
-    { label: 'Users',            href: '/admin/users',            icon: UserCog },
+    { label: 'Users',            href: '/admin/users',            icon: UserCog,         section: 'divider' },
     { label: 'Departments',      href: '/admin/departments',      icon: Building2 },
     { label: 'Roles',            href: '/admin/roles',            icon: BadgeCheck },
-    { label: 'KPI Templates',    href: '/admin/kpi-templates',    icon: FileBarChart },
+    { label: 'KPI Templates',    href: '/admin/kpi-templates',    icon: FileBarChart,    section: 'divider' },
     { label: 'KRA Templates',    href: '/admin/kra-templates',    icon: Target },
     { label: 'MIS Integration',  href: '/admin/mis',              icon: FileSpreadsheet },
-    { label: 'Competencies',     href: '/admin/competencies',     icon: Target },
+    { label: 'Competencies',     href: '/admin/competencies',     icon: Target,          section: 'divider' },
     { label: 'Review Templates', href: '/admin/review-templates', icon: FileSpreadsheet },
     { label: 'Email Templates',  href: '/admin/email-templates',  icon: Mail },
     { label: 'Notifications',    href: '/admin/notifications',    icon: Bell },
-    { label: 'Payout Config',    href: '/admin/payout-config',    icon: Wallet },
+    { label: 'Payout Config',    href: '/admin/payout-config',    icon: Wallet,          section: 'divider' },
     { label: 'Payouts',          href: '/admin/payouts',          icon: Settings2 },
     { label: 'Reports',          href: '/admin/reports',          icon: FileBarChart },
     { label: 'Audit Log',        href: '/admin/audit-log',        icon: ScrollText },
-    { label: 'Docs',             href: '/docs',                   icon: BookOpen },
+    { label: 'Docs',             href: '/docs',                   icon: BookOpen,        section: 'divider' },
     { label: 'Help',             href: '#help',                   icon: HelpCircle },
   ],
 }
@@ -161,20 +161,20 @@ export function Sidebar({
   const expandedContent = (
     <>
       {/* Logo */}
-      <div className="px-5 pt-6 pb-5">
+      <div className="px-5 pt-5 pb-4">
         <div className="flex items-center gap-3">
-          <img src="/icon.svg" alt="PMS" className="h-9 w-9 rounded-xl" />
+          <img src="/icon.svg" alt="PMS" className="h-8 w-8 rounded-lg" />
           <div className="min-w-0 flex-1">
-            <p className="text-[15px] font-bold text-slate-900 tracking-tight">PMS</p>
-            <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">EMB Global</p>
+            <p className="text-sm font-bold text-slate-800 tracking-tight leading-none">PMS</p>
+            <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-[0.15em] mt-0.5">EMB Global</p>
           </div>
           {/* Collapse button — desktop only */}
           <button
             onClick={toggleCollapsed}
-            className="hidden lg:flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            className="hidden lg:flex h-6 w-6 items-center justify-center rounded-md text-slate-300 hover:text-slate-500 hover:bg-slate-100 transition-colors"
             title="Collapse sidebar"
           >
-            <PanelLeftClose className="h-4 w-4" />
+            <PanelLeftClose className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
@@ -182,7 +182,7 @@ export function Sidebar({
       {/* Role Switcher */}
       {availableRoles.length > 1 && (
         <div className="px-4 mb-3">
-          <div className="flex rounded-lg bg-slate-100 p-0.5">
+          <div className="flex rounded-lg bg-slate-100/80 p-0.5">
             {availableRoles.map(r => (
               <button
                 key={r}
@@ -190,8 +190,8 @@ export function Sidebar({
                 className={cn(
                   'flex-1 rounded-md px-2 py-1.5 text-[11px] font-medium transition-all',
                   currentRole === r
-                    ? 'bg-white text-indigo-700 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
+                    ? 'bg-white text-slate-800 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-600'
                 )}
               >
                 {ROLE_DISPLAY[r]}
@@ -202,68 +202,73 @@ export function Sidebar({
       )}
 
       {/* Search */}
-      <div className="px-4 mb-4">
+      <div className="px-4 mb-3">
         <CommandPaletteTrigger />
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-3 space-y-0.5">
-        {visibleItems.map(item => {
+      <nav className="flex-1 overflow-y-auto px-3 pb-2">
+        {visibleItems.map((item, idx) => {
           const Icon = item.icon
           const isActive = item.href !== '#help' &&
             (pathname === item.href || (item.href !== '/admin' && item.href !== '/employee' && pathname.startsWith(item.href)))
           const isExactActive = pathname === item.href
+          const active = isActive || isExactActive
+          const showDivider = item.section === 'divider' && idx > 0
 
-          if (item.href === '#help') {
-            return (
-              <button
-                key="help"
-                onClick={() => setHelpOpen(true)}
-                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
-              >
-                <Icon className="h-[18px] w-[18px] shrink-0" />
-                {item.label}
-              </button>
-            )
-          }
-
-          return (
+          const element = item.href === '#help' ? (
+            <button
+              key="help"
+              onClick={() => setHelpOpen(true)}
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-[7px] text-[13px] text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-600"
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {item.label}
+            </button>
+          ) : (
             <Link
               key={item.href}
               href={item.href}
               onClick={() => setMobileOpen(false)}
               className={cn(
-                'flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] transition-all',
-                (isActive || isExactActive)
-                  ? 'bg-indigo-50 text-indigo-700 font-semibold border-l-[3px] border-indigo-600 pl-[9px]'
+                'flex items-center gap-2.5 rounded-lg px-3 py-[7px] text-[13px] transition-all',
+                active
+                  ? 'bg-indigo-50/80 text-indigo-700 font-medium'
                   : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
               )}
             >
               <Icon className={cn(
-                'h-[18px] w-[18px] shrink-0',
-                (isActive || isExactActive) ? 'text-indigo-600' : ''
+                'h-4 w-4 shrink-0',
+                active ? 'text-indigo-500' : 'text-slate-400'
               )} />
               {item.label}
             </Link>
           )
+
+          return showDivider ? (
+            <div key={item.href || 'help'}>
+              <div className="h-px bg-slate-100 my-2 mx-2" />
+              {element}
+            </div>
+          ) : element
         })}
       </nav>
 
       {/* Footer */}
-      <div className="mt-auto px-4 py-4 space-y-2">
+      <div className="px-4 pb-4 pt-2">
         <div className="h-px bg-slate-100 mb-3" />
         <button
           onClick={handleSignOut}
-          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-[7px] text-[13px] text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500"
         >
-          <LogOut className="h-[18px] w-[18px]" />
+          <LogOut className="h-4 w-4" />
           Sign out
         </button>
-        <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-slate-50 border border-slate-100">
+        <div className="flex items-center gap-2.5 px-3 py-2.5 mt-2 rounded-lg bg-slate-50/80">
           <UserAvatar name={userName} role={role} />
           <div className="min-w-0">
-            <p className="text-[13px] font-semibold text-slate-800 truncate">{userName}</p>
-            <p className="text-[10px] font-medium text-slate-400">{role === 'hrbp' ? 'HRBP' : role.charAt(0).toUpperCase() + role.slice(1)}</p>
+            <p className="text-[13px] font-medium text-slate-700 truncate leading-tight">{userName}</p>
+            <p className="text-[10px] text-slate-400">{role === 'hrbp' ? 'HRBP' : role.charAt(0).toUpperCase() + role.slice(1)}</p>
           </div>
         </div>
       </div>
@@ -274,26 +279,26 @@ export function Sidebar({
   const collapsedContent = (
     <>
       {/* Logo icon + expand button */}
-      <div className="flex flex-col items-center pt-6 pb-4 gap-3">
-        <img src="/icon.svg" alt="PMS" className="h-9 w-9 rounded-xl" />
+      <div className="flex flex-col items-center pt-5 pb-3 gap-2">
+        <img src="/icon.svg" alt="PMS" className="h-8 w-8 rounded-lg" />
         <button
           onClick={toggleCollapsed}
-          className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+          className="flex h-6 w-6 items-center justify-center rounded-md text-slate-300 hover:text-slate-500 hover:bg-slate-100 transition-colors"
           title="Expand sidebar"
         >
-          <PanelLeftOpen className="h-4 w-4" />
+          <PanelLeftOpen className="h-3.5 w-3.5" />
         </button>
       </div>
 
       {/* Role Switcher — collapsed: show first letter */}
       {availableRoles.length > 1 && (
-        <div className="flex flex-col items-center gap-1 mb-3 px-1">
+        <div className="flex flex-col items-center gap-1 mb-2 px-1">
           {availableRoles.map(r => (
             <button
               key={r}
               onClick={() => router.push(ROLE_HOME[r as UserRole])}
               className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-lg text-[11px] font-semibold transition-all',
+                'flex h-7 w-7 items-center justify-center rounded-lg text-[10px] font-semibold transition-all',
                 currentRole === r
                   ? 'bg-indigo-50 text-indigo-700'
                   : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'
@@ -308,55 +313,57 @@ export function Sidebar({
 
       {/* Nav — icon only with tooltips */}
       <nav className="flex-1 overflow-y-auto px-2 space-y-0.5">
-        {visibleItems.map(item => {
+        {visibleItems.map((item, idx) => {
           const Icon = item.icon
           const isActive = item.href !== '#help' &&
             (pathname === item.href || (item.href !== '/admin' && item.href !== '/employee' && pathname.startsWith(item.href)))
           const isExactActive = pathname === item.href
+          const active = isActive || isExactActive
+          const showDivider = item.section === 'divider' && idx > 0
 
-          if (item.href === '#help') {
-            return (
-              <button
-                key="help"
-                onClick={() => setHelpOpen(true)}
-                className="flex w-full items-center justify-center rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
-                title={item.label}
-              >
-                <Icon className="h-[18px] w-[18px]" />
-              </button>
-            )
-          }
-
-          return (
+          const element = item.href === '#help' ? (
+            <button
+              key="help"
+              onClick={() => setHelpOpen(true)}
+              className="flex w-full items-center justify-center rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-600"
+              title={item.label}
+            >
+              <Icon className="h-4 w-4" />
+            </button>
+          ) : (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
                 'flex items-center justify-center rounded-lg p-2 transition-all',
-                (isActive || isExactActive)
-                  ? 'bg-indigo-50 text-indigo-700'
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                active
+                  ? 'bg-indigo-50/80 text-indigo-600'
+                  : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
               )}
               title={item.label}
             >
-              <Icon className={cn(
-                'h-[18px] w-[18px]',
-                (isActive || isExactActive) ? 'text-indigo-600' : ''
-              )} />
+              <Icon className="h-4 w-4" />
             </Link>
           )
+
+          return showDivider ? (
+            <div key={item.href || 'help'}>
+              <div className="h-px bg-slate-100 my-1.5 mx-1" />
+              {element}
+            </div>
+          ) : element
         })}
       </nav>
 
       {/* Footer — collapsed */}
-      <div className="mt-auto flex flex-col items-center py-4 gap-2">
-        <div className="h-px w-8 bg-slate-100 mb-1" />
+      <div className="mt-auto flex flex-col items-center py-3 gap-2">
+        <div className="h-px w-6 bg-slate-100 mb-1" />
         <button
           onClick={handleSignOut}
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500"
           title="Sign out"
         >
-          <LogOut className="h-[18px] w-[18px]" />
+          <LogOut className="h-4 w-4" />
         </button>
         <div title={`${userName} (${role === 'hrbp' ? 'HRBP' : role.charAt(0).toUpperCase() + role.slice(1)})`}>
           <UserAvatar name={userName} role={role} />
@@ -383,12 +390,12 @@ export function Sidebar({
 
       {/* Mobile sidebar — always expanded */}
       <aside className={cn(
-        'fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col bg-white border-r border-slate-200 shadow-xl transition-transform duration-300 lg:hidden',
+        'fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col bg-white/95 backdrop-blur-md border-r border-slate-200/80 shadow-xl transition-transform duration-300 lg:hidden',
         mobileOpen ? 'translate-x-0' : '-translate-x-full'
       )}>
         <button
           onClick={() => setMobileOpen(false)}
-          className="absolute top-4 right-4 flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+          className="absolute top-4 right-4 flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100"
           aria-label="Close menu"
         >
           <X className="h-4 w-4" />
@@ -398,8 +405,8 @@ export function Sidebar({
 
       {/* Desktop sidebar — collapsible */}
       <aside className={cn(
-        'hidden lg:flex flex-col shrink-0 bg-white border-r border-slate-200 transition-all duration-300',
-        collapsed ? 'w-[64px]' : 'w-[260px]'
+        'hidden lg:flex flex-col shrink-0 bg-white/95 backdrop-blur-md border-r border-slate-200/80 transition-all duration-300',
+        collapsed ? 'w-[56px]' : 'w-[240px]'
       )}>
         {collapsed ? collapsedContent : expandedContent}
       </aside>

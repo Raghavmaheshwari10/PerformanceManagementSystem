@@ -1,12 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <defs>
-    <linearGradient id="leaf" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#22c55e"/>
-      <stop offset="100%" stop-color="#15803d"/>
-    </linearGradient>
-  </defs>
-  <path d="M6 26C6 26 7 8 24 4C24 4 26 20 14 26C14 26 18 20 20 14" fill="url(#leaf)" stroke="#166534" stroke-width="0.5"/>
-  <path d="M6 26C10 20 14 16 20 14" fill="none" stroke="#dcfce7" stroke-width="1.5" stroke-linecap="round"/>
-  <path d="M10 24C12 20 14 18 17 16" fill="none" stroke="#dcfce7" stroke-width="0.8" stroke-linecap="round" opacity="0.6"/>
-  <path d="M8 22C10 19 13 17 15 15" fill="none" stroke="#dcfce7" stroke-width="0.8" stroke-linecap="round" opacity="0.4"/>
+  <rect width="32" height="32" rx="7" fill="#1a3a2a"/>
+  <g transform="translate(16,16)">
+    <!-- 8 petals arranged in a flower pattern -->
+    <ellipse cx="0" cy="-5.5" rx="3.2" ry="5.8" fill="#3cb371" transform="rotate(0)" opacity="0.9"/>
+    <ellipse cx="0" cy="-5.5" rx="3.2" ry="5.8" fill="#2e8b57" transform="rotate(45)" opacity="0.9"/>
+    <ellipse cx="0" cy="-5.5" rx="3.2" ry="5.8" fill="#4eca7a" transform="rotate(90)" opacity="0.9"/>
+    <ellipse cx="0" cy="-5.5" rx="3.2" ry="5.8" fill="#2e8b57" transform="rotate(135)" opacity="0.9"/>
+    <ellipse cx="0" cy="-5.5" rx="3.2" ry="5.8" fill="#3cb371" transform="rotate(180)" opacity="0.9"/>
+    <ellipse cx="0" cy="-5.5" rx="3.2" ry="5.8" fill="#2e8b57" transform="rotate(225)" opacity="0.9"/>
+    <ellipse cx="0" cy="-5.5" rx="3.2" ry="5.8" fill="#4eca7a" transform="rotate(270)" opacity="0.9"/>
+    <ellipse cx="0" cy="-5.5" rx="3.2" ry="5.8" fill="#2e8b57" transform="rotate(315)" opacity="0.9"/>
+  </g>
 </svg>
