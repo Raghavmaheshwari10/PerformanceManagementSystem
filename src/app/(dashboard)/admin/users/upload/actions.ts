@@ -196,16 +196,27 @@ export async function uploadUsersWithMapping(
     validRows.push({ original: row, mapped })
   }
 
-  // Link managers
+  // Link managers — check both imported users and existing users in DB
   if (colMap.manager_email) {
     for (const { mapped } of validRows) {
       if (mapped.manager_email && validateEmail(mapped.manager_email)) {
-        const managerId = emailToId.get(mapped.manager_email)
+        // First check if manager was in current import batch
+        let managerId = emailToId.get(mapped.manager_email)
+        // If not, look up in the database
+        if (!managerId) {
+          const existingManager = await prisma.user.findUnique({
+            where: { email: mapped.manager_email },
+            select: { id: true },
+          })
+          if (existingManager) managerId = existingManager.id
+        }
         if (managerId) {
           await prisma.user.update({
             where: { email: mapped.email },
             data: { manager_id: managerId },
           })
+        } else {
+          skippedReasons.push(`Manager not found: ${mapped.manager_email} (for ${mapped.email})`)
         }
       }
     }
