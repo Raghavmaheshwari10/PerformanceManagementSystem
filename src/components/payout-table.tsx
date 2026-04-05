@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { DownloadAppraisalButton } from '@/components/download-appraisal-button'
 
 interface PayoutRow {
   employeeName: string
@@ -10,6 +11,8 @@ interface PayoutRow {
   variablePay: number
   multiplier: number
   payoutAmount: number
+  employeeId: string
+  cycleId: string
 }
 
 interface CycleSummary {
@@ -191,6 +194,7 @@ export function PayoutDashboard({
                     <th className="p-3 text-right text-muted-foreground cursor-pointer hover:text-foreground select-none" onClick={() => handleSort('payoutAmount')}>
                       Payout{sortKey === 'payoutAmount' && <span className="ml-1">{sortDir === 'asc' ? '↑' : '↓'}</span>}
                     </th>
+                    <th className="p-3 text-right text-xs text-muted-foreground font-medium">PDF</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -210,6 +214,14 @@ export function PayoutDashboard({
                       <td className="p-3 text-right tabular-nums font-semibold">
                         {formatCurrency(r.payoutAmount)}
                       </td>
+                      <td className="p-3 text-right">
+                        <DownloadAppraisalButton
+                          cycleId={r.cycleId}
+                          employeeId={r.employeeId}
+                          size="icon"
+                          variant="ghost"
+                        />
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -219,6 +231,7 @@ export function PayoutDashboard({
                     <td className="p-3 text-right tabular-nums">{formatCurrency(totalVariablePay)}</td>
                     <td className="p-3"></td>
                     <td className="p-3 text-right tabular-nums text-green-600">{formatCurrency(totalPayout)}</td>
+                    <td className="p-3"></td>
                   </tr>
                 </tfoot>
               </table>

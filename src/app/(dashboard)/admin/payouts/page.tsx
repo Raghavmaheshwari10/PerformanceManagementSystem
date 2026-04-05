@@ -19,7 +19,9 @@ export default async function AdminPayoutsPage() {
     ? await prisma.appraisal.findMany({
         where: { cycle_id: { in: lockedCycleIds }, locked_at: { not: null } },
         select: {
+          id: true,
           cycle_id: true,
+          employee_id: true,
           final_rating: true,
           payout_multiplier: true,
           payout_amount: true,
@@ -42,6 +44,8 @@ export default async function AdminPayoutsPage() {
     variablePay: number
     multiplier: number
     payoutAmount: number
+    employeeId: string
+    cycleId: string
   }>> = {}
 
   for (const a of appraisals) {
@@ -53,6 +57,8 @@ export default async function AdminPayoutsPage() {
       variablePay: Number(a.snapshotted_variable_pay ?? 0),
       multiplier: Number(a.payout_multiplier ?? 0),
       payoutAmount: Number(a.payout_amount ?? 0),
+      employeeId: a.employee_id,
+      cycleId: a.cycle_id,
     })
   }
 
