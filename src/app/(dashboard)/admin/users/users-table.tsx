@@ -212,11 +212,11 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
         </div>
       )}
 
-      <div className="glass overflow-hidden">
-        <table className="w-full text-sm table-row-hover">
+      <div className="glass overflow-x-auto">
+        <table className="w-full min-w-[700px] text-sm table-row-hover">
           <thead>
             <tr className="border-b border-border bg-muted/50">
-              <th className="p-3 w-10">
+              <th className="p-3 w-10 whitespace-nowrap">
                 <input
                   type="checkbox"
                   checked={allSelected}
@@ -224,15 +224,15 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
                   className="rounded"
                 />
               </th>
-              <th className="p-3 text-left text-muted-foreground">Emp Code</th>
-              <th className="p-3 text-left text-muted-foreground">Name</th>
-              <th className="p-3 text-left text-muted-foreground">Email</th>
-              <th className="p-3 text-left text-muted-foreground">Department</th>
-              <th className="p-3 text-left text-muted-foreground">Designation</th>
-              <th className="p-3 text-left text-muted-foreground">Role</th>
-              <th className="p-3 text-left text-muted-foreground">Status</th>
-              <th className="p-3 text-left text-muted-foreground">Invite</th>
-              <th className="p-3 text-right text-muted-foreground">Actions</th>
+              <th className="p-3 text-left text-muted-foreground hidden sm:table-cell whitespace-nowrap">Emp Code</th>
+              <th className="p-3 text-left text-muted-foreground whitespace-nowrap">Name</th>
+              <th className="p-3 text-left text-muted-foreground whitespace-nowrap">Email</th>
+              <th className="p-3 text-left text-muted-foreground whitespace-nowrap">Department</th>
+              <th className="p-3 text-left text-muted-foreground hidden sm:table-cell whitespace-nowrap">Designation</th>
+              <th className="p-3 text-left text-muted-foreground whitespace-nowrap">Role</th>
+              <th className="p-3 text-left text-muted-foreground whitespace-nowrap">Status</th>
+              <th className="p-3 text-left text-muted-foreground whitespace-nowrap">Invite</th>
+              <th className="p-3 text-right text-muted-foreground whitespace-nowrap">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -246,11 +246,11 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
                     className="rounded"
                   />
                 </td>
-                <td className="p-3 text-xs font-mono text-muted-foreground">{u.emp_code ?? '—'}</td>
+                <td className="p-3 text-xs font-mono text-muted-foreground hidden sm:table-cell">{u.emp_code ?? '—'}</td>
                 <td className="p-3 font-medium">{u.full_name}</td>
                 <td className="p-3 text-muted-foreground">{u.email}</td>
                 <td className="p-3 text-muted-foreground">{u.department?.name ?? '—'}</td>
-                <td className="p-3 text-muted-foreground">{u.designation ?? '—'}</td>
+                <td className="p-3 text-muted-foreground hidden sm:table-cell">{u.designation ?? '—'}</td>
                 <td className="p-3">
                   <select
                     defaultValue={u.role}
