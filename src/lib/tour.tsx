@@ -22,6 +22,7 @@ export function tourReducer(state: TourState, action: TourAction): TourState {
 }
 
 const STORAGE_KEY = (tourId: string) => `pms:tour:${tourId}:done`
+const ONBOARDED_KEY = 'pms:onboarded'
 
 interface TourContextValue {
   tourState: TourState
@@ -30,6 +31,7 @@ interface TourContextValue {
   finishTour: () => void
   replayTour: (tourId: string) => void
   isDone: (tourId: string) => boolean
+  isOnboarded: () => boolean
 }
 
 const TourContext = createContext<TourContextValue | null>(null)
@@ -42,6 +44,11 @@ export function TourProvider({ children }: { children: ReactNode }) {
     return localStorage.getItem(STORAGE_KEY(tourId)) === '1'
   }, [])
 
+  const isOnboarded = useCallback(() => {
+    if (typeof window === 'undefined') return true
+    return localStorage.getItem(ONBOARDED_KEY) === '1'
+  }, [])
+
   const startTour = useCallback((tourId: string) => {
     dispatch({ type: 'START', tourId })
   }, [])
@@ -50,6 +57,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
 
   const finishTour = useCallback(() => {
     if (tourState.tourId) localStorage.setItem(STORAGE_KEY(tourState.tourId), '1')
+    localStorage.setItem(ONBOARDED_KEY, '1')   // Mark user as onboarded — no more auto-starts
     dispatch({ type: 'FINISH' })
   }, [tourState.tourId])
 
@@ -59,7 +67,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <TourContext.Provider value={{ tourState, startTour, nextStep, finishTour, replayTour, isDone }}>
+    <TourContext.Provider value={{ tourState, startTour, nextStep, finishTour, replayTour, isDone, isOnboarded }}>
       {children}
     </TourContext.Provider>
   )

@@ -12,7 +12,7 @@ const PAD = 8
 
 export function TourEngine() {
   const pathname = usePathname()
-  const { tourState, startTour, nextStep, finishTour, isDone } = useTour()
+  const { tourState, startTour, nextStep, finishTour, isDone, isOnboarded } = useTour()
   const [rect, setRect] = useState<Rect | null>(null)
   const autoStarted = useRef<Set<string>>(new Set())
 
@@ -23,11 +23,12 @@ export function TourEngine() {
   const isLast = tour ? tourState.stepIndex === tour.steps.length - 1 : false
 
   useEffect(() => {
-    if (!tour || isDone(tour.id) || autoStarted.current.has(tour.id)) return
+    // Only auto-start on first-ever login (before user is marked as onboarded)
+    if (!tour || isOnboarded() || isDone(tour.id) || autoStarted.current.has(tour.id)) return
     autoStarted.current.add(tour.id)
     const timer = setTimeout(() => startTour(tour.id), 800)
     return () => clearTimeout(timer)
-  }, [pathname, tour, isDone, startTour])
+  }, [pathname, tour, isDone, isOnboarded, startTour])
 
   useEffect(() => {
     if (!step) { setRect(null); return }
