@@ -33,9 +33,23 @@ export function TourEngine() {
     if (!step) { setRect(null); return }
     const el = document.querySelector(`[data-tour="${step.id}"]`)
     if (!el) { setRect(null); return }
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    const r = el.getBoundingClientRect()
-    setRect({ top: r.top, left: r.left, width: r.width, height: r.height })
+
+    const measure = () => {
+      const r = el.getBoundingClientRect()
+      setRect({ top: r.top, left: r.left, width: r.width, height: r.height })
+    }
+
+    // Scroll instantly so getBoundingClientRect is accurate immediately
+    el.scrollIntoView({ behavior: 'instant', block: 'center' })
+    measure()
+
+    // Re-measure on scroll/resize so overlay stays anchored to the element
+    window.addEventListener('scroll', measure, { passive: true })
+    window.addEventListener('resize', measure, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', measure)
+      window.removeEventListener('resize', measure)
+    }
   }, [step])
 
   if (!step || !rect) return null

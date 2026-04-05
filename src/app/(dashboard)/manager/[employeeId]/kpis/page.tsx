@@ -329,7 +329,7 @@ export default async function KpiSettingPage({
                         <Label htmlFor={`kpi-target-${kra.id}`}>Target</Label>
                         <Input id={`kpi-target-${kra.id}`} name="target" type="number" step="any" placeholder="e.g. 95" />
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1" data-tour="weight-field">
                         <Label htmlFor={`kpi-weight-${kra.id}`}>Weight (%)</Label>
                         <Input id={`kpi-weight-${kra.id}`} name="weight" type="number" min="1" max={remaining} required placeholder={`Max ${remaining}`} />
                       </div>
@@ -338,7 +338,9 @@ export default async function KpiSettingPage({
                       <Label htmlFor={`kpi-desc-${kra.id}`}>Description</Label>
                       <Input id={`kpi-desc-${kra.id}`} name="description" placeholder="How will this be measured? (optional)" />
                     </div>
-                    <SubmitButton pendingLabel="Adding...">Add KPI</SubmitButton>
+                    <div data-tour="add-kpi-btn">
+                      <SubmitButton pendingLabel="Adding...">Add KPI</SubmitButton>
+                    </div>
                   </form>
                 )}
               </div>
