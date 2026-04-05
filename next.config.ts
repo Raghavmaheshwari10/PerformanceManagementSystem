@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   ...(process.env.NODE_ENV === 'development' && {
@@ -6,4 +7,14 @@ const nextConfig: NextConfig = {
   }),
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: true,           // suppress build output noise
+  sourcemaps: {
+    filesToDeleteAfterUpload: ['.next/static/**/*.map'], // don't expose source maps to client
+  },
+  disableLogger: true,
+  automaticVercelMonitors: false,
+});
