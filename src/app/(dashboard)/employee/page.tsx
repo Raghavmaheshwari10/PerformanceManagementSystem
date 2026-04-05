@@ -895,15 +895,15 @@ export default async function EmployeeReviewPage() {
                   individualMultiplier={Number(appraisal.payout_multiplier ?? 0)}
                   payoutAmount={Number(appraisal.payout_amount)}
                 />
+                <div className="mt-4 flex justify-end">
+                  <DownloadAppraisalButton
+                    cycleId={cycle.id}
+                    employeeId={user.id}
+                    label="Download My Appraisal"
+                  />
+                </div>
               </div>
             )}
-            <div className="mt-4 flex justify-end">
-              <DownloadAppraisalButton
-                cycleId={cycle.id}
-                employeeId={user.id}
-                label="Download My Appraisal"
-              />
-            </div>
           </section>
         )
       })()}

@@ -32,10 +32,13 @@ export function DownloadAppraisalButton({
         throw new Error(body.error ?? `Error ${res.status}`)
       }
       const blob = await res.blob()
+      const disposition = res.headers.get('Content-Disposition') ?? ''
+      const match = disposition.match(/filename="([^"]+)"/)
+      const filename = match?.[1] ?? 'appraisal.pdf'
       const url  = URL.createObjectURL(blob)
       const a    = document.createElement('a')
       a.href     = url
-      a.download = `appraisal.pdf`
+      a.download = filename
       a.click()
       URL.revokeObjectURL(url)
     } catch (err) {

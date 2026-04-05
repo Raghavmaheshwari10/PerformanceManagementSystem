@@ -56,10 +56,18 @@ export async function GET(req: NextRequest) {
       where: { id: employeeId },
       select: { department_id: true },
     })
-    if (!emp || !deptIds.includes(emp.department_id!)) {
+    if (!emp || emp.department_id == null || !deptIds.includes(emp.department_id)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
-  } else if (!['admin', 'manager'].includes(user.role)) {
+  } else if (user.role === 'manager') {
+    const emp = await prisma.user.findUnique({
+      where: { id: employeeId },
+      select: { manager_id: true },
+    })
+    if (!emp || emp.manager_id !== user.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+  } else if (user.role !== 'admin') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
