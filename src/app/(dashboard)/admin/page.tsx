@@ -120,8 +120,8 @@ export default async function AdminDashboard() {
 
         {/* Cycle Health — 2 cols */}
         <div className={cn(
-          'lg:col-span-2 rounded-xl border bg-white p-6 space-y-4',
-          overdueManagerReviews > 0 ? 'border-red-200' : 'border-slate-200'
+          'lg:col-span-2 glass p-6 space-y-4',
+          overdueManagerReviews > 0 && 'border-red-200'
         )}>
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-slate-900">Cycle Health</h2>
@@ -178,7 +178,7 @@ export default async function AdminDashboard() {
         </div>
 
         {/* Role Breakdown */}
-        <div className="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
+        <div className="glass p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-slate-900">Team Composition</h2>
             <Link href="/admin/users" className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">Manage &rarr;</Link>
@@ -253,7 +253,7 @@ export default async function AdminDashboard() {
 
       {/* Recent Cycles */}
       {allCycles.length > 0 && (
-        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+        <div className="glass overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
             <h2 className="font-semibold text-slate-900">Recent Cycles</h2>
             <Link href="/admin/cycles" className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">View all &rarr;</Link>
@@ -288,7 +288,7 @@ function StatCard({ label, value, sub, icon, iconColor, href }: {
   label: string; value: number; sub: string; icon: React.ReactNode; iconColor: string; href: string
 }) {
   return (
-    <Link href={href} className="group rounded-xl border border-slate-200 bg-white p-5 transition-all hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-500/5 hover:-translate-y-0.5">
+    <Link href={href} className="group glass glass-interactive p-5">
       <div className="flex items-center justify-between mb-3">
         <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl', iconColor)}>
           {icon}
