@@ -4,19 +4,30 @@ import { createContext, useContext, useReducer, useCallback, type ReactNode } fr
 
 export type ToastVariant = 'success' | 'error' | 'info' | 'warning'
 
+export interface ToastAction {
+  label: string
+  onClick: () => void
+}
+
+export interface ToastOptions {
+  action?: ToastAction
+  duration?: number
+}
+
 export interface Toast {
   id: string
   variant: ToastVariant
   message: string
+  action?: ToastAction
 }
 
 export interface ToastState { toasts: Toast[] }
 
-export type ToastAction =
+export type ToastReducerAction =
   | { type: 'ADD'; toast: Toast }
   | { type: 'DISMISS'; id: string }
 
-export function toastReducer(state: ToastState, action: ToastAction): ToastState {
+export function toastReducer(state: ToastState, action: ToastReducerAction): ToastState {
   switch (action.type) {
     case 'ADD': {
       const toasts = [...state.toasts, action.toast]
@@ -29,10 +40,10 @@ export function toastReducer(state: ToastState, action: ToastAction): ToastState
 
 interface ToastContextValue {
   toast: {
-    success: (message: string) => void
-    error:   (message: string) => void
-    info:    (message: string) => void
-    warning: (message: string) => void
+    success: (message: string, options?: ToastOptions) => void
+    error:   (message: string, options?: ToastOptions) => void
+    info:    (message: string, options?: ToastOptions) => void
+    warning: (message: string, options?: ToastOptions) => void
   }
   toasts: Toast[]
   dismiss: (id: string) => void
@@ -43,17 +54,17 @@ const ToastContext = createContext<ToastContextValue | null>(null)
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(toastReducer, { toasts: [] })
 
-  const add = useCallback((variant: ToastVariant, message: string) => {
+  const add = useCallback((variant: ToastVariant, message: string, options?: ToastOptions) => {
     const id = crypto.randomUUID()
-    dispatch({ type: 'ADD', toast: { id, variant, message } })
-    setTimeout(() => dispatch({ type: 'DISMISS', id }), 4000)
+    dispatch({ type: 'ADD', toast: { id, variant, message, action: options?.action } })
+    setTimeout(() => dispatch({ type: 'DISMISS', id }), options?.duration ?? 4000)
   }, [])
 
   const toast = {
-    success: (m: string) => add('success', m),
-    error:   (m: string) => add('error', m),
-    info:    (m: string) => add('info', m),
-    warning: (m: string) => add('warning', m),
+    success: (m: string, o?: ToastOptions) => add('success', m, o),
+    error:   (m: string, o?: ToastOptions) => add('error', m, o),
+    info:    (m: string, o?: ToastOptions) => add('info', m, o),
+    warning: (m: string, o?: ToastOptions) => add('warning', m, o),
   }
 
   return (

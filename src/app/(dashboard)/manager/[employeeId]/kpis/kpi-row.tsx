@@ -25,6 +25,25 @@ export function KpiRow({ kpiId, employeeId, title, target, weight, unit, isFinal
   const [updateState, updateAction] = useActionState(updateKpi, INITIAL)
   const formRef = useRef<HTMLFormElement>(null)
   const { toast } = useToast()
+  const [pendingDelete, setPendingDelete] = useState(false)
+  const deleteTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleDelete = () => {
+    setPendingDelete(true)
+    deleteTimer.current = setTimeout(async () => {
+      await deleteKpi(kpiId, employeeId)
+    }, 5000)
+    toast.success('KPI removed', {
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          if (deleteTimer.current) clearTimeout(deleteTimer.current)
+          setPendingDelete(false)
+        },
+      },
+      duration: 5000,
+    })
+  }
 
   useEffect(() => {
     if (updateState === INITIAL) return
@@ -41,6 +60,8 @@ export function KpiRow({ kpiId, employeeId, title, target, weight, unit, isFinal
     if (unit === 'percent') return `${target}%`
     return String(target)
   }
+
+  if (pendingDelete) return null
 
   if (editing && !isFinalized) {
     return (
@@ -87,11 +108,14 @@ export function KpiRow({ kpiId, employeeId, title, target, weight, unit, isFinal
             <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
               Edit
             </Button>
-            <form action={deleteKpi.bind(null, kpiId, employeeId) as unknown as (fd: FormData) => Promise<void>}>
-              <Button variant="ghost" size="sm" type="submit" className="text-destructive hover:text-destructive">
-                Remove
-              </Button>
-            </form>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+              onClick={handleDelete}
+            >
+              Remove
+            </Button>
           </>
         )}
       </div>

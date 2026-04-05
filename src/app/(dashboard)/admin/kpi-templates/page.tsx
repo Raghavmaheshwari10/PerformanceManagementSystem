@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { toggleTemplateActive, deleteKpiTemplate } from './actions'
 import { UNIT_LABELS, KPI_CATEGORY_LABELS, KPI_CATEGORY_STYLES } from '@/lib/constants'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil } from 'lucide-react'
+import { DeleteTemplateButton } from './delete-template-button'
 
 export default async function KpiTemplatesPage({
   searchParams,
@@ -105,13 +106,7 @@ export default async function KpiTemplatesPage({
                         title="Edit">
                         <Pencil className="h-3.5 w-3.5" />
                       </Link>
-                      <form action={deleteKpiTemplate.bind(null, t.id) as unknown as (fd: FormData) => Promise<void>}>
-                        <button type="submit"
-                          className="rounded p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                          title="Delete">
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </form>
+                      <DeleteTemplateButton id={t.id} action={deleteKpiTemplate} />
                     </div>
                   </td>
                 </tr>

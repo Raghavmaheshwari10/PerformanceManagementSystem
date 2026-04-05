@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { toastReducer, type ToastState, type ToastAction } from '../toast'
+import { toastReducer, type ToastState, type ToastReducerAction } from '../toast'
 
 describe('toastReducer', () => {
   const initialState: ToastState = { toasts: [] }
 
   it('adds a toast', () => {
-    const action: ToastAction = { type: 'ADD', toast: { id: '1', variant: 'success', message: 'Done' } }
+    const action: ToastReducerAction = { type: 'ADD', toast: { id: '1', variant: 'success', message: 'Done' } }
     const state = toastReducer(initialState, action)
     expect(state.toasts).toHaveLength(1)
     expect(state.toasts[0].message).toBe('Done')

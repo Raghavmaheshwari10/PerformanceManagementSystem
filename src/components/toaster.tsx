@@ -33,7 +33,15 @@ export function Toaster() {
         >
           <span className="font-bold text-base leading-none mt-0.5">{ICONS[t.variant]}</span>
           <span className="flex-1">{t.message}</span>
-          <button onClick={() => dismiss(t.id)} className="opacity-50 hover:opacity-100 text-xs ml-1">✕</button>
+          {t.action && (
+            <button
+              onClick={() => { t.action!.onClick(); dismiss(t.id) }}
+              className="shrink-0 rounded-md border border-current/20 px-2 py-0.5 text-xs font-semibold hover:bg-black/5 transition-colors"
+            >
+              {t.action.label}
+            </button>
+          )}
+          <button onClick={() => dismiss(t.id)} className="opacity-50 hover:opacity-100 text-xs ml-1 shrink-0">✕</button>
         </div>
       ))}
     </div>
