@@ -5,6 +5,7 @@ import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import type { ActionResult } from '@/lib/types'
 import { dispatchPendingNotifications } from '@/lib/email'
+import logger from '@/lib/logger'
 import { getCycleDepartmentIds } from '@/lib/cycle-helpers'
 
 export async function sendSelfReviewReminders(cycleId: string): Promise<ActionResult<{ sent: number }>> {
@@ -35,7 +36,7 @@ export async function sendSelfReviewReminders(cycleId: string): Promise<ActionRe
   })
 
   for (const u of pending) {
-    dispatchPendingNotifications(u.id).catch(console.error)
+    dispatchPendingNotifications(u.id).catch(err => logger.error('dispatchNotifications', 'Failed to dispatch pending notifications', { userId: u.id }, err))
   }
 
   await prisma.auditLog.create({
@@ -114,7 +115,7 @@ export async function sendManagerReviewReminders(cycleId: string): Promise<Actio
   })
 
   for (const id of pendingManagerIds) {
-    dispatchPendingNotifications(id).catch(console.error)
+    dispatchPendingNotifications(id).catch(err => logger.error('dispatchNotifications', 'Failed to dispatch pending notifications', { userId: id }, err))
   }
 
   await prisma.auditLog.create({

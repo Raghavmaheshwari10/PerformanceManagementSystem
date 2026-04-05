@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import type { ActionResult } from '@/lib/types'
+import logger from '@/lib/logger'
 
 export async function createCompetency(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const user = await requireRole(['admin', 'hrbp'])
@@ -137,7 +138,7 @@ export async function deleteCompetency(id: string): Promise<void> {
   const usageCount = await prisma.reviewQuestion.count({ where: { competency_id: id } })
   if (usageCount > 0) {
     // Can't throw in server actions easily, just log
-    console.warn(`Cannot delete competency ${id}: used by ${usageCount} review questions`)
+    logger.warn('deleteCompetency', `Cannot delete competency: in use by ${usageCount} review questions`, { id, usageCount })
     return
   }
 

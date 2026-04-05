@@ -5,6 +5,7 @@ import { requireRole, getCurrentUser } from '@/lib/auth'
 import type { ActionResult, RatingTier } from '@/lib/types'
 import type { RatingTier as PrismaRatingTier } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
+import logger from '@/lib/logger'
 
 export async function updatePayoutConfig(
   tier: RatingTier,
@@ -40,7 +41,7 @@ export async function updatePayoutConfig(
     })
   } catch (e) {
     // Don't fail the whole action just because audit log failed
-    console.error('Audit log write failed:', e)
+    logger.error('savePayoutConfig', 'Audit log write failed', undefined, e)
   }
 
   revalidatePath('/admin/payout-config')

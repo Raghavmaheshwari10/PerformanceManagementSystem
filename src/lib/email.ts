@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { sendSlackDM, buildSlackBlocks, isSlackConfigured } from '@/lib/slack'
 import type { NotificationType } from '@prisma/client'
 import { captureServerActionError } from '@/lib/sentry'
+import logger from '@/lib/logger'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const fromAddress = process.env.EMAIL_FROM ?? 'noreply@example.com'
@@ -467,6 +468,6 @@ export async function notifyUsers(
 
   // Dispatch in background (fire-and-forget)
   for (const id of recipientIds) {
-    dispatchPendingNotifications(id).catch(console.error)
+    dispatchPendingNotifications(id).catch(err => logger.error('dispatchNotifications', 'Failed to dispatch pending notifications', { userId: id }, err))
   }
 }

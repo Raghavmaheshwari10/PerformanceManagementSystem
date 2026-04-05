@@ -9,6 +9,7 @@ import type { ActionResult, CycleStatus } from '@/lib/types'
 import type { NotificationType } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import logger from '@/lib/logger'
 
 export async function createCycle(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const user = await requireRole(['admin', 'hrbp'])
@@ -396,7 +397,7 @@ export async function deleteCycle(cycleId: string): Promise<ActionResult> {
       },
     })
   } catch (e) {
-    console.error('Failed to delete cycle:', e)
+    logger.error('deleteCycle', 'Failed to delete cycle', undefined, e)
     return { data: null, error: e instanceof Error ? e.message : 'Failed to delete cycle' }
   }
 
