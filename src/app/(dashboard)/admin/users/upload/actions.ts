@@ -7,6 +7,7 @@ import { sendInviteEmail } from '@/lib/email'
 import { revalidatePath } from 'next/cache'
 import crypto from 'crypto'
 import type { ActionResult } from '@/lib/types'
+import { captureServerActionError } from '@/lib/sentry'
 
 export interface UploadSummary {
   added: number
@@ -237,6 +238,7 @@ export async function uploadUsersWithMapping(
       await sendInviteEmail(email, inviteUrl, name)
       invited++
     } catch (err) {
+      captureServerActionError('uploadUsersWithMapping', err, { source })
       console.error(`Failed to send invite email to ${email}:`, err)
       skippedReasons.push(`Invite email failed for ${email}`)
     }

@@ -2,6 +2,7 @@ import { Resend } from 'resend'
 import { prisma } from '@/lib/prisma'
 import { sendSlackDM, buildSlackBlocks, isSlackConfigured } from '@/lib/slack'
 import type { NotificationType } from '@prisma/client'
+import { captureServerActionError } from '@/lib/sentry'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const fromAddress = process.env.EMAIL_FROM ?? 'noreply@example.com'
@@ -434,6 +435,7 @@ export async function dispatchPendingNotifications(recipientId: string): Promise
         data: { status: inAppEnabled ? 'sent' : 'sent', sent_at: new Date() },
       })
     } catch (err) {
+      captureServerActionError('sendEmail', err, { type: 'email' })
       await prisma.notification.update({
         where: { id: notif.id },
         data: { status: 'failed', error_message: String(err) },

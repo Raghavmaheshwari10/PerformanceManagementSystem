@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { fetchAopTargets, fetchMisActuals } from '@/lib/mis-api-client'
+import { captureServerActionError } from '@/lib/sentry'
 
 // ---------------------------------------------------------------------------
 // Types for MIS API responses
@@ -147,6 +148,7 @@ export async function syncTargets(
     return { synced, failed }
   } catch (err) {
     // Fatal error — mark log as failed and re-throw
+    captureServerActionError('syncTargets', err, { fiscalYear })
     const msg = err instanceof Error ? err.message : String(err)
     await prisma.misSyncLog.update({
       where: { id: log.id },
@@ -265,6 +267,7 @@ export async function syncActuals(
     return { synced, failed }
   } catch (err) {
     // Fatal error — mark log as failed and re-throw
+    captureServerActionError('syncActuals', err, { fiscalYear, month })
     const msg = err instanceof Error ? err.message : String(err)
     await prisma.misSyncLog.update({
       where: { id: log.id },
