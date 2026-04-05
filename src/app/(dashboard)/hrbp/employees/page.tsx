@@ -1,5 +1,7 @@
+import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
+import { TableSkeleton } from '@/components/skeletons'
 
 export default async function EmployeeDirectoryPage({
   searchParams,
@@ -9,27 +11,8 @@ export default async function EmployeeDirectoryPage({
   await requireRole(['hrbp', 'admin'])
   const { q, dept } = await searchParams
 
-  const [users, departments] = await Promise.all([
-    prisma.user.findMany({
-      where: {
-        is_active: true,
-        ...(dept ? { department_id: dept } : {}),
-        ...(q ? {
-          OR: [
-            { full_name: { contains: q, mode: 'insensitive' } },
-            { email: { contains: q, mode: 'insensitive' } },
-          ],
-        } : {}),
-      },
-      include: {
-        department: { select: { name: true } },
-        manager: { select: { full_name: true } },
-      },
-      orderBy: { full_name: 'asc' },
-      take: 100,
-    }),
-    prisma.department.findMany({ orderBy: { name: 'asc' } }),
-  ])
+  // Fetch departments immediately — needed for the filter <select>
+  const departments = await prisma.department.findMany({ orderBy: { name: 'asc' } })
 
   return (
     <div className="space-y-6">
@@ -53,26 +36,56 @@ export default async function EmployeeDirectoryPage({
         )}
       </form>
 
-      <p className="text-sm text-muted-foreground">{users.length} employee{users.length !== 1 ? 's' : ''}</p>
+      <Suspense fallback={<TableSkeleton rows={6} />}>
+        <EmployeesContent q={q} dept={dept} />
+      </Suspense>
+    </div>
+  )
+}
 
-      <div className="space-y-1">
-        {users.map(u => (
-          <div key={u.id} className="flex items-center justify-between rounded border p-3 text-sm hover:bg-muted/30">
-            <div>
-              <p className="font-medium">{u.full_name}</p>
-              <p className="text-xs text-muted-foreground">{u.email}</p>
-            </div>
-            <div className="text-right text-xs text-muted-foreground space-y-0.5">
-              <p>{u.department?.name ?? '—'}</p>
-              <p>{u.role === 'hrbp' ? 'HRBP' : u.role.charAt(0).toUpperCase() + u.role.slice(1)}</p>
-              {u.manager && <p className="text-muted-foreground/70">↑ {u.manager.full_name}</p>}
-            </div>
+async function EmployeesContent({ q, dept }: { q?: string; dept?: string }) {
+  const users = await prisma.user.findMany({
+    where: {
+      is_active: true,
+      ...(dept ? { department_id: dept } : {}),
+      ...(q
+        ? {
+            OR: [
+              { full_name: { contains: q, mode: 'insensitive' } },
+              { email: { contains: q, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+    },
+    include: {
+      department: { select: { name: true } },
+      manager: { select: { full_name: true } },
+    },
+    orderBy: { full_name: 'asc' },
+    take: 100,
+  })
+
+  return (
+    <div className="space-y-1">
+      <p className="text-sm text-muted-foreground mb-2">
+        {users.length} employee{users.length !== 1 ? 's' : ''}
+      </p>
+      {users.map(u => (
+        <div key={u.id} className="flex items-center justify-between rounded border p-3 text-sm hover:bg-muted/30">
+          <div>
+            <p className="font-medium">{u.full_name}</p>
+            <p className="text-xs text-muted-foreground">{u.email}</p>
           </div>
-        ))}
-        {users.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-6">No employees found.</p>
-        )}
-      </div>
+          <div className="text-right text-xs text-muted-foreground space-y-0.5">
+            <p>{u.department?.name ?? '—'}</p>
+            <p>{u.role === 'hrbp' ? 'HRBP' : u.role.charAt(0).toUpperCase() + u.role.slice(1)}</p>
+            {u.manager && <p className="text-muted-foreground/70">↑ {u.manager.full_name}</p>}
+          </div>
+        </div>
+      ))}
+      {users.length === 0 && (
+        <p className="text-sm text-muted-foreground text-center py-6">No employees found.</p>
+      )}
     </div>
   )
 }
