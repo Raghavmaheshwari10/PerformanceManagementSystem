@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { getCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { Sidebar } from '@/components/sidebar'
@@ -46,6 +47,7 @@ function notificationMessage(type: string, p: Record<string, string | undefined>
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser()
+  Sentry.setUser({ id: user.id, email: user.email, username: user.full_name })
 
   const rawNotifications = await prisma.notification.findMany({
     where: { recipient_id: user.id, dismissed_at: null },
