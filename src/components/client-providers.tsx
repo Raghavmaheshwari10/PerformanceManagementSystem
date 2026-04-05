@@ -9,11 +9,11 @@ import { TourEngine } from '@/components/tour-engine'
 import { HelpButton } from '@/components/help-button'
 import type { ReactNode } from 'react'
 
-export function ClientProviders({ children }: { children: ReactNode }) {
+export function ClientProviders({ children, initialOnboarded = false }: { children: ReactNode; initialOnboarded?: boolean }) {
   return (
     <ToastProvider>
       <ConfirmProvider>
-        <TourProvider>
+        <TourProvider initialOnboarded={initialOnboarded}>
           {children}
           <Toaster />
           <ConfirmDialog />

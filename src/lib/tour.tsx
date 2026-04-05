@@ -1,6 +1,7 @@
 'use client'
 
-import { createContext, useContext, useReducer, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useReducer, useCallback, useRef, type ReactNode } from 'react'
+import { markUserOnboarded } from '@/lib/tour-actions'
 
 export interface TourState {
   status: 'idle' | 'active'
@@ -22,7 +23,6 @@ export function tourReducer(state: TourState, action: TourAction): TourState {
 }
 
 const STORAGE_KEY = (tourId: string) => `pms:tour:${tourId}:done`
-const ONBOARDED_KEY = 'pms:onboarded'
 
 interface TourContextValue {
   tourState: TourState
@@ -36,18 +36,23 @@ interface TourContextValue {
 
 const TourContext = createContext<TourContextValue | null>(null)
 
-export function TourProvider({ children }: { children: ReactNode }) {
+export function TourProvider({
+  children,
+  initialOnboarded,
+}: {
+  children: ReactNode
+  initialOnboarded: boolean
+}) {
   const [tourState, dispatch] = useReducer(tourReducer, { status: 'idle', tourId: null, stepIndex: 0 })
+  // Cache in ref so isOnboarded() stays O(1) after first finish
+  const onboardedRef = useRef(initialOnboarded)
 
   const isDone = useCallback((tourId: string) => {
     if (typeof window === 'undefined') return false
     return localStorage.getItem(STORAGE_KEY(tourId)) === '1'
   }, [])
 
-  const isOnboarded = useCallback(() => {
-    if (typeof window === 'undefined') return true
-    return localStorage.getItem(ONBOARDED_KEY) === '1'
-  }, [])
+  const isOnboarded = useCallback(() => onboardedRef.current, [])
 
   const startTour = useCallback((tourId: string) => {
     dispatch({ type: 'START', tourId })
@@ -57,7 +62,11 @@ export function TourProvider({ children }: { children: ReactNode }) {
 
   const finishTour = useCallback(() => {
     if (tourState.tourId) localStorage.setItem(STORAGE_KEY(tourState.tourId), '1')
-    localStorage.setItem(ONBOARDED_KEY, '1')   // Mark user as onboarded — no more auto-starts
+    // Mark in DB (server action) — fire-and-forget, non-blocking
+    if (!onboardedRef.current) {
+      onboardedRef.current = true
+      markUserOnboarded().catch(console.error)
+    }
     dispatch({ type: 'FINISH' })
   }, [tourState.tourId])
 

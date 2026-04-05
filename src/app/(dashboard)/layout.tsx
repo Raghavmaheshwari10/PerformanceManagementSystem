@@ -93,7 +93,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   return (
-    <ClientProviders>
+    <ClientProviders initialOnboarded={!!user.onboarded_at}>
       <CommandPaletteProvider role={user.role}>
         <div className="flex h-screen">
           <Sidebar
