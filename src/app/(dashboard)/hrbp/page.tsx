@@ -5,6 +5,9 @@ import { getCycleDepartmentStatuses } from '@/lib/cycle-helpers'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import type { Cycle, CycleStatus } from '@/lib/types'
+import { OnboardingChecklist } from '@/components/onboarding-checklist'
+import type { ChecklistItem } from '@/components/onboarding-checklist'
+import { markUserOnboarded } from '@/lib/tour-actions'
 
 function daysUntil(dateStr: string | Date | null): number | null {
   if (!dateStr) return null
@@ -82,7 +85,7 @@ function CycleCard({ cycle, resolvedStatus, overdueCount }: { cycle: CycleWithDe
 }
 
 export default async function HrbpPage() {
-  await requireRole(['hrbp'])
+  const user = await requireRole(['hrbp'])
 
   const allCyclesRaw = await prisma.cycle.findMany({
     orderBy: { created_at: 'desc' },
@@ -127,9 +130,19 @@ export default async function HrbpPage() {
 
   const totalOverdue = Array.from(overdueMap.values()).reduce((s, n) => s + n, 0)
 
+  const showOnboarding = !user.onboarded_at
+  const hasCalibrationCycles = allCycles.some(c => ['calibrating', 'locked'].includes(resolvedStatusMap.get(c.id) ?? c.status))
+  const checklistItems: ChecklistItem[] = showOnboarding ? [
+    { label: 'Review active cycles', completed: active.length > 0 },
+    { label: 'View employee directory', completed: true, href: '/hrbp/employees' },
+    { label: 'Review calibration', completed: hasCalibrationCycles, href: '/hrbp/calibration' },
+  ] : []
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Review Cycles</h1>
+
+      {showOnboarding && <OnboardingChecklist items={checklistItems} dismissAction={markUserOnboarded} />}
 
       {/* Overdue alert bar */}
       {totalOverdue > 0 && (

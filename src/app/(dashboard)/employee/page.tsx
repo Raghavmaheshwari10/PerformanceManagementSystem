@@ -11,6 +11,9 @@ import { DownloadAppraisalButton } from '@/components/download-appraisal-button'
 import { CycleTimeline } from '@/components/cycle-timeline'
 import { RATING_TIERS } from '@/lib/constants'
 import type { Cycle, Kpi, Kra, Review, Appraisal, ReviewQuestionWithCompetency } from '@/lib/types'
+import { OnboardingChecklist } from '@/components/onboarding-checklist'
+import type { ChecklistItem } from '@/components/onboarding-checklist'
+import { markUserOnboarded } from '@/lib/tour-actions'
 
 /* ── Action computation (inlined from action-inbox) ── */
 
@@ -293,8 +296,17 @@ export default async function EmployeeReviewPage() {
 
   const badge = URGENCY_BADGE[heroAction.urgency]
 
+  const showOnboarding = !user.onboarded_at
+  const checklistItems: ChecklistItem[] = showOnboarding ? [
+    { label: 'Complete your profile', completed: !!(user.department_id && user.designation), href: '/employee/profile' },
+    { label: 'Review your KPIs', completed: serializedKpis.length > 0 },
+    { label: 'Submit self-review', completed: review?.status === 'submitted' },
+  ] : []
+
   return (
     <div className="space-y-6">
+      {showOnboarding && <OnboardingChecklist items={checklistItems} dismissAction={markUserOnboarded} />}
+
       {/* Header */}
       <div className="flex items-center gap-3">
         <h1 className="text-2xl font-bold">My Review — {cycle.name}</h1>

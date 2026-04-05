@@ -8,6 +8,9 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import type { User } from '@/lib/types'
 import type { Cycle, CycleStatus } from '@prisma/client'
+import { OnboardingChecklist } from '@/components/onboarding-checklist'
+import type { ChecklistItem } from '@/components/onboarding-checklist'
+import { markUserOnboarded } from '@/lib/tour-actions'
 
 interface EmployeeStatus {
   employee: User
@@ -196,8 +199,20 @@ async function ManagerTeamContent() {
   // Overall totals for single-cycle mode (keep top-level summary identical to before)
   const isMultiCycle = cycleSections.length > 1
 
+  const showOnboarding = !user.onboarded_at
+  const hasKpisSet = kpis.length > 0
+  const hasManagerReviewsDone = appraisals.some(a => a.manager_submitted_at !== null)
+
+  const checklistItems: ChecklistItem[] = showOnboarding ? [
+    { label: 'Set KPIs for your team', completed: hasKpisSet, href: employees.length > 0 ? `/manager/${employees[0].id}/kpis` : undefined },
+    { label: 'Complete a manager review', completed: hasManagerReviewsDone, href: employees.length > 0 ? `/manager/${employees[0].id}/review` : undefined },
+    { label: 'View team goals', completed: false, href: employees.length > 0 ? `/manager/${employees[0].id}/goals` : undefined },
+  ] : []
+
   return (
     <>
+      {showOnboarding && <OnboardingChecklist items={checklistItems} dismissAction={markUserOnboarded} />}
+
       {/* No active cycle empty state */}
       {!hasCycles && (
         <div className="glass flex flex-col items-center justify-center py-12 text-center">

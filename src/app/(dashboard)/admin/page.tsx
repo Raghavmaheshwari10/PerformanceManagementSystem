@@ -1,12 +1,15 @@
 import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
-import { requireRole } from '@/lib/auth'
+import { requireRole, getCurrentUser } from '@/lib/auth'
 import { CycleStatusBadge } from '@/components/cycle-status-badge'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { CYCLE_STATUS_LABELS } from '@/lib/constants'
 import { StatCardsSkeleton } from '@/components/skeletons'
+import { OnboardingChecklist } from '@/components/onboarding-checklist'
+import type { ChecklistItem } from '@/components/onboarding-checklist'
+import { markUserOnboarded } from '@/lib/tour-actions'
 
 function daysUntil(d: Date | string | null) {
   if (!d) return null
@@ -64,6 +67,18 @@ async function AdminDashboardContent() {
     prisma.department.count(),
   ])
 
+  const user = await getCurrentUser()
+  const showOnboarding = !user.onboarded_at
+
+  const kpiTemplateCount = showOnboarding ? await prisma.kpiTemplate.count() : 0
+
+  const checklistItems: ChecklistItem[] = showOnboarding ? [
+    { label: 'Add departments', completed: departments > 0, href: '/admin/departments' },
+    { label: 'Add users', completed: activeUsers.length >= 2, href: '/admin/users' },
+    { label: 'Create first cycle', completed: allCycles.length > 0, href: '/admin/cycles/new' },
+    { label: 'Configure KPI templates', completed: kpiTemplateCount > 0, href: '/admin/kpi-templates' },
+  ] : []
+
   const inactiveUsers = totalUsersAll - activeUsers.length
   const activeCycle = allCycles.find(c => !['draft', 'published'].includes(c.status))
 
@@ -91,6 +106,8 @@ async function AdminDashboardContent() {
 
   return (
     <>
+      {showOnboarding && <OnboardingChecklist items={checklistItems} dismissAction={markUserOnboarded} />}
+
       {/* Top Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
