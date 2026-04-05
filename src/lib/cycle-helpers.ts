@@ -55,6 +55,81 @@ export async function getStatusForEmployee(
 }
 
 /**
+ * Batch version of getStatusForEmployee — resolves all statuses in 4 queries
+ * regardless of how many employees are in the list. Use this instead of
+ * mapping over getStatusForEmployee in a loop.
+ *
+ * Returns a Map<employeeId, CycleStatus>.
+ */
+export async function batchGetStatusForEmployees(
+  cycleId: string,
+  employeeIds: string[]
+): Promise<Map<string, CycleStatus>> {
+  if (employeeIds.length === 0) return new Map()
+
+  // Query 1+2+3 in parallel: overrides, employee dept IDs, cycle fallback status
+  const [overrides, users, cycle] = await Promise.all([
+    prisma.cycleEmployee.findMany({
+      where: { cycle_id: cycleId, employee_id: { in: employeeIds } },
+      select: { employee_id: true, status_override: true, excluded: true },
+    }),
+    prisma.user.findMany({
+      where: { id: { in: employeeIds } },
+      select: { id: true, department_id: true },
+    }),
+    prisma.cycle.findUnique({
+      where: { id: cycleId },
+      select: { status: true },
+    }),
+  ])
+
+  // Query 4: department-level statuses for all relevant depts
+  const deptIds = [
+    ...new Set(
+      users.map(u => u.department_id).filter((id): id is string => id !== null)
+    ),
+  ]
+  const deptStatuses =
+    deptIds.length > 0
+      ? await prisma.cycleDepartment.findMany({
+          where: { cycle_id: cycleId, department_id: { in: deptIds } },
+          select: { department_id: true, status: true },
+        })
+      : []
+
+  // Build lookup maps
+  const overrideMap = new Map(overrides.map(o => [o.employee_id, o]))
+  const userDeptMap = new Map(users.map(u => [u.id, u.department_id]))
+  const deptStatusMap = new Map(deptStatuses.map(d => [d.department_id, d.status]))
+  const cycleStatus: CycleStatus = cycle?.status ?? 'draft'
+
+  // Resolve each employee's effective status in-memory
+  const result = new Map<string, CycleStatus>()
+  for (const empId of employeeIds) {
+    const override = overrideMap.get(empId)
+    if (override?.excluded) {
+      result.set(empId, 'draft')
+      continue
+    }
+    if (override?.status_override) {
+      result.set(empId, override.status_override)
+      continue
+    }
+    const deptId = userDeptMap.get(empId)
+    if (deptId) {
+      const deptStatus = deptStatusMap.get(deptId)
+      if (deptStatus) {
+        result.set(empId, deptStatus)
+        continue
+      }
+    }
+    result.set(empId, cycleStatus)
+  }
+
+  return result
+}
+
+/**
  * Get the cycle status for a specific department within a cycle.
  * Falls back to Cycle.status for org-wide cycles.
  */
