@@ -197,7 +197,7 @@ export function ReviewForm({ cycleId, employeeId, kpis, kras, defaultRating, def
                   </div>
 
                   {(q.answer_type === 'rating' || q.answer_type === 'mixed') && (
-                    <div className="flex items-center gap-1">
+                    <div className="flex flex-wrap items-center gap-1">
                       {[1, 2, 3, 4, 5].map(val => (
                         <button
                           key={val}

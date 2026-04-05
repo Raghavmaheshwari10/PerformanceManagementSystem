@@ -319,9 +319,9 @@ export default async function ManagerReviewPage({
       )}
 
       {/* Side-by-side layout */}
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         {/* LEFT — Employee's self-assessment (read-only, scrollable) */}
-        <div className="rounded-lg border bg-muted/20 p-4 space-y-4 xl:max-h-[calc(100vh-12rem)] xl:overflow-y-auto">
+        <div className="rounded-lg border bg-muted/20 p-4 space-y-4 lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground sticky top-0 bg-muted/20 py-1">
             Employee Self-Assessment
           </h2>
