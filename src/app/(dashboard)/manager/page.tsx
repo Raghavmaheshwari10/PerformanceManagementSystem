@@ -1,3 +1,5 @@
+import { Suspense } from 'react'
+import { CardGridSkeleton } from '@/components/skeletons'
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { getActiveCyclesForManager, batchGetStatusForEmployees, type CycleWithDepartments } from '@/lib/cycle-helpers'
@@ -29,6 +31,19 @@ function getInitials(name: string): string {
 }
 
 export default async function ManagerTeamPage() {
+  await requireRole(['manager'])
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Your Team</h1>
+      <Suspense fallback={<CardGridSkeleton cards={6} />}>
+        <ManagerTeamContent />
+      </Suspense>
+    </div>
+  )
+}
+
+async function ManagerTeamContent() {
   const user = await requireRole(['manager'])
 
   // Get all relevant cycles for this manager (dept-scoped + org-wide)
@@ -182,10 +197,7 @@ export default async function ManagerTeamPage() {
   const isMultiCycle = cycleSections.length > 1
 
   return (
-    <div className="space-y-6">
-      {/* Page header */}
-      <h1 className="text-2xl font-bold text-foreground">My Team</h1>
-
+    <>
       {/* No active cycle empty state */}
       {!hasCycles && (
         <div className="glass flex flex-col items-center justify-center py-12 text-center">
@@ -425,6 +437,6 @@ export default async function ManagerTeamPage() {
           </div>
         )
       })}
-    </div>
+    </>
   )
 }
