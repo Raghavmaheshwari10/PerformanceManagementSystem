@@ -18,6 +18,14 @@ export function useCommandPalette() {
   return ctx
 }
 
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  const tag = target.tagName
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true
+  if (target.isContentEditable) return true
+  return false
+}
+
 export function CommandPaletteProvider({
   role,
   children,
@@ -33,6 +41,11 @@ export function CommandPaletteProvider({
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
         setOpen(v => !v)
+        return
+      }
+      if (e.key === '/' && !isEditableTarget(e.target)) {
+        e.preventDefault()
+        setOpen(true)
       }
     }
     document.addEventListener('keydown', onKey)

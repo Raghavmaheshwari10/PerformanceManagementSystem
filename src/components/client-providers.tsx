@@ -9,6 +9,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 import { TourEngine } from '@/components/tour-engine'
 import { HelpButton } from '@/components/help-button'
 import { SessionTimeout } from '@/components/session-timeout'
+import { KeyboardShortcutsDialog } from '@/components/keyboard-shortcuts-dialog'
 import type { ReactNode } from 'react'
 
 export function ClientProviders({ children, initialOnboarded = false }: { children: ReactNode; initialOnboarded?: boolean }) {
@@ -23,6 +24,7 @@ export function ClientProviders({ children, initialOnboarded = false }: { childr
             <TourEngine />
             <HelpButton />
             <SessionTimeout />
+            <KeyboardShortcutsDialog />
           </TourProvider>
         </ConfirmProvider>
       </ToastProvider>
