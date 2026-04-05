@@ -1,5 +1,6 @@
 'use client'
 
+import { SessionProvider } from 'next-auth/react'
 import { ToastProvider } from '@/lib/toast'
 import { ConfirmProvider } from '@/lib/confirm'
 import { TourProvider } from '@/lib/tour'
@@ -12,17 +13,19 @@ import type { ReactNode } from 'react'
 
 export function ClientProviders({ children, initialOnboarded = false }: { children: ReactNode; initialOnboarded?: boolean }) {
   return (
-    <ToastProvider>
-      <ConfirmProvider>
-        <TourProvider initialOnboarded={initialOnboarded}>
-          {children}
-          <Toaster />
-          <ConfirmDialog />
-          <TourEngine />
-          <HelpButton />
-          <SessionTimeout />
-        </TourProvider>
-      </ConfirmProvider>
-    </ToastProvider>
+    <SessionProvider>
+      <ToastProvider>
+        <ConfirmProvider>
+          <TourProvider initialOnboarded={initialOnboarded}>
+            {children}
+            <Toaster />
+            <ConfirmDialog />
+            <TourEngine />
+            <HelpButton />
+            <SessionTimeout />
+          </TourProvider>
+        </ConfirmProvider>
+      </ToastProvider>
+    </SessionProvider>
   )
 }
