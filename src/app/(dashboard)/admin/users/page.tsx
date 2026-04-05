@@ -49,5 +49,9 @@ async function UsersContent() {
     )
   }
 
-  return <UsersTable users={users as unknown as User[]} departments={departments} />
+  return (
+    <Suspense fallback={<TableSkeleton rows={8} />}>
+      <UsersTable users={users as unknown as User[]} departments={departments} />
+    </Suspense>
+  )
 }
