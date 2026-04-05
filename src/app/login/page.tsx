@@ -2,10 +2,14 @@
 
 import { signIn } from 'next-auth/react'
 import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { AuthLayout } from './auth-layout'
 
 export default function LoginPage() {
+  const searchParams = useSearchParams()
+  const timedOut = searchParams.get('reason') === 'timeout'
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPass, setShowPass] = useState(false)
@@ -111,6 +115,13 @@ export default function LoginPage() {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
+
+        {/* Session timeout notice */}
+        {timedOut && !error && (
+          <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-2.5 text-center text-sm text-amber-400">
+            You were signed out after 30 minutes of inactivity.
+          </div>
+        )}
 
         {/* Error message */}
         {error && (
