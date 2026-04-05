@@ -1,6 +1,7 @@
 'use client'
 
 import { useFormStatus } from 'react-dom'
+import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { ComponentProps } from 'react'
 
@@ -21,6 +22,9 @@ export function SubmitButton({ pendingLabel, children, formAction, disabled, ...
       disabled={disabled || pending}
       aria-disabled={disabled || pending}
     >
+      {pending && (
+        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+      )}
       {pending && pendingLabel ? pendingLabel : children}
     </Button>
   )
