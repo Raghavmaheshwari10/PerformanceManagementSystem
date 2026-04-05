@@ -4,6 +4,8 @@ import { PEER_REVIEW_STATUS_LABELS } from '@/lib/constants'
 import { PeerRequestForm } from './peer-request-form'
 import { PeerReviewSubmitForm } from './peer-review-submit-form'
 import { PeerReviewActions } from './peer-review-actions'
+import { MessageSquare } from 'lucide-react'
+import { EmptyState } from '@/components/empty-state'
 
 export default async function PeerReviewsPage() {
   const user = await requireRole(['employee', 'manager', 'hrbp'])
@@ -95,7 +97,13 @@ export default async function PeerReviewsPage() {
         </section>
       )}
 
-      {!cycle && <p className="text-muted-foreground">No active review cycle.</p>}
+      {!cycle && (
+        <EmptyState
+          icon={<MessageSquare className="h-7 w-7" />}
+          title="No active review cycle"
+          description="Peer reviews will be available once a review cycle is active."
+        />
+      )}
     </div>
   )
 }

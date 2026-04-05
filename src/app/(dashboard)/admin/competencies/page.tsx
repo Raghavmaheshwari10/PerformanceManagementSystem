@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { COMPETENCY_CATEGORY_LABELS } from '@/lib/constants'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2, Star } from 'lucide-react'
+import { EmptyState } from '@/components/empty-state'
 
 const CATEGORY_STYLES: Record<string, string> = {
   core: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
@@ -177,7 +178,11 @@ export default async function CompetenciesPage({
       ))}
 
       {competencies.length === 0 && (
-        <p className="text-sm text-muted-foreground">No competencies yet. Add one above.</p>
+        <EmptyState
+          icon={<Star className="h-7 w-7" />}
+          title="No competencies defined"
+          description="Add competencies to evaluate behavioral and technical skills."
+        />
       )}
     </div>
   )

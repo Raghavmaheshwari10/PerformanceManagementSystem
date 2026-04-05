@@ -2,6 +2,8 @@ import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { TableSkeleton } from '@/components/skeletons'
+import { Users } from 'lucide-react'
+import { EmptyState } from '@/components/empty-state'
 
 export default async function EmployeeDirectoryPage({
   searchParams,
@@ -84,7 +86,11 @@ async function EmployeesContent({ q, dept }: { q?: string; dept?: string }) {
         </div>
       ))}
       {users.length === 0 && (
-        <p className="text-sm text-muted-foreground text-center py-6">No employees found.</p>
+        <EmptyState
+          icon={<Users className="h-7 w-7" />}
+          title="No employees found"
+          description="Try adjusting your search or filter criteria."
+        />
       )}
     </div>
   )

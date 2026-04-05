@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { HistoryRows } from './history-rows'
+import { Clock } from 'lucide-react'
+import { EmptyState } from '@/components/empty-state'
 
 const RATING_ORDER: Record<string, number> = { FEE: 5, EE: 4, ME: 3, SME: 2, BE: 1 }
 
@@ -59,9 +61,11 @@ export default async function EmployeeHistoryPage() {
       </div>
 
       {published.length === 0 ? (
-        <p className="glass border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-          Your results will appear here once a review cycle is published.
-        </p>
+        <EmptyState
+          icon={<Clock className="h-7 w-7" />}
+          title="No review history yet"
+          description="Your results will appear here once a review cycle is published."
+        />
       ) : (
         <HistoryRows rows={enriched as unknown as Parameters<typeof HistoryRows>[0]['rows']} />
       )}

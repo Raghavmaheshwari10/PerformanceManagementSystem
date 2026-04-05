@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { toggleTemplateActive, deleteKpiTemplate } from './actions'
 import { UNIT_LABELS, KPI_CATEGORY_LABELS, KPI_CATEGORY_STYLES } from '@/lib/constants'
-import { Pencil } from 'lucide-react'
+import { Pencil, FileText } from 'lucide-react'
+import { EmptyState } from '@/components/empty-state'
 import { DeleteTemplateButton } from './delete-template-button'
 
 export default async function KpiTemplatesPage({
@@ -117,7 +118,12 @@ export default async function KpiTemplatesPage({
       ))}
 
       {Object.keys(grouped).length === 0 && (
-        <p className="text-muted-foreground text-sm">No templates found.</p>
+        <EmptyState
+          icon={<FileText className="h-7 w-7" />}
+          title="No KPI templates yet"
+          description="Create templates to standardize KPI setting across your organization."
+          action={{ label: '+ New Template', href: '/admin/kpi-templates/new' }}
+        />
       )}
     </div>
   )

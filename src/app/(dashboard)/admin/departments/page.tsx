@@ -2,6 +2,8 @@ import { requireRole } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { createDepartment, deleteDepartment, renameDepartment, assignHrbp, removeHrbp } from './actions'
 import { SubmitButton } from '@/components/submit-button'
+import { Building2 } from 'lucide-react'
+import { EmptyState } from '@/components/empty-state'
 
 export default async function DepartmentsPage() {
   await requireRole(['admin'])
@@ -114,9 +116,11 @@ export default async function DepartmentsPage() {
           )
         })}
         {departments.length === 0 && (
-          <p className="px-4 py-6 text-sm text-muted-foreground text-center">
-            No departments yet
-          </p>
+          <EmptyState
+            icon={<Building2 className="h-7 w-7" />}
+            title="No departments yet"
+            description="Create departments to organize your team structure."
+          />
         )}
       </div>
     </div>

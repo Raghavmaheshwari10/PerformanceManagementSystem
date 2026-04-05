@@ -9,6 +9,8 @@ import { getNextStatus } from '@/lib/cycle-machine'
 import { CYCLE_STATUS_LABELS } from '@/lib/constants'
 import { getScopedEmployeeWhere } from '@/lib/cycle-helpers'
 import { DeleteCycleButton } from './delete-cycle-button'
+import { RefreshCw } from 'lucide-react'
+import { EmptyState } from '@/components/empty-state'
 import type { Cycle } from '@/lib/types'
 
 interface CycleProgress {
@@ -153,6 +155,14 @@ export default async function AdminCyclesPage() {
       )}
 
       {/* Cycle table */}
+      {allCycles.length === 0 ? (
+        <EmptyState
+          icon={<RefreshCw className="h-7 w-7" />}
+          title="No review cycles yet"
+          description="Create your first cycle to start the performance review process."
+          action={{ label: '+ Create Cycle', href: '/admin/cycles/new' }}
+        />
+      ) : (
       <div className="glass overflow-hidden">
         <table className="w-full text-sm table-row-hover">
           <thead>
@@ -209,6 +219,7 @@ export default async function AdminCyclesPage() {
           </tbody>
         </table>
       </div>
+      )}
     </div>
   )
 }

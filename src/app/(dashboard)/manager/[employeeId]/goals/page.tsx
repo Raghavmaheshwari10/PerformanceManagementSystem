@@ -2,6 +2,8 @@ import { prisma } from '@/lib/prisma'
 import { requireRole, requireManagerOwnership } from '@/lib/auth'
 import { notFound } from 'next/navigation'
 import { GoalApprovalRow } from './goal-approval-row'
+import { Target } from 'lucide-react'
+import { EmptyState } from '@/components/empty-state'
 
 export default async function ManagerEmployeeGoalsPage({
   params,
@@ -40,7 +42,11 @@ export default async function ManagerEmployeeGoalsPage({
         </div>
       )}
       {goals.length === 0 ? (
-        <p className="text-muted-foreground">No goals set for this cycle.</p>
+        <EmptyState
+          icon={<Target className="h-7 w-7" />}
+          title="No goals set"
+          description="This employee hasn't submitted any goals for the current cycle yet."
+        />
       ) : (
         <div className="space-y-2">
           {goals.map(goal => <GoalApprovalRow key={goal.id} goal={goal as unknown as import('@/lib/types').Goal} />)}
