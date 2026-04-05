@@ -1,9 +1,11 @@
+import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { BellCurveChart } from '@/components/bell-curve-chart'
 import { OverrideForm } from './override-form'
 import { CalibrationActionsClient } from './calibration-actions-client'
 import { CalculateScoresButton } from './calculate-scores-button'
+import { TableSkeleton } from '@/components/skeletons'
 import type { RatingTier, Cycle } from '@/lib/types'
 import Link from 'next/link'
 
@@ -26,10 +28,19 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
   await requireRole(['hrbp'])
   const searchParams = await props.searchParams
   const cycleId = searchParams?.cycle
-  const selectedDept = searchParams?.dept as string | undefined
 
   if (!cycleId) return <p>Select a cycle from the overview page.</p>
 
+  return (
+    <div className="space-y-6">
+      <Suspense fallback={<TableSkeleton />}>
+        <CalibrationContent cycleId={cycleId} selectedDept={searchParams?.dept} />
+      </Suspense>
+    </div>
+  )
+}
+
+async function CalibrationContent({ cycleId, selectedDept }: { cycleId: string; selectedDept?: string }) {
   const [cycle, allAppraisals, cycleDepts, allDepartments] = await Promise.all([
     prisma.cycle.findUnique({ where: { id: cycleId } }),
     prisma.appraisal.findMany({
@@ -91,7 +102,7 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
   const isLocked = typedCycle?.status === 'locked'
 
   return (
-    <div className="space-y-6">
+    <>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Calibration — {typedCycle?.name}</h1>
         {isCalibrating && <CalculateScoresButton cycleId={cycleId} />}
@@ -294,6 +305,6 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
         canPublish={isLocked}
         isLocked={isLocked}
       />
-    </div>
+    </>
   )
 }

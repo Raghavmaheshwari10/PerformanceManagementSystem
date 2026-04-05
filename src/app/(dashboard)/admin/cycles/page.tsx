@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { CycleStatusBadge } from '@/components/cycle-status-badge'
@@ -11,6 +12,7 @@ import { getScopedEmployeeWhere } from '@/lib/cycle-helpers'
 import { DeleteCycleButton } from './delete-cycle-button'
 import { RefreshCw } from 'lucide-react'
 import { EmptyState } from '@/components/empty-state'
+import { TableSkeleton } from '@/components/skeletons'
 import type { Cycle } from '@/lib/types'
 
 interface CycleProgress {
@@ -56,6 +58,23 @@ function ProgressRing({ pct, label, sub }: { pct: number; label: string; sub: st
 export default async function AdminCyclesPage() {
   await requireRole(['admin'])
 
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Cycle Management</h1>
+        <Link href="/admin/cycles/new" data-tour="create-cycle">
+          <Button>Create Cycle</Button>
+        </Link>
+      </div>
+
+      <Suspense fallback={<TableSkeleton />}>
+        <CyclesContent />
+      </Suspense>
+    </div>
+  )
+}
+
+async function CyclesContent() {
   const allCycles = await prisma.cycle.findMany({
     take: 50, // Paginate — avoid loading unbounded cycles
     orderBy: { created_at: 'desc' },
@@ -95,14 +114,7 @@ export default async function AdminCyclesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Cycle Management</h1>
-        <Link href="/admin/cycles/new" data-tour="create-cycle">
-          <Button>Create Cycle</Button>
-        </Link>
-      </div>
-
+    <>
       {/* Progress dashboard for active cycle */}
       {progress && (
         <div className={cn(
@@ -220,6 +232,6 @@ export default async function AdminCyclesPage() {
         </table>
       </div>
       )}
-    </div>
+    </>
   )
 }
