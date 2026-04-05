@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { CycleStatusBadge } from '@/components/cycle-status-badge'
@@ -5,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { CYCLE_STATUS_LABELS } from '@/lib/constants'
+import { StatCardsSkeleton } from '@/components/skeletons'
 
 function daysUntil(d: Date | string | null) {
   if (!d) return null
@@ -21,6 +23,31 @@ const ROLE_META: Record<string, { color: string; bg: string; label: string }> = 
 export default async function AdminDashboard() {
   await requireRole(['admin'])
 
+  return (
+    <div className="space-y-6">
+      {/* Header stays in shell — renders instantly */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Admin Dashboard</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Overview of your performance management system</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link href="/admin/cycles/new">
+            <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/30">
+              + New Cycle
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      <Suspense fallback={<StatCardsSkeleton />}>
+        <AdminDashboardContent />
+      </Suspense>
+    </div>
+  )
+}
+
+async function AdminDashboardContent() {
   const [allCycles, activeUsers, totalUsersAll, lastImportLog, recentNotifs, departments] = await Promise.all([
     prisma.cycle.findMany({ orderBy: { created_at: 'desc' }, take: 5 }),
     prisma.user.findMany({
@@ -63,22 +90,7 @@ export default async function AdminDashboard() {
   const mgrPct = totalEmployees > 0 ? Math.round((managerReviewsDone / totalEmployees) * 100) : 0
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Admin Dashboard</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Overview of your performance management system</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link href="/admin/cycles/new">
-            <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/30">
-              + New Cycle
-            </Button>
-          </Link>
-        </div>
-      </div>
-
+    <>
       {/* Top Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
@@ -278,7 +290,7 @@ export default async function AdminDashboard() {
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }
 
