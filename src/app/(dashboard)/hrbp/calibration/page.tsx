@@ -157,23 +157,23 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
         <BellCurveChart distribution={distribution} total={rows.length} />
       </div>
 
-      <div className="glass overflow-hidden" data-tour="override-form">
-        <table className="w-full text-sm table-row-hover">
+      <div className="glass overflow-x-auto" data-tour="override-form">
+        <table className="w-full text-sm table-row-hover min-w-[640px]">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              <th className="p-3 text-left text-muted-foreground">Employee</th>
-              <th className="p-3 text-left text-muted-foreground">Department</th>
-              <th className="p-3 text-left text-muted-foreground">Manager Rating</th>
-              <th className="p-3 text-right text-muted-foreground">MIS Score</th>
-              <th className="p-3 text-left text-muted-foreground">Suggested</th>
-              <th className="p-3 text-left text-muted-foreground">Final Rating</th>
+              <th className="p-3 text-left text-muted-foreground whitespace-nowrap">Employee</th>
+              <th className="p-3 text-left text-muted-foreground whitespace-nowrap">Department</th>
+              <th className="p-3 text-left text-muted-foreground whitespace-nowrap">Manager Rating</th>
+              <th className="p-3 text-right text-muted-foreground whitespace-nowrap">MIS Score</th>
+              <th className="p-3 text-left text-muted-foreground whitespace-nowrap">Suggested</th>
+              <th className="p-3 text-left text-muted-foreground whitespace-nowrap">Final Rating</th>
               {['locked', 'published'].includes(typedCycle?.status ?? '') && (
                 <>
-                  <th className="p-3 text-right text-muted-foreground">Multiplier</th>
-                  <th className="p-3 text-right text-muted-foreground">Payout</th>
+                  <th className="p-3 text-right text-muted-foreground whitespace-nowrap">Multiplier</th>
+                  <th className="p-3 text-right text-muted-foreground whitespace-nowrap">Payout</th>
                 </>
               )}
-              {isCalibrating && <th className="p-3 text-left text-muted-foreground">Override</th>}
+              {isCalibrating && <th className="p-3 text-left text-muted-foreground whitespace-nowrap">Override</th>}
             </tr>
           </thead>
           <tbody>
@@ -234,20 +234,20 @@ export default async function CalibrationPage(props: { searchParams: Promise<{ c
             Exited Employees
             <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-xs font-semibold text-red-400">{exitedRows.length}</span>
           </h2>
-          <div className="glass overflow-hidden opacity-80">
-            <table className="w-full text-sm table-row-hover">
+          <div className="glass overflow-x-auto opacity-80">
+            <table className="w-full text-sm table-row-hover min-w-[560px]">
               <thead>
                 <tr className="border-b border-border bg-red-500/5">
-                  <th className="p-3 text-left text-muted-foreground">Employee</th>
-                  <th className="p-3 text-left text-muted-foreground">Department</th>
-                  <th className="p-3 text-left text-muted-foreground">Manager Rating</th>
-                  <th className="p-3 text-left text-muted-foreground">Final Rating</th>
-                  <th className="p-3 text-right text-muted-foreground">Proration</th>
-                  <th className="p-3 text-left text-muted-foreground">Exited On</th>
+                  <th className="p-3 text-left text-muted-foreground whitespace-nowrap">Employee</th>
+                  <th className="p-3 text-left text-muted-foreground whitespace-nowrap">Department</th>
+                  <th className="p-3 text-left text-muted-foreground whitespace-nowrap">Manager Rating</th>
+                  <th className="p-3 text-left text-muted-foreground whitespace-nowrap">Final Rating</th>
+                  <th className="p-3 text-right text-muted-foreground whitespace-nowrap">Proration</th>
+                  <th className="p-3 text-left text-muted-foreground whitespace-nowrap">Exited On</th>
                   {['locked', 'published'].includes(typedCycle?.status ?? '') && (
-                    <th className="p-3 text-right text-muted-foreground">Payout</th>
+                    <th className="p-3 text-right text-muted-foreground whitespace-nowrap">Payout</th>
                   )}
-                  {isCalibrating && <th className="p-3 text-left text-muted-foreground">Override</th>}
+                  {isCalibrating && <th className="p-3 text-left text-muted-foreground whitespace-nowrap">Override</th>}
                 </tr>
               </thead>
               <tbody>
