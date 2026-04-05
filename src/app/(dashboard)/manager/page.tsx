@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
-import { getActiveCyclesForManager, getStatusForEmployee, type CycleWithDepartments } from '@/lib/cycle-helpers'
+import { getActiveCyclesForManager, batchGetStatusForEmployees, type CycleWithDepartments } from '@/lib/cycle-helpers'
 import { DeadlineBanner } from '@/components/deadline-banner'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
@@ -137,19 +137,20 @@ export default async function ManagerTeamPage() {
       }
     }
 
-    // Resolve per-employee status (respects CycleEmployee override → CycleDepartment → Cycle fallback)
-    const resolvedStatuses = await Promise.all(
-      cycleEmployees.map(emp => getStatusForEmployee(cycle.id, emp.id))
+    // Batch-resolve all employee statuses in 4 queries total
+    const statusMap = await batchGetStatusForEmployees(
+      cycle.id,
+      cycleEmployees.map(e => e.id)
     )
 
-    const statuses: EmployeeStatus[] = cycleEmployees.map((emp, i) => ({
+    const statuses: EmployeeStatus[] = cycleEmployees.map((emp) => ({
       employee: emp as unknown as User,
       kpiCount: kpiCounts.get(emp.id) ?? 0,
       selfReviewStatus: reviewMap.has(emp.id)
         ? (reviewMap.get(emp.id) === 'submitted' ? 'submitted' : 'draft')
         : 'not_started',
       managerReviewStatus: appraisalMap.get(emp.id) ? 'submitted' : 'pending',
-      resolvedStatus: resolvedStatuses[i],
+      resolvedStatus: statusMap.get(emp.id) ?? 'draft',
     }))
 
     const totalReviews = statuses.length
