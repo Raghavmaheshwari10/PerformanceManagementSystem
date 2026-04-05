@@ -7,6 +7,7 @@ import { DeadlineBanner } from '@/components/deadline-banner'
 import { formatKpiValue, KPI_CATEGORY_LABELS, KRA_CATEGORY_STYLES as KRA_CAT_STYLES } from '@/lib/constants'
 import { SelfReviewForm } from './self-review-form'
 import { PayoutBreakdown } from '@/components/payout-breakdown'
+import { DownloadAppraisalButton } from '@/components/download-appraisal-button'
 import { CycleTimeline } from '@/components/cycle-timeline'
 import { RATING_TIERS } from '@/lib/constants'
 import type { Cycle, Kpi, Kra, Review, Appraisal, ReviewQuestionWithCompetency } from '@/lib/types'
@@ -896,6 +897,13 @@ export default async function EmployeeReviewPage() {
                 />
               </div>
             )}
+            <div className="mt-4 flex justify-end">
+              <DownloadAppraisalButton
+                cycleId={cycle.id}
+                employeeId={user.id}
+                label="Download My Appraisal"
+              />
+            </div>
           </section>
         )
       })()}
