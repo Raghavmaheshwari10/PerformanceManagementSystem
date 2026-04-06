@@ -133,6 +133,33 @@ enum PeerReviewStatus {
   @@map("peer_review_status")
 }
 
+enum PipStatus {
+  draft
+  active
+  extended
+  completed
+  closed
+
+  @@map("pip_status")
+}
+
+enum PipOutcome {
+  improved
+  partially_improved
+  not_improved
+
+  @@map("pip_outcome")
+}
+
+enum PipMilestoneStatus {
+  pending
+  in_progress
+  completed
+  missed
+
+  @@map("pip_milestone_status")
+}
+
 enum AnswerType {
   rating
   text
@@ -237,6 +264,15 @@ model User {
   meetings_as_hrbp     ReviewMeeting[] @relation("MeetingHrbp")
   meetings_scheduled   ReviewMeeting[] @relation("MeetingScheduler")
   mom_submitted        MeetingMinutes[] @relation("MomSubmitter")
+  top_talent_configs_updated TopTalentConfig[] @relation("TopTalentConfigUpdater")
+  pips_as_employee       Pip[]             @relation("PipEmployee")
+  pips_as_manager        Pip[]             @relation("PipManager")
+  pips_initiated         Pip[]             @relation("PipInitiator")
+  pips_as_hrbp           Pip[]             @relation("PipHrbp")
+  pips_as_skip_level     Pip[]             @relation("PipSkipLevel")
+  pip_milestones_signed  PipMilestone[]    @relation("PipMilestoneHrbpSigner")
+  pip_check_ins_created  PipCheckIn[]      @relation("PipCheckInCreator")
+  pip_documents_uploaded PipDocument[]     @relation("PipDocumentUploader")
 
   @@index([manager_id], name: "idx_users_manager")
   @@index([role], name: "idx_users_role")
@@ -292,6 +328,7 @@ model Cycle {
   departments     CycleDepartment[]
   cycle_employees CycleEmployee[]
   review_meetings ReviewMeeting[]
+  pips Pip[]
 
   @@map("cycles")
 }
@@ -881,4 +918,109 @@ model ScoringConfig {
 
   @@unique([rating_tier], name: "uq_scoring_config_tier")
   @@map("scoring_configs")
+}
+
+model TopTalentConfig {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rating_tiers    String[] @default(["FEE", "EE"])
+  min_cycles      Int      @default(1)
+  score_threshold Int      @default(0)
+  mis_threshold   Int      @default(0)
+  updated_by      String?  @db.Uuid
+  updated_at      DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  updater User? @relation("TopTalentConfigUpdater", fields: [updated_by], references: [id])
+
+  @@map("top_talent_config")
+}
+
+model Pip {
+  id                      String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employee_id             String      @db.Uuid
+  manager_id              String      @db.Uuid
+  initiated_by            String      @db.Uuid
+  hrbp_id                 String      @db.Uuid
+  cycle_id                String?     @db.Uuid
+  skip_level_manager_id   String?     @db.Uuid
+  reason                  String
+  start_date              DateTime    @db.Date
+  end_date                DateTime    @db.Date
+  status                  PipStatus   @default(draft)
+  outcome                 PipOutcome?
+  employee_acknowledged_at DateTime?  @db.Timestamptz(6)
+  escalation_note         String?
+  auto_flag_next_cycle    Boolean     @default(true)
+  created_at              DateTime    @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime    @default(now()) @updatedAt @db.Timestamptz(6)
+
+  employee            User            @relation("PipEmployee", fields: [employee_id], references: [id])
+  manager             User            @relation("PipManager", fields: [manager_id], references: [id])
+  initiator           User            @relation("PipInitiator", fields: [initiated_by], references: [id])
+  hrbp                User            @relation("PipHrbp", fields: [hrbp_id], references: [id])
+  cycle               Cycle?          @relation(fields: [cycle_id], references: [id])
+  skip_level_manager  User?           @relation("PipSkipLevel", fields: [skip_level_manager_id], references: [id])
+  milestones          PipMilestone[]
+  check_ins           PipCheckIn[]
+  documents           PipDocument[]
+
+  @@index([employee_id], name: "idx_pips_employee")
+  @@index([manager_id], name: "idx_pips_manager")
+  @@index([hrbp_id], name: "idx_pips_hrbp")
+  @@index([status], name: "idx_pips_status")
+  @@map("pips")
+}
+
+model PipMilestone {
+  id                  String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  pip_id              String             @db.Uuid
+  title               String
+  description         String?
+  target_metric       String
+  due_date            DateTime           @db.Date
+  status              PipMilestoneStatus @default(pending)
+  hrbp_signed_off_at  DateTime?          @db.Timestamptz(6)
+  hrbp_signed_off_by  String?            @db.Uuid
+  sort_order          Int                @default(0)
+  created_at          DateTime           @default(now()) @db.Timestamptz(6)
+
+  pip          Pip   @relation(fields: [pip_id], references: [id], onDelete: Cascade)
+  hrbp_signer  User? @relation("PipMilestoneHrbpSigner", fields: [hrbp_signed_off_by], references: [id])
+
+  @@index([pip_id], name: "idx_pip_milestones_pip")
+  @@map("pip_milestones")
+}
+
+model PipCheckIn {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  pip_id            String   @db.Uuid
+  created_by        String   @db.Uuid
+  check_in_date     DateTime @db.Date
+  progress_rating   Int
+  notes             String
+  next_steps        String?
+  employee_response String?
+  created_at        DateTime @default(now()) @db.Timestamptz(6)
+
+  pip     Pip  @relation(fields: [pip_id], references: [id], onDelete: Cascade)
+  creator User @relation("PipCheckInCreator", fields: [created_by], references: [id])
+
+  @@index([pip_id], name: "idx_pip_check_ins_pip")
+  @@map("pip_check_ins")
+}
+
+model PipDocument {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  pip_id      String   @db.Uuid
+  uploaded_by String   @db.Uuid
+  file_name   String
+  file_url    String
+  file_type   String
+  description String?
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  pip      Pip  @relation(fields: [pip_id], references: [id], onDelete: Cascade)
+  uploader User @relation("PipDocumentUploader", fields: [uploaded_by], references: [id])
+
+  @@index([pip_id], name: "idx_pip_documents_pip")
+  @@map("pip_documents")
 }
