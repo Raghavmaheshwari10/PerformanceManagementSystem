@@ -22,23 +22,23 @@ export function NewUserForm({ departments, managers }: Props) {
 
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1">
-          <label className="text-xs font-medium">Emp Code</label>
-          <input name="emp_code" placeholder="e.g. EMB001" className="w-full rounded border bg-background px-3 py-2 text-sm" />
+          <label htmlFor="emp_code" className="text-xs font-medium">Emp Code</label>
+          <input id="emp_code" name="emp_code" placeholder="e.g. EMB001" className="w-full rounded border bg-background px-3 py-2 text-sm" />
         </div>
         <div className="space-y-1">
-          <label className="text-xs font-medium">Full Name *</label>
-          <input name="full_name" required className="w-full rounded border bg-background px-3 py-2 text-sm" />
+          <label htmlFor="full_name" className="text-xs font-medium">Full Name *</label>
+          <input id="full_name" name="full_name" required className="w-full rounded border bg-background px-3 py-2 text-sm" />
         </div>
         <div className="space-y-1">
-          <label className="text-xs font-medium">Email *</label>
-          <input name="email" type="email" required className="w-full rounded border bg-background px-3 py-2 text-sm" />
+          <label htmlFor="email" className="text-xs font-medium">Email *</label>
+          <input id="email" name="email" type="email" required className="w-full rounded border bg-background px-3 py-2 text-sm" />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1">
-          <label className="text-xs font-medium">Role *</label>
-          <select name="role" required className="w-full rounded border bg-background px-3 py-2 text-sm">
+          <label htmlFor="role" className="text-xs font-medium">Role *</label>
+          <select id="role" name="role" required className="w-full rounded border bg-background px-3 py-2 text-sm">
             <option value="">Select role</option>
             <option value="employee">Employee</option>
             <option value="manager">Manager</option>
@@ -47,8 +47,8 @@ export function NewUserForm({ departments, managers }: Props) {
           </select>
         </div>
         <div className="space-y-1">
-          <label className="text-xs font-medium">Department</label>
-          <select name="department_id" className="w-full rounded border bg-background px-3 py-2 text-sm">
+          <label htmlFor="department_id" className="text-xs font-medium">Department</label>
+          <select id="department_id" name="department_id" className="w-full rounded border bg-background px-3 py-2 text-sm">
             <option value="">None</option>
             {departments.map(d => (
               <option key={d.id} value={d.id}>{d.name}</option>
@@ -59,24 +59,24 @@ export function NewUserForm({ departments, managers }: Props) {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1">
-          <label className="text-xs font-medium">Designation</label>
-          <input name="designation" className="w-full rounded border bg-background px-3 py-2 text-sm" />
+          <label htmlFor="designation" className="text-xs font-medium">Designation</label>
+          <input id="designation" name="designation" className="w-full rounded border bg-background px-3 py-2 text-sm" />
         </div>
         <div className="space-y-1">
-          <label className="text-xs font-medium">Variable Pay (₹)</label>
-          <input name="variable_pay" type="number" min="0" defaultValue={0} className="w-full rounded border bg-background px-3 py-2 text-sm" />
+          <label htmlFor="variable_pay" className="text-xs font-medium">Variable Pay (₹)</label>
+          <input id="variable_pay" name="variable_pay" type="number" min="0" defaultValue={0} className="w-full rounded border bg-background px-3 py-2 text-sm" />
         </div>
       </div>
 
       <div className="space-y-1">
-        <label className="text-xs font-medium">Password</label>
-        <input name="password" type="password" placeholder="Leave blank to send invite email" className="w-full rounded border bg-background px-3 py-2 text-sm" />
+        <label htmlFor="password" className="text-xs font-medium">Password</label>
+        <input id="password" name="password" type="password" placeholder="Leave blank to send invite email" className="w-full rounded border bg-background px-3 py-2 text-sm" />
         <p className="text-[11px] text-muted-foreground">If blank, user receives an invite email to set their own password (72hr expiry).</p>
       </div>
 
       <div className="space-y-1">
-        <label className="text-xs font-medium">Manager</label>
-        <select name="manager_id" className="w-full rounded border bg-background px-3 py-2 text-sm">
+        <label htmlFor="manager_id" className="text-xs font-medium">Manager</label>
+        <select id="manager_id" name="manager_id" className="w-full rounded border bg-background px-3 py-2 text-sm">
           <option value="">None</option>
           {managers.map(m => (
             <option key={m.id} value={m.id}>{m.full_name}</option>

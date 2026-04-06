@@ -10,6 +10,8 @@ const EVENTS       = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart
 export function SessionTimeout() {
   const { status } = useSession()
   const [showWarning, setShowWarning] = useState(false)
+  const modalRef = useRef<HTMLDivElement>(null)
+  const stayBtnRef = useRef<HTMLButtonElement>(null)
   const [countdown, setCountdown]     = useState(5 * 60) // seconds remaining in warning window
   const idleTimer    = useRef<ReturnType<typeof setTimeout> | null>(null)
   const warnTimer    = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -61,6 +63,35 @@ export function SessionTimeout() {
     }
   }, [status, resetTimers])
 
+  // Focus trap for the warning modal
+  useEffect(() => {
+    if (!showWarning) return
+
+    const modal = modalRef.current
+    if (!modal) return
+
+    // Focus the "Stay signed in" button on open
+    stayBtnRef.current?.focus()
+
+    function trapFocus(e: KeyboardEvent) {
+      if (e.key !== 'Tab') return
+      const focusable = modal!.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+      if (focusable.length === 0) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener('keydown', trapFocus)
+    return () => document.removeEventListener('keydown', trapFocus)
+  }, [showWarning])
+
   if (!showWarning) return null
 
   const mins = Math.floor(countdown / 60)
@@ -68,7 +99,7 @@ export function SessionTimeout() {
 
   return (
     <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-xl border bg-background shadow-2xl p-6 space-y-4 mx-4">
+      <div ref={modalRef} className="w-full max-w-sm rounded-xl border bg-background shadow-2xl p-6 space-y-4 mx-4">
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/40">
             <svg className="h-5 w-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -94,6 +125,7 @@ export function SessionTimeout() {
             Sign out now
           </button>
           <button
+            ref={stayBtnRef}
             onClick={resetTimers}
             className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:bg-primary/90 transition-colors font-medium"
           >

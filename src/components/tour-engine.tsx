@@ -15,6 +15,7 @@ export function TourEngine() {
   const { tourState, startTour, nextStep, finishTour, isDone, isOnboarded } = useTour()
   const [rect, setRect] = useState<Rect | null>(null)
   const autoStarted = useRef<Set<string>>(new Set())
+  const popoverRef = useRef<HTMLDivElement>(null)
 
   const tour = getTourForPath(pathname)
   const step = tourState.status === 'active' && tour
@@ -53,6 +54,40 @@ export function TourEngine() {
     }
   }, [step])
 
+  // Focus trap and Escape handling for tour step popover
+  useEffect(() => {
+    if (!step || !rect) return
+
+    const popover = popoverRef.current
+    if (!popover) return
+
+    // Focus the first button in the popover
+    const firstBtn = popover.querySelector<HTMLElement>('button')
+    firstBtn?.focus()
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        finishTour()
+        return
+      }
+      if (e.key !== 'Tab') return
+      const focusable = popover!.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+      if (focusable.length === 0) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [step, rect, finishTour])
+
   if (!step || !rect) return null
 
   const spotTop  = rect.top  - PAD
@@ -81,6 +116,7 @@ export function TourEngine() {
         aria-label="Close tour"
       />
       <div
+        ref={popoverRef}
         className="fixed z-[201] w-80 rounded-xl border bg-background shadow-xl p-5"
         style={{ top: popoverTop, left: Math.min(spotLeft, window.innerWidth - 340) }}
         onClick={e => e.stopPropagation()}

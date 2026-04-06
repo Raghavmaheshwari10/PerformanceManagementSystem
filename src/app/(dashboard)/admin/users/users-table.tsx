@@ -121,11 +121,13 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
           value={search}
           onChange={e => updateParam('search', e.target.value)}
           className="max-w-xs bg-white/5 border-white/10 text-foreground placeholder:text-foreground/30"
+          aria-label="Search users"
         />
         <select
           value={roleFilter}
           onChange={e => updateParam('role', e.target.value)}
           className="rounded-md border border-input bg-background px-3 py-1.5 text-sm text-foreground"
+          aria-label="Filter by role"
         >
           <option value="">All roles</option>
           {ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
@@ -134,6 +136,7 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
           value={deptFilter}
           onChange={e => updateParam('dept', e.target.value)}
           className="rounded-md border border-input bg-background px-3 py-1.5 text-sm text-foreground"
+          aria-label="Filter by department"
         >
           <option value="">All departments</option>
           {deptNames.map(d => <option key={d} value={d}>{d}</option>)}
@@ -142,6 +145,7 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
           value={activeFilter}
           onChange={e => updateParam('active', e.target.value)}
           className="rounded-md border border-input bg-background px-3 py-1.5 text-sm text-foreground"
+          aria-label="Filter by status"
         >
           <option value="">All statuses</option>
           <option value="active">Active</option>
@@ -159,6 +163,7 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
             value={bulkAction}
             onChange={e => { setBulkAction(e.target.value); setBulkValue(''); setBulkError(null) }}
             className="rounded-md border border-input bg-background px-3 py-1.5 text-sm text-foreground"
+            aria-label="Bulk action"
           >
             <option value="">Choose action...</option>
             <option value="department">Change Department</option>
@@ -173,6 +178,7 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
               value={bulkValue}
               onChange={e => setBulkValue(e.target.value)}
               className="rounded-md border border-input bg-background px-3 py-1.5 text-sm text-foreground"
+              aria-label="Select department for bulk update"
             >
               <option value="">No department</option>
               {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
@@ -184,6 +190,7 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
               value={bulkValue}
               onChange={e => setBulkValue(e.target.value)}
               className="rounded-md border border-input bg-background px-3 py-1.5 text-sm text-foreground"
+              aria-label="Select role for bulk update"
             >
               <option value="">Select role...</option>
               {ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
@@ -222,6 +229,7 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
                   checked={allSelected}
                   onChange={toggleAll}
                   className="rounded"
+                  aria-label="Select all users"
                 />
               </th>
               <th className="p-3 text-left text-muted-foreground hidden sm:table-cell whitespace-nowrap">Emp Code</th>
@@ -244,6 +252,7 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
                     checked={selected.has(u.id)}
                     onChange={() => toggleOne(u.id)}
                     className="rounded"
+                    aria-label={`Select ${u.full_name}`}
                   />
                 </td>
                 <td className="p-3 text-xs font-mono text-muted-foreground hidden sm:table-cell">{u.emp_code ?? '—'}</td>
@@ -256,6 +265,7 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
                     defaultValue={u.role}
                     onChange={e => startTransition(() => updateUserRole(u.id, e.target.value))}
                     className="rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                    aria-label={`Role for ${u.full_name}`}
                   >
                     {ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
                   </select>
@@ -305,13 +315,13 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
                   <div className="flex items-center justify-end gap-1">
                     <Link href={`/admin/users/${u.id}/edit`}
                       className="rounded p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-                      title="Edit">
+                      aria-label={`Edit ${u.full_name}`}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Link>
                     <button
                       onClick={() => handleDeleteSingle(u.id, u.full_name)}
                       className="rounded p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                      title="Delete">
+                      aria-label={`Delete ${u.full_name}`}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>

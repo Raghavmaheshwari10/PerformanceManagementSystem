@@ -164,7 +164,7 @@ export function Sidebar({
           <img src="/icon.svg" alt="PMS" className="h-8 w-8 rounded-lg" />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-bold text-slate-800 tracking-tight leading-none">PMS</p>
-            <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-[0.15em] mt-0.5">EMB Global</p>
+            <p className="text-[9px] font-semibold text-slate-500 uppercase tracking-[0.15em] mt-0.5">EMB Global</p>
           </div>
           {/* Collapse button — desktop only */}
           <button
@@ -189,7 +189,7 @@ export function Sidebar({
                   'flex-1 rounded-md px-2 py-1.5 text-[11px] font-medium transition-all',
                   currentRole === r
                     ? 'bg-white text-slate-800 shadow-sm'
-                    : 'text-slate-400 hover:text-slate-600'
+                    : 'text-slate-500 hover:text-slate-600'
                 )}
               >
                 {ROLE_DISPLAY[r]}
@@ -218,7 +218,7 @@ export function Sidebar({
             <button
               key="help"
               onClick={() => setHelpOpen(true)}
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-[7px] text-[13px] text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-600"
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-[7px] text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-600"
             >
               <Icon className="h-4 w-4 shrink-0" />
               {item.label}
@@ -257,7 +257,7 @@ export function Sidebar({
         <div className="h-px bg-slate-100 mb-3" />
         <button
           onClick={handleSignOut}
-          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-[7px] text-[13px] text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500"
+          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-[7px] text-[13px] text-slate-500 transition-colors hover:bg-red-50 hover:text-red-500"
         >
           <LogOut className="h-4 w-4" />
           Sign out
@@ -266,7 +266,7 @@ export function Sidebar({
           <UserAvatar name={userName} role={role} />
           <div className="min-w-0">
             <p className="text-[13px] font-medium text-slate-700 truncate leading-tight">{userName}</p>
-            <p className="text-[10px] text-slate-400">{role === 'hrbp' ? 'HRBP' : role.charAt(0).toUpperCase() + role.slice(1)}</p>
+            <p className="text-[10px] text-slate-500">{role === 'hrbp' ? 'HRBP' : role.charAt(0).toUpperCase() + role.slice(1)}</p>
           </div>
         </div>
       </div>

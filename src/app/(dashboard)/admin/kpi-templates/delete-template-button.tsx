@@ -28,6 +28,7 @@ export function DeleteTemplateButton({ id, action }: { id: string; action: (id: 
         })
       }}
       className="text-destructive hover:text-destructive/80"
+      aria-label="Delete template"
     >
       <Trash2 className="h-4 w-4" />
     </button>

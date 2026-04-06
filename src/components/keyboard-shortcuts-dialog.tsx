@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 function isEditableTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false
@@ -18,6 +18,7 @@ const SHORTCUTS = [
 
 export function KeyboardShortcutsDialog() {
   const [open, setOpen] = useState(false)
+  const modalRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -34,11 +35,41 @@ export function KeyboardShortcutsDialog() {
     return () => document.removeEventListener('keydown', onKey)
   }, [open])
 
+  useEffect(() => {
+    if (!open) return
+
+    const modal = modalRef.current
+    if (!modal) return
+
+    // Focus the close button on open
+    const firstFocusable = modal.querySelector<HTMLElement>('button')
+    firstFocusable?.focus()
+
+    function trapFocus(e: KeyboardEvent) {
+      if (e.key !== 'Tab') return
+      const focusable = modal!.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+      if (focusable.length === 0) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener('keydown', trapFocus)
+    return () => document.removeEventListener('keydown', trapFocus)
+  }, [open])
+
   if (!open) return null
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setOpen(false)}>
       <div
+        ref={modalRef}
         className="w-full max-w-sm rounded-xl border border-slate-200 bg-white shadow-2xl mx-4"
         onClick={e => e.stopPropagation()}
       >
@@ -47,6 +78,7 @@ export function KeyboardShortcutsDialog() {
           <button
             onClick={() => setOpen(false)}
             className="flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+            aria-label="Close shortcuts dialog"
           >
             ✕
           </button>

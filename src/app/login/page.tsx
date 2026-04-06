@@ -33,7 +33,7 @@ function LoginForm() {
     <div className="space-y-6">
       <div>
         <h1 className="text-[1.75rem] font-semibold tracking-tight text-white">Welcome back</h1>
-        <p className="mt-1 text-sm text-white/40">Sign in to your workspace</p>
+        <p className="mt-1 text-sm text-white/60">Sign in to your workspace</p>
       </div>
 
       {/* Google OAuth */}

@@ -41,7 +41,7 @@ export function Toaster() {
               {t.action.label}
             </button>
           )}
-          <button onClick={() => dismiss(t.id)} className="opacity-50 hover:opacity-100 text-xs ml-1 shrink-0">✕</button>
+          <button onClick={() => dismiss(t.id)} className="opacity-50 hover:opacity-100 text-xs ml-1 shrink-0" aria-label="Dismiss notification">✕</button>
         </div>
       ))}
     </div>

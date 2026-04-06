@@ -28,7 +28,7 @@ export function OnboardingChecklist({ items, dismissAction }: OnboardingChecklis
           <h3 className="font-semibold text-slate-900">Getting Started</h3>
         </div>
         <form action={dismissAction}>
-          <button type="submit" className="text-slate-400 hover:text-slate-600 transition-colors">
+          <button type="submit" className="text-slate-400 hover:text-slate-600 transition-colors" aria-label="Dismiss onboarding checklist">
             <X className="h-4 w-4" />
           </button>
         </form>
