@@ -317,7 +317,7 @@ function StatCard({ label, value, sub, icon, iconColor, href }: {
   label: string; value: number; sub: string; icon: React.ReactNode; iconColor: string; href: string
 }) {
   return (
-    <Link href={href} className="group glass glass-interactive p-5">
+    <Link href={href} className="group glass glass-interactive glass-accent p-5">
       <div className="flex items-center justify-between mb-3">
         <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl', iconColor)}>
           {icon}

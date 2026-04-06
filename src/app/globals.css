@@ -105,9 +105,9 @@
   --glass-strong-border: #e2e8f0;
 
   /* Mesh */
-  --mesh-1: rgba(79,70,229,0.04);
-  --mesh-2: rgba(168,85,247,0.03);
-  --mesh-3: rgba(16,185,129,0.02);
+  --mesh-1: rgba(79,70,229,0.07);
+  --mesh-2: rgba(168,85,247,0.05);
+  --mesh-3: rgba(16,185,129,0.03);
 
   /* Table */
   --table-row-hover: #f8fafc;

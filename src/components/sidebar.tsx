@@ -163,13 +163,13 @@ export function Sidebar({
         <div className="flex items-center gap-3">
           <img src="/icon.svg" alt="PMS" className="h-8 w-8 rounded-lg" />
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-slate-800 tracking-tight leading-none">PMS</p>
-            <p className="text-[9px] font-semibold text-slate-500 uppercase tracking-[0.15em] mt-0.5">EMB Global</p>
+            <p className="text-sm font-bold text-white tracking-tight leading-none">PMS</p>
+            <p className="text-[9px] font-semibold text-white/40 uppercase tracking-[0.15em] mt-0.5">EMB Global</p>
           </div>
           {/* Collapse button — desktop only */}
           <button
             onClick={toggleCollapsed}
-            className="hidden lg:flex h-6 w-6 items-center justify-center rounded-md text-slate-300 hover:text-slate-500 hover:bg-slate-100 transition-colors"
+            className="hidden lg:flex h-6 w-6 items-center justify-center rounded-md text-white/30 hover:text-white/60 hover:bg-white/10 transition-colors"
             title="Collapse sidebar"
           >
             <PanelLeftClose className="h-3.5 w-3.5" />
@@ -180,7 +180,7 @@ export function Sidebar({
       {/* Role Switcher */}
       {availableRoles.length > 1 && (
         <div className="px-4 mb-3">
-          <div className="flex rounded-lg bg-slate-100/80 p-0.5">
+          <div className="flex rounded-lg bg-white/[0.06] p-0.5">
             {availableRoles.map(r => (
               <button
                 key={r}
@@ -188,8 +188,8 @@ export function Sidebar({
                 className={cn(
                   'flex-1 rounded-md px-2 py-1.5 text-[11px] font-medium transition-all',
                   currentRole === r
-                    ? 'bg-white text-slate-800 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-600'
+                    ? 'bg-white/10 text-white shadow-sm'
+                    : 'text-white/40 hover:text-white/60'
                 )}
               >
                 {ROLE_DISPLAY[r]}
@@ -218,7 +218,7 @@ export function Sidebar({
             <button
               key="help"
               onClick={() => setHelpOpen(true)}
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-[7px] text-[13px] text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-600"
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-[7px] text-[13px] text-white/50 transition-colors hover:bg-white/[0.06] hover:text-white/70"
             >
               <Icon className="h-4 w-4 shrink-0" />
               {item.label}
@@ -231,13 +231,13 @@ export function Sidebar({
               className={cn(
                 'flex items-center gap-2.5 rounded-lg px-3 py-[7px] text-[13px] transition-all',
                 active
-                  ? 'bg-indigo-50/80 text-indigo-700 font-medium'
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                  ? 'bg-indigo-500/15 text-indigo-300 font-medium'
+                  : 'text-white/50 hover:bg-white/[0.06] hover:text-white/70'
               )}
             >
               <Icon className={cn(
                 'h-4 w-4 shrink-0',
-                active ? 'text-indigo-500' : 'text-slate-400'
+                active ? 'text-indigo-400' : 'text-white/30'
               )} />
               {item.label}
             </Link>
@@ -245,7 +245,7 @@ export function Sidebar({
 
           return showDivider ? (
             <div key={item.href || 'help'}>
-              <div className="h-px bg-slate-100 my-2 mx-2" />
+              <div className="h-px bg-white/[0.06] my-2 mx-2" />
               {element}
             </div>
           ) : element
@@ -254,19 +254,19 @@ export function Sidebar({
 
       {/* Footer */}
       <div className="px-4 pb-4 pt-2">
-        <div className="h-px bg-slate-100 mb-3" />
+        <div className="h-px bg-white/[0.06] mb-3" />
         <button
           onClick={handleSignOut}
-          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-[7px] text-[13px] text-slate-500 transition-colors hover:bg-red-50 hover:text-red-500"
+          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-[7px] text-[13px] text-white/50 transition-colors hover:bg-red-500/10 hover:text-red-400"
         >
           <LogOut className="h-4 w-4" />
           Sign out
         </button>
-        <div className="flex items-center gap-2.5 px-3 py-2.5 mt-2 rounded-lg bg-slate-50/80">
+        <div className="flex items-center gap-2.5 px-3 py-2.5 mt-2 rounded-lg bg-white/[0.04]">
           <UserAvatar name={userName} role={role} />
           <div className="min-w-0">
-            <p className="text-[13px] font-medium text-slate-700 truncate leading-tight">{userName}</p>
-            <p className="text-[10px] text-slate-500">{role === 'hrbp' ? 'HRBP' : role.charAt(0).toUpperCase() + role.slice(1)}</p>
+            <p className="text-[13px] font-medium text-white/90 truncate leading-tight">{userName}</p>
+            <p className="text-[10px] text-white/40">{role === 'hrbp' ? 'HRBP' : role.charAt(0).toUpperCase() + role.slice(1)}</p>
           </div>
         </div>
       </div>
@@ -281,7 +281,7 @@ export function Sidebar({
         <img src="/icon.svg" alt="PMS" className="h-8 w-8 rounded-lg" />
         <button
           onClick={toggleCollapsed}
-          className="flex h-6 w-6 items-center justify-center rounded-md text-slate-300 hover:text-slate-500 hover:bg-slate-100 transition-colors"
+          className="flex h-6 w-6 items-center justify-center rounded-md text-white/30 hover:text-white/60 hover:bg-white/10 transition-colors"
           title="Expand sidebar"
         >
           <PanelLeftOpen className="h-3.5 w-3.5" />
@@ -298,8 +298,8 @@ export function Sidebar({
               className={cn(
                 'flex h-7 w-7 items-center justify-center rounded-lg text-[10px] font-semibold transition-all',
                 currentRole === r
-                  ? 'bg-indigo-50 text-indigo-700'
-                  : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'
+                  ? 'bg-indigo-500/15 text-indigo-300'
+                  : 'text-white/40 hover:bg-white/[0.06] hover:text-white/60'
               )}
               title={ROLE_DISPLAY[r]}
             >
@@ -323,7 +323,7 @@ export function Sidebar({
             <button
               key="help"
               onClick={() => setHelpOpen(true)}
-              className="flex w-full items-center justify-center rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-600"
+              className="flex w-full items-center justify-center rounded-lg p-2 text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white/60"
               title={item.label}
             >
               <Icon className="h-4 w-4" />
@@ -335,8 +335,8 @@ export function Sidebar({
               className={cn(
                 'flex items-center justify-center rounded-lg p-2 transition-all',
                 active
-                  ? 'bg-indigo-50/80 text-indigo-600'
-                  : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                  ? 'bg-indigo-500/15 text-indigo-400'
+                  : 'text-white/40 hover:bg-white/[0.06] hover:text-white/60'
               )}
               title={item.label}
             >
@@ -346,7 +346,7 @@ export function Sidebar({
 
           return showDivider ? (
             <div key={item.href || 'help'}>
-              <div className="h-px bg-slate-100 my-1.5 mx-1" />
+              <div className="h-px bg-white/[0.06] my-1.5 mx-1" />
               {element}
             </div>
           ) : element
@@ -355,10 +355,10 @@ export function Sidebar({
 
       {/* Footer — collapsed */}
       <div className="mt-auto flex flex-col items-center py-3 gap-2">
-        <div className="h-px w-6 bg-slate-100 mb-1" />
+        <div className="h-px w-6 bg-white/[0.06] mb-1" />
         <button
           onClick={handleSignOut}
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500"
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-white/40 transition-colors hover:bg-red-500/10 hover:text-red-400"
           title="Sign out"
         >
           <LogOut className="h-4 w-4" />
@@ -388,12 +388,12 @@ export function Sidebar({
 
       {/* Mobile sidebar — always expanded */}
       <aside className={cn(
-        'fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col bg-white/95 backdrop-blur-md border-r border-slate-200/80 shadow-xl transition-transform duration-300 lg:hidden',
+        'fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col bg-[#0c0a1a] border-r border-white/[0.06] shadow-xl transition-transform duration-300 lg:hidden',
         mobileOpen ? 'translate-x-0' : '-translate-x-full'
       )}>
         <button
           onClick={() => setMobileOpen(false)}
-          className="absolute top-4 right-4 flex h-6 w-6 items-center justify-center rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+          className="absolute top-4 right-4 flex h-6 w-6 items-center justify-center rounded-md text-white/40 hover:text-white/70 hover:bg-white/10"
           aria-label="Close menu"
         >
           <X className="h-4 w-4" />
@@ -403,7 +403,7 @@ export function Sidebar({
 
       {/* Desktop sidebar — collapsible */}
       <aside className={cn(
-        'hidden lg:flex flex-col shrink-0 bg-white/95 backdrop-blur-md border-r border-slate-200/80 transition-all duration-300',
+        'hidden lg:flex flex-col shrink-0 bg-[#0c0a1a] border-r border-white/[0.06] transition-all duration-300',
         collapsed ? 'w-[56px]' : 'w-[240px]'
       )}>
         {collapsed ? collapsedContent : expandedContent}
