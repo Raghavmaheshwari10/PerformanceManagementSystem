@@ -26,7 +26,7 @@ async function CompetencyGapContent() {
     fetchCompetencyGapData(latestCycleId),
     fetchCompetencyGapStats(latestCycleId),
     fetchCompetencyTrends(competencyIds),
-    prisma.department.findMany({ where: { is_active: true }, select: { name: true }, orderBy: { name: 'asc' } }),
+    prisma.department.findMany({ select: { name: true }, orderBy: { name: 'asc' } }),
   ])
 
   return (
