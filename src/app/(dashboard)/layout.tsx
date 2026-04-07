@@ -49,20 +49,24 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const user = await getCurrentUser()
   Sentry.setUser({ id: user.id, email: user.email, username: user.full_name })
 
-  const rawNotifications = await prisma.notification.findMany({
-    where: { recipient_id: user.id, dismissed_at: null },
-    orderBy: { created_at: 'desc' },
-    take: 50,
-    select: {
-      id: true,
-      type: true,
-      payload: true,
-      status: true,
-      snoozed_until: true,
-      dismissed_at: true,
-      created_at: true,
-    },
-  })
+  // Run notification + direct reports queries in parallel (not sequential)
+  const [rawNotifications, directReportsCount] = await Promise.all([
+    prisma.notification.findMany({
+      where: { recipient_id: user.id, dismissed_at: null },
+      orderBy: { created_at: 'desc' },
+      take: 50,
+      select: {
+        id: true,
+        type: true,
+        payload: true,
+        status: true,
+        snoozed_until: true,
+        dismissed_at: true,
+        created_at: true,
+      },
+    }),
+    prisma.user.count({ where: { manager_id: user.id, is_active: true } }),
+  ])
 
   // Map Prisma notifications to NotificationBell's expected shape
   // Generate a human-readable message from notification type + payload
@@ -83,7 +87,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const firstName = user.full_name.split(' ')[0]
 
   // Detect all available roles for this user
-  const hasDirectReports = await prisma.user.count({ where: { manager_id: user.id, is_active: true } }) > 0
+  const hasDirectReports = directReportsCount > 0
   const availableRoles: string[] = [user.role]
   // Everyone can access employee view (self-review, goals, peer reviews)
   if (!availableRoles.includes('employee')) {
