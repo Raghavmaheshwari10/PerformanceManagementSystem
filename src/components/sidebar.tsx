@@ -12,9 +12,10 @@ import {
   ClipboardCheck, History, Target, MessageSquare, Users2,
   UserCircle, LayoutDashboard, CalendarClock, UserCog,
   Building2, FileBarChart, Settings2, BarChart3, Scale,
-  ScrollText, BookOpen, HelpCircle, LogOut,
+  ScrollText, BookOpen, HelpCircle, LogOut, Star,
   Wallet, Bell, FileSpreadsheet, Menu, X,
   Mail, BadgeCheck, Video, PanelLeftClose, PanelLeftOpen,
+  AlertTriangle,
 } from 'lucide-react'
 
 interface NavItem {
@@ -39,6 +40,8 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'My Team',      href: '/manager',           icon: Users2 },
     { label: 'Team Payouts', href: '/manager/payouts',   icon: Wallet },
     { label: 'Team Reports', href: '/manager/reports',   icon: FileBarChart },
+    { label: 'Top Talent',   href: '/manager/top-talent', icon: Star },
+    { label: 'PIP',          href: '/manager/pip',        icon: AlertTriangle },
     { label: 'MIS Tracking', href: '/manager/mis',       icon: BarChart3 },
     { label: 'My Review',    href: '/manager/my-review', icon: ClipboardCheck, section: 'divider' },
     { label: 'Help',         href: '#help',              icon: HelpCircle },
@@ -50,6 +53,8 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Employees',    href: '/hrbp/employees',    icon: Users2 },
     { label: 'Payouts',      href: '/hrbp/payouts',      icon: Wallet },
     { label: 'Reports',      href: '/hrbp/reports',      icon: BarChart3 },
+    { label: 'Top Talent',   href: '/hrbp/top-talent',   icon: Star },
+    { label: 'PIP',          href: '/hrbp/pip',           icon: AlertTriangle },
     { label: 'MIS Overview', href: '/hrbp/mis',          icon: BarChart3 },
     { label: 'Audit Log',    href: '/hrbp/audit-log',    icon: ScrollText },
     { label: 'My Review',    href: '/hrbp/my-review',    icon: ClipboardCheck, requireAlsoEmployee: true, section: 'divider' },
@@ -72,6 +77,8 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Payout Config',    href: '/admin/payout-config',    icon: Wallet,          section: 'divider' },
     { label: 'Payouts',          href: '/admin/payouts',          icon: Settings2 },
     { label: 'Reports',          href: '/admin/reports',          icon: FileBarChart },
+    { label: 'Top Talent',       href: '/admin/top-talent',       icon: Star },
+    { label: 'PIP',              href: '/admin/pip',              icon: AlertTriangle },
     { label: 'Audit Log',        href: '/admin/audit-log',        icon: ScrollText },
     { label: 'Docs',             href: '/docs',                   icon: BookOpen,        section: 'divider' },
     { label: 'Help',             href: '#help',                   icon: HelpCircle },
