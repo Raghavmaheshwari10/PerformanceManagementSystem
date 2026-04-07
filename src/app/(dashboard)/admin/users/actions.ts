@@ -469,6 +469,7 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
       prisma.feedback.deleteMany({ where: { OR: [{ from_user_id: userId }, { to_user_id: userId }] } }),
       prisma.reviewResponse.deleteMany({ where: { respondent_id: userId } }),
       prisma.kra.deleteMany({ where: { employee_id: userId } }),
+      prisma.kpiComment.deleteMany({ where: { author_id: userId } }),
       prisma.kpi.deleteMany({ where: { OR: [{ employee_id: userId }, { manager_id: userId }] } }),
       // Unlink direct reports and cycles created by this user
       prisma.user.updateMany({ where: { manager_id: userId }, data: { manager_id: null } }),
@@ -583,6 +584,7 @@ export async function bulkDeleteUsers(userIds: string[]): Promise<ActionResult> 
       prisma.hrbpDepartment.deleteMany({ where: { hrbp_id: { in: deletable } } }),
       prisma.cycleEmployee.deleteMany({ where: { employee_id: { in: deletable } } }),
       prisma.peerReviewRequest.deleteMany({ where: { OR: [{ reviewee_id: { in: deletable } }, { peer_user_id: { in: deletable } }, { requested_by: { in: deletable } }] } }),
+      prisma.kpiComment.deleteMany({ where: { author_id: { in: deletable } } }),
       prisma.kpi.deleteMany({ where: { OR: [{ employee_id: { in: deletable } }, { manager_id: { in: deletable } }] } }),
       prisma.kra.deleteMany({ where: { employee_id: { in: deletable } } }),
       prisma.user.deleteMany({ where: { id: { in: deletable } } }),
