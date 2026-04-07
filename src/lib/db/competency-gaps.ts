@@ -196,11 +196,15 @@ export async function fetchCompetencyGapData(
   // Sort by employee name
   rows.sort((a, b) => a.employeeName.localeCompare(b.employeeName))
 
-  const meta: CompetencyMeta[] = competencies.map(c => ({
-    id: c.id,
-    name: c.name,
-    category: c.category,
-  }))
+  // Only include competencies that have linked questions in this template
+  const linkedCompetencyIds = new Set(questionCompetencyMap.values())
+  const meta: CompetencyMeta[] = competencies
+    .filter(c => linkedCompetencyIds.has(c.id))
+    .map(c => ({
+      id: c.id,
+      name: c.name,
+      category: c.category,
+    }))
 
   return { rows, competencies: meta }
 }
@@ -304,32 +308,33 @@ export async function fetchCompetencyTrends(
   const chronological = [...publishedCycles].reverse()
   const targetCompetencyIds = new Set(competencyIds)
 
-  const results: CompetencyTrendPoint[] = []
+  // Fetch all cycles concurrently
+  const cycleResults = await Promise.all(
+    chronological.map(async (cycle) => {
+      const { rows, competencies } = await fetchCompetencyGapData(cycle.id, options)
 
-  for (const cycle of chronological) {
-    const { rows, competencies } = await fetchCompetencyGapData(cycle.id, options)
+      // Compute averages only for requested competencyIds
+      const averages: Record<string, number> = {}
 
-    // Compute averages only for requested competencyIds
-    const averages: Record<string, number> = {}
+      for (const comp of competencies) {
+        if (!targetCompetencyIds.has(comp.id)) continue
 
-    for (const comp of competencies) {
-      if (!targetCompetencyIds.has(comp.id)) continue
-
-      const values = rows
-        .map(r => r.competencyScores[comp.id])
-        .filter((v): v is number => v != null)
-      if (values.length > 0) {
-        averages[comp.id] =
-          Math.round((values.reduce((s, v) => s + v, 0) / values.length) * 100) / 100
+        const values = rows
+          .map(r => r.competencyScores[comp.id])
+          .filter((v): v is number => v != null)
+        if (values.length > 0) {
+          averages[comp.id] =
+            Math.round((values.reduce((s, v) => s + v, 0) / values.length) * 100) / 100
+        }
       }
-    }
 
-    results.push({
-      cycleName: cycle.name,
-      cycleId: cycle.id,
-      averages,
-    })
-  }
+      return {
+        cycleName: cycle.name,
+        cycleId: cycle.id,
+        averages,
+      }
+    }),
+  )
 
-  return results
+  return cycleResults
 }
