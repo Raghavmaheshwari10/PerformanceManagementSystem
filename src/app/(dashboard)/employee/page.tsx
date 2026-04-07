@@ -758,6 +758,8 @@ export default async function EmployeeReviewPage() {
             kras={serializedKras}
             questions={templateQuestions}
             existingResponses={existingResponses}
+            currentUserId={user.id}
+            cycleStatus={resolvedStatus}
           />
         </div>
       )}

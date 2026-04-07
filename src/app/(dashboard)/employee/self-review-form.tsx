@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { RatingPillSelector, STANDARD_RATING_OPTIONS } from '@/components/rating-pill-selector'
 import { RATING_TIERS, KPI_CATEGORY_LABELS, KRA_CATEGORY_STYLES as KRA_CAT_STYLES_IMPORT } from '@/lib/constants'
 import { useToast } from '@/lib/toast'
+import { KpiCommentThread } from '@/components/kpi-comment-thread'
 import type { ActionResult, Kpi, Kra, Review, ReviewQuestionWithCompetency } from '@/lib/types'
 
 const INITIAL: ActionResult = { data: null, error: null }
@@ -28,13 +29,15 @@ interface SelfReviewFormProps {
   kras: Kra[]
   questions?: ReviewQuestionWithCompetency[]
   existingResponses?: Record<string, { rating_value: number | null; text_value: string | null }>
+  currentUserId: string
+  cycleStatus: string
 }
 
 const STAR_LABELS = ['Poor', 'Below Average', 'Average', 'Good', 'Excellent']
 
 const KRA_CATEGORY_STYLES = KRA_CAT_STYLES_IMPORT
 
-export function SelfReviewForm({ cycleId, review, kpis, kras, questions = [], existingResponses = {} }: SelfReviewFormProps) {
+export function SelfReviewForm({ cycleId, review, kpis, kras, questions = [], existingResponses = {}, currentUserId, cycleStatus }: SelfReviewFormProps) {
   const [submitState, submitAction] = useActionState(submitSelfReview, INITIAL)
   const [draftState, draftAction] = useActionState(saveDraftReview, INITIAL)
   const [rating, setRating] = useState(review?.self_rating ?? '')
@@ -139,6 +142,8 @@ export function SelfReviewForm({ cycleId, review, kpis, kras, questions = [], ex
                             kpi={kpi}
                             rating={kpiRatings[kpi.id] ?? null}
                             onRatingChange={(v) => setKpiRatings(prev => ({ ...prev, [kpi.id]: v }))}
+                            currentUserId={currentUserId}
+                            cycleStatus={cycleStatus}
                           />
                         ))}
                       </div>
@@ -157,6 +162,8 @@ export function SelfReviewForm({ cycleId, review, kpis, kras, questions = [], ex
                           kpi={kpi}
                           rating={kpiRatings[kpi.id] ?? null}
                           onRatingChange={(v) => setKpiRatings(prev => ({ ...prev, [kpi.id]: v }))}
+                          currentUserId={currentUserId}
+                          cycleStatus={cycleStatus}
                         />
                       ))}
                     </div>
@@ -172,6 +179,8 @@ export function SelfReviewForm({ cycleId, review, kpis, kras, questions = [], ex
                     kpi={kpi}
                     rating={kpiRatings[kpi.id] ?? null}
                     onRatingChange={(v) => setKpiRatings(prev => ({ ...prev, [kpi.id]: v }))}
+                    currentUserId={currentUserId}
+                    cycleStatus={cycleStatus}
                   />
                 ))}
               </div>
@@ -327,10 +336,14 @@ function KpiRatingCard({
   kpi,
   rating,
   onRatingChange,
+  currentUserId,
+  cycleStatus,
 }: {
   kpi: Kpi
   rating: string | null
   onRatingChange: (value: string) => void
+  currentUserId: string
+  cycleStatus: string
 }) {
   const target = formatTarget(kpi)
   return (
@@ -386,6 +399,13 @@ function KpiRatingCard({
         defaultValue={kpi.self_comments ?? ''}
         placeholder="Comments on this KPI (optional)…"
         className="text-xs"
+      />
+
+      {/* Row 4: Comment Thread */}
+      <KpiCommentThread
+        kpiId={kpi.id}
+        currentUserId={currentUserId}
+        readOnly={cycleStatus !== 'self_review' && cycleStatus !== 'manager_review'}
       />
     </div>
   )
