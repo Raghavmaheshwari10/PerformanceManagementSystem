@@ -11,7 +11,10 @@ export default async function EditKraTemplatePage({ params }: { params: Promise<
   const { id } = await params
 
   const [template, departments, roleOptions] = await Promise.all([
-    prisma.kraTemplate.findUnique({ where: { id } }),
+    prisma.kraTemplate.findUnique({
+      where: { id },
+      include: { departments: { select: { department_id: true } } },
+    }),
     prisma.department.findMany({
       orderBy: { name: 'asc' },
       select: { id: true, name: true },
@@ -20,11 +23,16 @@ export default async function EditKraTemplatePage({ params }: { params: Promise<
   ])
   if (!template) notFound()
 
+  const defaultValues = {
+    ...(template as unknown as KraTemplate),
+    department_ids: template.departments.map(d => d.department_id),
+  }
+
   const boundAction = updateKraTemplate.bind(null, id)
   return (
     <div className="max-w-2xl space-y-6">
       <h1 className="text-2xl font-bold">Edit KRA Template</h1>
-      <KraTemplateForm action={boundAction} defaultValues={template as unknown as KraTemplate} departments={departments} roleOptions={roleOptions} />
+      <KraTemplateForm action={boundAction} defaultValues={defaultValues} departments={departments} roleOptions={roleOptions} />
     </div>
   )
 }

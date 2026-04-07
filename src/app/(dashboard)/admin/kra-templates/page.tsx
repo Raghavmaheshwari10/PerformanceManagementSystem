@@ -20,6 +20,7 @@ export default async function KraTemplatesPage({
     include: {
       role_slug: { select: { id: true, label: true } },
       department: { select: { id: true, name: true } },
+      departments: { include: { department: { select: { id: true, name: true } } } },
     },
     orderBy: [{ role_slug_id: 'asc' }, { sort_order: 'asc' }],
   })
@@ -90,7 +91,16 @@ export default async function KraTemplatesPage({
                   </td>
                   <td className="p-3 text-muted-foreground truncate">{t.description ?? '—'}</td>
                   <td className="p-3 text-muted-foreground">{t.weight != null ? `${t.weight}%` : '—'}</td>
-                  <td className="p-3 text-muted-foreground truncate">{t.department?.name ?? '—'}</td>
+                  <td className="p-3 text-muted-foreground">
+                    {t.departments.length > 0
+                      ? <div className="flex flex-wrap gap-1">{t.departments.map(d => (
+                          <span key={d.department_id} className="inline-block rounded-full bg-indigo-500/10 px-2 py-0.5 text-[11px] font-medium text-indigo-400">{d.department.name}</span>
+                        ))}</div>
+                      : t.department?.name
+                        ? <span className="inline-block rounded-full bg-indigo-500/10 px-2 py-0.5 text-[11px] font-medium text-indigo-400">{t.department.name}</span>
+                        : <span className="text-xs italic">Org-wide</span>
+                    }
+                  </td>
                   <td className="p-3">
                     <form action={toggleKraTemplateActive.bind(null, t.id, t.is_active) as unknown as (fd: FormData) => Promise<void>}>
                       <button type="submit"
