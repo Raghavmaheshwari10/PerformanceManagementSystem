@@ -86,6 +86,7 @@ enum NotificationType {
   meeting_scheduled
   meeting_reminder
   meeting_mom_submitted
+  kpi_comment
 
   @@map("notification_type")
 }
@@ -235,6 +236,7 @@ model User {
   hrbp_departments HrbpDepartment[]
   kpis_as_employee Kpi[]             @relation("KpiEmployee")
   kpis_as_manager  Kpi[]             @relation("KpiManager")
+  kpi_comments     KpiComment[]      @relation("KpiCommentAuthor")
   reviews          Review[]
   appraisals_as_employee Appraisal[] @relation("AppraisalEmployee")
   appraisals_as_manager  Appraisal[] @relation("AppraisalManager")
@@ -386,9 +388,24 @@ model Kpi {
   manager  User  @relation("KpiManager", fields: [manager_id], references: [id])
   kra      Kra?  @relation(fields: [kra_id], references: [id], onDelete: SetNull)
   mis_mappings KpiMisMapping[]
+  comments     KpiComment[]
 
   @@index([cycle_id, employee_id], name: "idx_kpis_cycle_employee")
   @@map("kpis")
+}
+
+model KpiComment {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  kpi_id     String   @db.Uuid
+  author_id  String   @db.Uuid
+  body       String
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  kpi    Kpi  @relation(fields: [kpi_id], references: [id], onDelete: Cascade)
+  author User @relation("KpiCommentAuthor", fields: [author_id], references: [id])
+
+  @@index([kpi_id, created_at])
+  @@map("kpi_comments")
 }
 
 model Kra {
