@@ -2,6 +2,7 @@
 
 import { useActionState, useState, useEffect } from 'react'
 import { submitManagerRating } from '../../actions'
+import { KpiCommentThread } from '@/components/kpi-comment-thread'
 import { SubmitButton } from '@/components/submit-button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -24,9 +25,11 @@ interface ReviewFormProps {
   competencyQuestions?: ReviewQuestionWithCompetency[]
   existingCompetencyResponses?: Record<string, { rating_value: number | null; text_value: string | null }>
   competencyWeight?: number
+  currentUserId: string
+  cycleStatus: string
 }
 
-export function ReviewForm({ cycleId, employeeId, kpis, kras, defaultRating, defaultComments, competencyQuestions = [], existingCompetencyResponses = {}, competencyWeight = 0 }: ReviewFormProps) {
+export function ReviewForm({ cycleId, employeeId, kpis, kras, defaultRating, defaultComments, competencyQuestions = [], existingCompetencyResponses = {}, competencyWeight = 0, currentUserId, cycleStatus }: ReviewFormProps) {
   const [state, action] = useActionState(submitManagerRating, INITIAL)
   const [rating, setRating] = useState(defaultRating ?? '')
   const [kpiRatings, setKpiRatings] = useState<Record<string, string>>(() => {
@@ -129,6 +132,8 @@ export function ReviewForm({ cycleId, employeeId, kpis, kras, defaultRating, def
                           kpi={kpi}
                           rating={kpiRatings[kpi.id] ?? null}
                           onRatingChange={(v) => setKpiRatings(prev => ({ ...prev, [kpi.id]: v }))}
+                          currentUserId={currentUserId}
+                          cycleStatus={cycleStatus}
                         />
                       ))}
                     </div>
@@ -145,6 +150,8 @@ export function ReviewForm({ cycleId, employeeId, kpis, kras, defaultRating, def
                         kpi={kpi}
                         rating={kpiRatings[kpi.id] ?? null}
                         onRatingChange={(v) => setKpiRatings(prev => ({ ...prev, [kpi.id]: v }))}
+                        currentUserId={currentUserId}
+                        cycleStatus={cycleStatus}
                       />
                     ))}
                   </div>
@@ -159,6 +166,8 @@ export function ReviewForm({ cycleId, employeeId, kpis, kras, defaultRating, def
                   kpi={kpi}
                   rating={kpiRatings[kpi.id] ?? null}
                   onRatingChange={(v) => setKpiRatings(prev => ({ ...prev, [kpi.id]: v }))}
+                  currentUserId={currentUserId}
+                  cycleStatus={cycleStatus}
                 />
               ))}
             </div>
@@ -289,10 +298,14 @@ function KpiRatingCard({
   kpi,
   rating,
   onRatingChange,
+  currentUserId,
+  cycleStatus,
 }: {
   kpi: Kpi
   rating: string | null
   onRatingChange: (value: string) => void
+  currentUserId: string
+  cycleStatus: string
 }) {
   const target = formatTarget(kpi)
   const achievement = formatAchievement(kpi)
@@ -352,6 +365,13 @@ function KpiRatingCard({
         defaultValue={kpi.manager_comments ?? ''}
         placeholder="Comments on this KPI (optional)…"
         className="text-xs"
+      />
+
+      {/* Row 5: Comment thread */}
+      <KpiCommentThread
+        kpiId={kpi.id}
+        currentUserId={currentUserId}
+        readOnly={cycleStatus !== 'self_review' && cycleStatus !== 'manager_review'}
       />
     </div>
   )

@@ -83,6 +83,7 @@ export default async function ManagerReviewPage({
       ? prisma.cycle.findUnique({
           where: { id: cycleId },
           select: {
+            status: true,
             competency_weight: true,
             review_template_id: true,
             review_template: {
@@ -512,6 +513,8 @@ export default async function ManagerReviewPage({
               competencyQuestions={competencyQuestions}
               existingCompetencyResponses={existingCompetencyResponses}
               competencyWeight={competencyWeight}
+              currentUserId={user.id}
+              cycleStatus={cycleData?.status ?? ''}
             />
           ) : (
             <p className="text-sm text-muted-foreground">No active cycle selected.</p>
