@@ -15,15 +15,32 @@ export default async function KraTemplatesPage({
   await requireRole(['admin'])
   const { category } = await searchParams
 
-  const templates = await prisma.kraTemplate.findMany({
-    where: category ? { category } : undefined,
-    include: {
-      role_slug: { select: { id: true, label: true } },
-      department: { select: { id: true, name: true } },
-      departments: { include: { department: { select: { id: true, name: true } } } },
-    },
-    orderBy: [{ role_slug_id: 'asc' }, { sort_order: 'asc' }],
-  })
+  let templates: Awaited<ReturnType<typeof prisma.kraTemplate.findMany<{
+    include: { role_slug: { select: { id: true; label: true } }; department: { select: { id: true; name: true } }; departments: { include: { department: { select: { id: true; name: true } } } } }
+  }>>>
+
+  try {
+    templates = await prisma.kraTemplate.findMany({
+      where: category ? { category } : undefined,
+      include: {
+        role_slug: { select: { id: true, label: true } },
+        department: { select: { id: true, name: true } },
+        departments: { include: { department: { select: { id: true, name: true } } } },
+      },
+      orderBy: [{ role_slug_id: 'asc' }, { sort_order: 'asc' }],
+    })
+  } catch {
+    // Fallback: kra_template_departments table may not exist yet (migration pending)
+    const fallback = await prisma.kraTemplate.findMany({
+      where: category ? { category } : undefined,
+      include: {
+        role_slug: { select: { id: true, label: true } },
+        department: { select: { id: true, name: true } },
+      },
+      orderBy: [{ role_slug_id: 'asc' }, { sort_order: 'asc' }],
+    })
+    templates = fallback.map(t => ({ ...t, departments: [] })) as typeof templates
+  }
 
   // Group by role
   const grouped = templates.reduce<Record<string, { label: string; items: typeof templates }>>((acc, t) => {

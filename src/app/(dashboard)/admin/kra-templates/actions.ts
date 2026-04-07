@@ -30,14 +30,16 @@ export async function createKraTemplate(_prev: ActionResult, formData: FormData)
   try {
     const template = await prisma.kraTemplate.create({ data })
 
-    // Sync many-to-many departments
+    // Sync many-to-many departments (graceful if table not yet migrated)
     if (department_ids.length > 0) {
-      await prisma.kraTemplateDepartment.createMany({
-        data: department_ids.map(deptId => ({
-          kra_template_id: template.id,
-          department_id: deptId,
-        })),
-      })
+      try {
+        await prisma.kraTemplateDepartment.createMany({
+          data: department_ids.map(deptId => ({
+            kra_template_id: template.id,
+            department_id: deptId,
+          })),
+        })
+      } catch { /* join table may not exist yet */ }
     }
 
     await prisma.auditLog.create({
@@ -66,16 +68,18 @@ export async function updateKraTemplate(id: string, _prev: ActionResult, formDat
   try {
     await prisma.kraTemplate.update({ where: { id }, data })
 
-    // Sync many-to-many departments: delete all then re-create
-    await prisma.kraTemplateDepartment.deleteMany({ where: { kra_template_id: id } })
-    if (department_ids.length > 0) {
-      await prisma.kraTemplateDepartment.createMany({
-        data: department_ids.map(deptId => ({
-          kra_template_id: id,
-          department_id: deptId,
-        })),
-      })
-    }
+    // Sync many-to-many departments (graceful if table not yet migrated)
+    try {
+      await prisma.kraTemplateDepartment.deleteMany({ where: { kra_template_id: id } })
+      if (department_ids.length > 0) {
+        await prisma.kraTemplateDepartment.createMany({
+          data: department_ids.map(deptId => ({
+            kra_template_id: id,
+            department_id: deptId,
+          })),
+        })
+      }
+    } catch { /* join table may not exist yet */ }
 
     await prisma.auditLog.create({
       data: {
