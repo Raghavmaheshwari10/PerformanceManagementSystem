@@ -201,6 +201,7 @@ model Department {
   kra_templates   KraTemplate[]
   competencies    Competency[]
   aop_targets     AopTarget[]
+  dept_goals      DeptGoal[]
 
   @@map("departments")
 }
@@ -275,6 +276,8 @@ model User {
   pip_milestones_signed  PipMilestone[]    @relation("PipMilestoneHrbpSigner")
   pip_check_ins_created  PipCheckIn[]      @relation("PipCheckInCreator")
   pip_documents_uploaded PipDocument[]     @relation("PipDocumentUploader")
+  org_goals_created  OrgGoal[]  @relation("OrgGoalCreator")
+  dept_goals_created DeptGoal[] @relation("DeptGoalCreator")
 
   @@index([manager_id], name: "idx_users_manager")
   @@index([role], name: "idx_users_role")
@@ -331,6 +334,7 @@ model Cycle {
   cycle_employees CycleEmployee[]
   review_meetings ReviewMeeting[]
   pips Pip[]
+  org_goals OrgGoal[]
 
   @@map("cycles")
 }
@@ -368,8 +372,9 @@ model Kpi {
   cycle_id    String   @db.Uuid
   employee_id String   @db.Uuid
   manager_id  String   @db.Uuid
-  kra_id      String?  @db.Uuid
-  title       String
+  kra_id        String?  @db.Uuid
+  dept_goal_id  String?  @db.Uuid
+  title         String
   description String?
   unit        String     @default("percent")
   target      Decimal?   @db.Decimal(12, 2)
@@ -386,7 +391,8 @@ model Kpi {
   cycle    Cycle @relation(fields: [cycle_id], references: [id])
   employee User  @relation("KpiEmployee", fields: [employee_id], references: [id])
   manager  User  @relation("KpiManager", fields: [manager_id], references: [id])
-  kra      Kra?  @relation(fields: [kra_id], references: [id], onDelete: SetNull)
+  kra       Kra?      @relation(fields: [kra_id], references: [id], onDelete: SetNull)
+  dept_goal DeptGoal? @relation(fields: [dept_goal_id], references: [id], onDelete: SetNull)
   mis_mappings KpiMisMapping[]
   comments     KpiComment[]
 
@@ -1040,4 +1046,38 @@ model PipDocument {
 
   @@index([pip_id], name: "idx_pip_documents_pip")
   @@map("pip_documents")
+}
+
+model OrgGoal {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String
+  description String?
+  cycle_id    String?    @db.Uuid
+  created_by  String     @db.Uuid
+  created_at  DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime   @default(now()) @updatedAt @db.Timestamptz(6)
+
+  cycle      Cycle?     @relation(fields: [cycle_id], references: [id])
+  creator    User       @relation("OrgGoalCreator", fields: [created_by], references: [id])
+  dept_goals DeptGoal[]
+
+  @@map("org_goals")
+}
+
+model DeptGoal {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title         String
+  description   String?
+  org_goal_id   String   @db.Uuid
+  department_id String   @db.Uuid
+  created_by    String   @db.Uuid
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  org_goal   OrgGoal    @relation(fields: [org_goal_id], references: [id], onDelete: Cascade)
+  department Department @relation(fields: [department_id], references: [id])
+  creator    User       @relation("DeptGoalCreator", fields: [created_by], references: [id])
+  kpis       Kpi[]
+
+  @@map("dept_goals")
 }
