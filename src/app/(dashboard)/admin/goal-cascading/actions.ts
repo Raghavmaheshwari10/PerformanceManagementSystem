@@ -71,11 +71,11 @@ export async function saveOrgGoal(
 
       await prisma.auditLog.create({
         data: {
-          user_id: user.id,
+          changed_by: user.id,
           action: 'update_org_goal',
           entity_type: 'org_goal',
           entity_id: goalId,
-          details: { title: parsed.data.title },
+          new_value: { title: parsed.data.title },
         },
       })
     } else {
@@ -89,11 +89,11 @@ export async function saveOrgGoal(
 
       await prisma.auditLog.create({
         data: {
-          user_id: user.id,
+          changed_by: user.id,
           action: 'create_org_goal',
           entity_type: 'org_goal',
           entity_id: goalId,
-          details: { title: parsed.data.title },
+          new_value: { title: parsed.data.title },
         },
       })
     }
@@ -116,11 +116,10 @@ export async function removeOrgGoal(id: string): Promise<ActionResult> {
 
     await prisma.auditLog.create({
       data: {
-        user_id: user.id,
+        changed_by: user.id,
         action: 'delete_org_goal',
         entity_type: 'org_goal',
         entity_id: id,
-        details: {},
       },
     })
 
@@ -164,11 +163,11 @@ export async function saveDeptGoal(
 
       await prisma.auditLog.create({
         data: {
-          user_id: user.id,
+          changed_by: user.id,
           action: 'update_dept_goal',
           entity_type: 'dept_goal',
           entity_id: goalId,
-          details: { title: parsed.data.title },
+          new_value: { title: parsed.data.title },
         },
       })
     } else {
@@ -183,11 +182,11 @@ export async function saveDeptGoal(
 
       await prisma.auditLog.create({
         data: {
-          user_id: user.id,
+          changed_by: user.id,
           action: 'create_dept_goal',
           entity_type: 'dept_goal',
           entity_id: goalId,
-          details: {
+          new_value: {
             title: parsed.data.title,
             orgGoalId: parsed.data.orgGoalId,
             departmentId: parsed.data.departmentId,
@@ -214,11 +213,10 @@ export async function removeDeptGoal(id: string): Promise<ActionResult> {
 
     await prisma.auditLog.create({
       data: {
-        user_id: user.id,
+        changed_by: user.id,
         action: 'delete_dept_goal',
         entity_type: 'dept_goal',
         entity_id: id,
-        details: {},
       },
     })
 
@@ -254,11 +252,11 @@ export async function linkKpi(
 
     await prisma.auditLog.create({
       data: {
-        user_id: user.id,
+        changed_by: user.id,
         action: 'link_kpi_to_dept_goal',
         entity_type: 'kpi',
         entity_id: kpiId,
-        details: { deptGoalId },
+        new_value: { deptGoalId },
       },
     })
 
@@ -288,11 +286,10 @@ export async function removeKpiLink(kpiId: string): Promise<ActionResult> {
 
     await prisma.auditLog.create({
       data: {
-        user_id: user.id,
+        changed_by: user.id,
         action: 'unlink_kpi',
         entity_type: 'kpi',
         entity_id: kpiId,
-        details: {},
       },
     })
 
