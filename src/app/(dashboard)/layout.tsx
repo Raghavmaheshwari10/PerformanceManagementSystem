@@ -102,6 +102,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             role={user.role}
             userName={user.full_name}
             isAlsoEmployee={user.is_also_employee ?? false}
+            isFounder={'is_founder' in user && user.is_founder === true}
             availableRoles={availableRoles}
           />
           <div className="flex flex-1 flex-col overflow-hidden gradient-mesh noise-overlay">

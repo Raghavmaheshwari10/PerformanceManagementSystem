@@ -1,6 +1,6 @@
 export type ActionResult<T = null> = { data: T; error: null } | { data: null; error: string }
 
-export type UserRole = "employee" | "manager" | "hrbp" | "admin"
+export type UserRole = "employee" | "manager" | "hrbp" | "admin" | "department_head"
 export type CycleStatus = "draft" | "kpi_setting" | "self_review" | "manager_review" | "calibrating" | "locked" | "published"
 export type RatingTier = "FEE" | "EE" | "ME" | "SME" | "BE"
 export type ReviewStatus = "draft" | "submitted"
@@ -36,6 +36,11 @@ export interface User {
   department_id?: string | null
   department?: Department        // joined, optional
   is_also_employee: boolean
+  is_founder: boolean
+  fixed_ctc?: number | null
+  annual_variable?: number | null
+  retention_bonus?: number | null
+  onetime_bonus?: number | null
   designation: string | null
   manager_id: string | null
   variable_pay: number

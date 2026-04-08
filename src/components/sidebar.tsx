@@ -15,7 +15,7 @@ import {
   ScrollText, BookOpen, HelpCircle, LogOut, Star,
   Wallet, Bell, FileSpreadsheet, Menu, X,
   Mail, BadgeCheck, Video, PanelLeftClose, PanelLeftOpen,
-  AlertTriangle,
+  AlertTriangle, Crosshair, Crown,
 } from 'lucide-react'
 
 interface NavItem {
@@ -89,13 +89,20 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Docs',             href: '/docs',                   icon: BookOpen,        section: 'divider' },
     { label: 'Help',             href: '#help',                   icon: HelpCircle },
   ],
+  department_head: [
+    { label: 'AOP Cascade',  href: '/department-head/aop',    icon: Crosshair },
+    { label: 'My Team',      href: '/department-head/team',   icon: Users2 },
+    { label: 'My Review',    href: '/department-head/review', icon: ClipboardCheck },
+    { label: 'Help',         href: '#help',                   icon: HelpCircle },
+  ],
 }
 
 const ROLE_COLORS: Record<UserRole, string> = {
-  admin:    'bg-indigo-600',
-  employee: 'bg-emerald-600',
-  manager:  'bg-amber-500',
-  hrbp:     'bg-violet-600',
+  admin:           'bg-indigo-600',
+  employee:        'bg-emerald-600',
+  manager:         'bg-amber-500',
+  hrbp:            'bg-violet-600',
+  department_head: 'bg-cyan-600',
 }
 
 function UserAvatar({ name, role }: { name: string; role?: UserRole }) {
@@ -115,6 +122,7 @@ const ROLE_HOME: Record<UserRole, string> = {
   manager: '/manager',
   hrbp: '/hrbp',
   employee: '/employee',
+  department_head: '/department-head',
 }
 
 const ROLE_DISPLAY: Record<string, string> = {
@@ -122,16 +130,18 @@ const ROLE_DISPLAY: Record<string, string> = {
   manager: 'Manager',
   hrbp: 'HRBP',
   employee: 'Employee',
+  department_head: 'Department Head',
 }
 
 const STORAGE_KEY = 'pms-sidebar-collapsed'
 
 export function Sidebar({
-  role, userName, isAlsoEmployee = false, availableRoles = []
+  role, userName, isAlsoEmployee = false, isFounder = false, availableRoles = []
 }: {
   role: UserRole
   userName: string
   isAlsoEmployee?: boolean
+  isFounder?: boolean
   availableRoles?: string[]
 }) {
   const pathname = usePathname()
@@ -156,12 +166,17 @@ export function Sidebar({
   const activeView: UserRole = pathname.startsWith('/admin') ? 'admin'
     : pathname.startsWith('/manager') ? 'manager'
     : pathname.startsWith('/hrbp') ? 'hrbp'
+    : pathname.startsWith('/department-head') ? 'department_head'
     : 'employee'
 
   const currentRole = availableRoles.includes(activeView) ? activeView : role
-  const visibleItems = NAV_ITEMS[currentRole].filter(
+  const baseItems = NAV_ITEMS[currentRole].filter(
     item => !item.requireAlsoEmployee || isAlsoEmployee
   )
+  // Inject "Founder View" link at the top of admin nav when user is a founder
+  const visibleItems = (currentRole === 'admin' && isFounder)
+    ? [{ label: 'Founder View', href: '/admin/founder', icon: Crown, section: undefined } as NavItem, ...baseItems]
+    : baseItems
 
   async function handleSignOut() {
     await signOut({ redirect: false })
@@ -279,7 +294,7 @@ export function Sidebar({
           <UserAvatar name={userName} role={role} />
           <div className="min-w-0">
             <p className="text-[13px] font-medium text-white/90 truncate leading-tight">{userName}</p>
-            <p className="text-[10px] text-white/40">{role === 'hrbp' ? 'HRBP' : role.charAt(0).toUpperCase() + role.slice(1)}</p>
+            <p className="text-[10px] text-white/40">{ROLE_DISPLAY[role] ?? (role.charAt(0).toUpperCase() + role.slice(1))}</p>
           </div>
         </div>
       </div>

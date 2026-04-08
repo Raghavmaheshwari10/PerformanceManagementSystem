@@ -36,6 +36,10 @@ export async function requireRole(allowedRoles: UserRole[]) {
   // Direct role match
   if (allowedRoles.includes(user.role)) return user
 
+  // department_head inherits manager + employee access
+  if (allowedRoles.includes('manager') && user.role === 'department_head') return user
+  if (allowedRoles.includes('employee') && user.role === 'department_head') return user
+
   // Multi-role: if 'manager' is allowed, check if user has direct reports
   if (allowedRoles.includes('manager')) {
     const hasReports = await prisma.user.count({
@@ -46,7 +50,7 @@ export async function requireRole(allowedRoles: UserRole[]) {
 
   // Multi-role: if 'employee' is allowed, managers/HRBPs/admins can access employee pages
   if (allowedRoles.includes('employee')) {
-    if (['manager', 'hrbp', 'admin'].includes(user.role)) return user
+    if (['manager', 'hrbp', 'admin', 'department_head'].includes(user.role)) return user
   }
 
   redirect('/unauthorized')
@@ -68,7 +72,7 @@ export async function requireManagerOwnership(employeeId: string, managerId: str
     where: { id: managerId },
     select: { role: true },
   })
-  if (caller && (caller.role === 'admin' || caller.role === 'hrbp')) return
+  if (caller && (caller.role === 'admin' || caller.role === 'hrbp' || caller.role === 'department_head')) return
 
   const employee = await prisma.user.findUnique({
     where: { id: employeeId },
@@ -81,9 +85,10 @@ export async function requireManagerOwnership(employeeId: string, managerId: str
 
 export function getRoleDashboardPath(role: UserRole): string {
   switch (role) {
-    case 'employee': return '/employee'
-    case 'manager':  return '/manager'
-    case 'hrbp':     return '/hrbp'
-    case 'admin':    return '/admin'
+    case 'employee':        return '/employee'
+    case 'manager':         return '/manager'
+    case 'hrbp':            return '/hrbp'
+    case 'admin':           return '/admin'
+    case 'department_head': return '/department-head'
   }
 }
