@@ -3,12 +3,10 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import type { ActionResult } from '@/lib/types'
-
 const AOP_KRA_TITLE = 'AOP Targets'
 const AOP_KPI_TITLES = ['Delivered Revenue', 'Gross Margin', 'New Sales (GMV)'] as const
 
-export async function initAopTemplates(): Promise<ActionResult> {
+export async function initAopTemplates(_formData: FormData): Promise<void> {
   const user = await requireRole(['superadmin'])
 
   try {
@@ -59,8 +57,7 @@ export async function initAopTemplates(): Promise<ActionResult> {
     })
 
     revalidatePath('/admin/aop-templates')
-    return { data: { kraTemplateId: kraTemplate.id }, error: null }
   } catch (e) {
-    return { data: null, error: e instanceof Error ? e.message : 'Failed to initialize AOP templates' }
+    console.error('[initAopTemplates]', e)
   }
 }

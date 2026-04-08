@@ -54,7 +54,7 @@ function formatIndianNumber(val: string): string {
   return num.toLocaleString('en-IN')
 }
 
-const initialState = { data: null, error: null } as ActionResult<UploadResult>
+const initialState = { data: null, error: null } as unknown as ActionResult<UploadResult>
 
 export function UploadForm() {
   const [csvText, setCsvText] = useState('')

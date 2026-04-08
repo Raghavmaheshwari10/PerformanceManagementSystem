@@ -112,6 +112,8 @@ export default async function DepartmentHeadAopPage() {
       jan: Number(ea.jan),
       feb: Number(ea.feb),
       mar: Number(ea.mar),
+      exited_at: ea.exited_at ? ea.exited_at.toISOString() : null,
+      replacement_for: ea.replacement_for ?? null,
     })),
   }))
 
