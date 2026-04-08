@@ -5,6 +5,7 @@ export type CycleStatus = "draft" | "kpi_setting" | "self_review" | "manager_rev
 export type RatingTier = "FEE" | "EE" | "ME" | "SME" | "BE"
 export type ReviewStatus = "draft" | "submitted"
 export type NotificationType = "cycle_kpi_setting_open" | "cycle_self_review_open" | "cycle_manager_review_open" | "cycle_published" | "review_submitted" | "manager_review_submitted" | "admin_message" | "review_reminder" | "meeting_scheduled" | "meeting_reminder" | "meeting_mom_submitted"
+export type CycleType = "monthly" | "quarterly" | "halfyearly" | "annual"
 export type NotificationStatus = "pending" | "sent" | "failed"
 
 export interface Department {
@@ -60,6 +61,9 @@ export interface Cycle {
   name: string
   quarter: string
   year: number
+  cycle_type: CycleType
+  period: string | null
+  fiscal_year: string | null
   status: CycleStatus
   kpi_setting_deadline: string | null
   self_review_deadline: string | null

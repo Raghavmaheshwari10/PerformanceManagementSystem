@@ -15,11 +15,16 @@ export async function createCycle(_prev: ActionResult, formData: FormData): Prom
   const user = await requireRole(['admin', 'hrbp'])
 
   const name = (formData.get('name') as string)?.trim()
-  const quarter = (formData.get('quarter') as string)?.trim()
-  const year = Number(formData.get('year'))
+  const cycle_type = (formData.get('cycle_type') as string) || 'quarterly'
+  const period = (formData.get('period') as string) || null
+  const fiscal_year = (formData.get('fiscal_year') as string) || null
 
-  if (!name || !quarter || !year) {
-    return { data: null, error: 'Name, quarter, and year are required' }
+  // Backward-compat: populate legacy quarter and year fields
+  const quarter = period || fiscal_year || ''
+  const year = parseInt(fiscal_year?.replace('FY', '20') || '2026')
+
+  if (!name) {
+    return { data: null, error: 'Cycle name is required' }
   }
 
   // Parse scope: department_ids and employee exclusions/inclusions
@@ -37,6 +42,9 @@ export async function createCycle(_prev: ActionResult, formData: FormData): Prom
         name,
         quarter,
         year,
+        cycle_type: cycle_type as 'monthly' | 'quarterly' | 'halfyearly' | 'annual',
+        period: period || null,
+        fiscal_year: fiscal_year || null,
         review_template_id: reviewTemplateId,
         competency_weight: competencyWeight,
         kpi_setting_deadline: formData.get('kpi_setting_deadline') ? new Date(formData.get('kpi_setting_deadline') as string) : null,
@@ -86,7 +94,7 @@ export async function createCycle(_prev: ActionResult, formData: FormData): Prom
         action: 'cycle_created',
         entity_type: 'cycle',
         entity_id: cycle.id,
-        new_value: { name, quarter, year, departments: departmentIds.length },
+        new_value: { name, cycle_type, period, fiscal_year, quarter, year, departments: departmentIds.length },
       },
     })
   } catch (e) {

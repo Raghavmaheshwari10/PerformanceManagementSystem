@@ -170,6 +170,15 @@ enum AnswerType {
   @@map("answer_type")
 }
 
+enum CycleType {
+  monthly
+  quarterly
+  halfyearly
+  annual
+
+  @@map("cycle_type")
+}
+
 // ─────────────────────────────────────────
 // Models
 // ─────────────────────────────────────────
@@ -307,6 +316,9 @@ model Cycle {
   name                    String
   quarter                 String
   year                    Int
+  cycle_type              CycleType   @default(quarterly)
+  period                  String?
+  fiscal_year             String?
   status                  CycleStatus @default(draft)
   kpi_setting_deadline    DateTime?   @db.Date
   self_review_deadline    DateTime?   @db.Date
