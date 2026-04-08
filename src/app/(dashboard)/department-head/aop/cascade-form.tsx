@@ -171,24 +171,24 @@ export function CascadeForm({ departmentName, fiscalYear, departmentAops, employ
     <div className="space-y-6">
       {/* Department & FY header */}
       <div className="flex items-center gap-4">
-        <div className="glass rounded-lg border border-white/10 px-4 py-2">
-          <span className="text-xs text-white/50">Department</span>
-          <p className="text-sm font-medium text-white/90">{departmentName}</p>
+        <div className="rounded-lg border border-gray-200 bg-white px-4 py-2">
+          <span className="text-xs text-slate-500">Department</span>
+          <p className="text-sm font-medium text-gray-900">{departmentName}</p>
         </div>
-        <div className="glass rounded-lg border border-white/10 px-4 py-2">
-          <span className="text-xs text-white/50">Fiscal Year</span>
-          <p className="text-sm font-medium text-white/90">{fiscalYear}</p>
+        <div className="rounded-lg border border-gray-200 bg-white px-4 py-2">
+          <span className="text-xs text-slate-500">Fiscal Year</span>
+          <p className="text-sm font-medium text-gray-900">{fiscalYear}</p>
         </div>
         {isLocked && (
-          <div className="flex items-center gap-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-2">
-            <Lock className="h-3.5 w-3.5 text-emerald-400" />
-            <span className="text-sm font-medium text-emerald-400">Locked</span>
+          <div className="flex items-center gap-1.5 rounded-lg bg-green-50 border border-green-200 px-3 py-2">
+            <Lock className="h-3.5 w-3.5 text-green-600" />
+            <span className="text-sm font-medium text-green-700">Locked</span>
           </div>
         )}
       </div>
 
       {/* Metric Tabs */}
-      <div className="flex border-b border-white/10">
+      <div className="flex border-b border-gray-200">
         {METRICS.map((metric) => {
           const hasDeptAop = departmentAops.some((da) => da.metric === metric.value)
           const metricLocked = departmentAops.find((da) => da.metric === metric.value)?.status === 'locked'
@@ -199,12 +199,12 @@ export function CascadeForm({ departmentName, fiscalYear, departmentAops, employ
               onClick={() => setActiveMetric(metric.value)}
               className={`px-5 py-2.5 text-sm font-medium transition-all border-b-2 -mb-px flex items-center gap-1.5 ${
                 activeMetric === metric.value
-                  ? 'border-indigo-500 text-indigo-300'
-                  : 'border-transparent text-white/50 hover:text-white/70 hover:border-white/20'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-gray-200'
               } ${!hasDeptAop ? 'opacity-50' : ''}`}
             >
               {metric.label}
-              {metricLocked && <Lock className="h-3 w-3 text-emerald-400" />}
+              {metricLocked && <Lock className="h-3 w-3 text-green-600" />}
             </button>
           )
         })}
@@ -212,8 +212,8 @@ export function CascadeForm({ departmentName, fiscalYear, departmentAops, employ
 
       {/* No target message */}
       {!activeDeptAop && (
-        <div className="glass rounded-xl border border-white/10 p-6">
-          <p className="text-sm text-white/50 text-center">
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <p className="text-sm text-slate-500 text-center">
             No target assigned by Admin yet for this metric. Ask your admin to set department targets.
           </p>
         </div>
@@ -221,19 +221,19 @@ export function CascadeForm({ departmentName, fiscalYear, departmentAops, employ
 
       {/* Department Target (read-only) */}
       {activeDeptAop && (
-        <div className="glass rounded-xl border border-white/10 p-6 space-y-3">
-          <h2 className="text-sm font-semibold text-white/70">Department Target (set by Admin)</h2>
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm space-y-3">
+          <h2 className="text-sm font-semibold text-slate-600">Department Target (set by Admin)</h2>
           <div className="flex flex-wrap items-center gap-4">
             <div>
-              <span className="text-[10px] text-white/40 uppercase block">Annual</span>
-              <span className="text-sm font-mono text-white/90">
+              <span className="text-[10px] text-slate-400 uppercase block">Annual</span>
+              <span className="text-sm font-mono text-gray-900">
                 &#8377;{formatLacs(activeDeptAop.annual_target)} L
               </span>
             </div>
             {MONTHS.map((m) => (
               <div key={m}>
-                <span className="text-[10px] text-white/40 uppercase block">{MONTH_LABELS[m]}</span>
-                <span className="text-xs font-mono text-white/70">
+                <span className="text-[10px] text-slate-400 uppercase block">{MONTH_LABELS[m]}</span>
+                <span className="text-xs font-mono text-slate-600">
                   &#8377;{formatLacs(Number((activeDeptAop as unknown as Record<string, unknown>)[m]))}
                 </span>
               </div>
@@ -244,18 +244,18 @@ export function CascadeForm({ departmentName, fiscalYear, departmentAops, employ
 
       {/* Team Cascade Table */}
       {activeDeptAop && (
-        <div className="glass rounded-xl border border-white/10 p-6 space-y-4">
-          <h2 className="text-lg font-semibold text-white/90">Team Cascade</h2>
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm space-y-4">
+          <h2 className="text-lg font-semibold text-gray-900">Team Cascade</h2>
 
           {/* Save state messages */}
           {saveState.error && (
-            <div className="flex items-center gap-2 rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-2.5 text-sm text-red-400">
+            <div className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-4 py-2.5 text-sm text-red-600">
               <XCircle className="h-4 w-4 shrink-0" />
               {saveState.error}
             </div>
           )}
           {saveState !== INITIAL && !saveState.error && (
-            <div className="flex items-center gap-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-4 py-2.5 text-sm text-emerald-400">
+            <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 px-4 py-2.5 text-sm text-green-700">
               <CheckCircle2 className="h-4 w-4 shrink-0" />
               Draft saved successfully
             </div>
@@ -263,20 +263,20 @@ export function CascadeForm({ departmentName, fiscalYear, departmentAops, employ
 
           {/* Lock state messages */}
           {lockState.error && (
-            <div className="flex items-center gap-2 rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-2.5 text-sm text-red-400">
+            <div className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-4 py-2.5 text-sm text-red-600">
               <XCircle className="h-4 w-4 shrink-0" />
               {lockState.error}
             </div>
           )}
           {lockState !== INITIAL && !lockState.error && (
-            <div className="flex items-center gap-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-4 py-2.5 text-sm text-emerald-400">
+            <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 px-4 py-2.5 text-sm text-green-700">
               <CheckCircle2 className="h-4 w-4 shrink-0" />
               Targets locked and employees notified
             </div>
           )}
 
           {employees.length === 0 ? (
-            <p className="text-sm text-white/50 text-center py-4">
+            <p className="text-sm text-slate-500 text-center py-4">
               No active employees in your department to assign targets to.
             </p>
           ) : (
@@ -288,15 +288,15 @@ export function CascadeForm({ departmentName, fiscalYear, departmentAops, employ
                 <div className="overflow-x-auto -mx-6 px-6">
                   <table className="w-full text-sm min-w-[900px]">
                     <thead>
-                      <tr className="border-b border-white/10">
-                        <th className="text-left py-2 pr-3 text-xs font-medium text-white/50 w-[140px]">Employee</th>
-                        <th className="text-right py-2 px-2 text-xs font-medium text-white/50 w-[100px]">Annual</th>
+                      <tr className="border-b border-gray-200 bg-gray-50">
+                        <th className="text-left py-2 pr-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider w-[140px]">Employee</th>
+                        <th className="text-right py-2 px-2 text-xs font-medium text-gray-500 uppercase tracking-wider w-[100px]">Annual</th>
                         {MONTHS.map((m) => (
-                          <th key={m} className="text-right py-2 px-1 text-xs font-medium text-white/50 w-[75px]">
+                          <th key={m} className="text-right py-2 px-1 text-xs font-medium text-gray-500 uppercase tracking-wider w-[75px]">
                             {MONTH_LABELS[m]}
                           </th>
                         ))}
-                        <th className="text-center py-2 pl-2 text-xs font-medium text-white/50 w-[40px]"></th>
+                        <th className="text-center py-2 pl-2 text-xs font-medium text-gray-500 w-[40px]"></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -307,11 +307,11 @@ export function CascadeForm({ departmentName, fiscalYear, departmentAops, employ
                         const valid = rowValid[emp.id]
 
                         return (
-                          <tr key={emp.id} className="border-b border-white/5 hover:bg-white/[0.02]">
-                            <td className="py-2 pr-3 text-white/80 text-xs font-medium">{emp.full_name}</td>
+                          <tr key={emp.id} className="border-b border-gray-200 hover:bg-gray-50">
+                            <td className="py-2 pr-3 px-4 text-gray-900 text-xs font-medium">{emp.full_name}</td>
                             <td className="py-1.5 px-1">
                               {isLocked ? (
-                                <span className="block text-right text-xs font-mono text-white/70 px-1.5 py-1">
+                                <span className="block text-right text-xs font-mono text-slate-600 px-1.5 py-1">
                                   {formatLacs(annual)}
                                 </span>
                               ) : (
@@ -322,7 +322,7 @@ export function CascadeForm({ departmentName, fiscalYear, departmentAops, employ
                                   min="0"
                                   value={ev?.annual ?? ''}
                                   onChange={(e) => setEmpValue(emp.id, 'annual', e.target.value)}
-                                  className="w-full rounded bg-white/10 border border-white/20 px-1.5 py-1 text-xs text-white text-right focus:outline-none focus:ring-1 focus:ring-indigo-500/40"
+                                  className="w-full rounded border border-gray-200 bg-white px-1.5 py-1 text-xs text-gray-900 text-right focus:outline-none focus:ring-1 focus:ring-indigo-500"
                                   placeholder="0"
                                 />
                               )}
@@ -330,7 +330,7 @@ export function CascadeForm({ departmentName, fiscalYear, departmentAops, employ
                             {MONTHS.map((m) => (
                               <td key={m} className="py-1.5 px-0.5">
                                 {isLocked ? (
-                                  <span className="block text-right text-[11px] font-mono text-white/70 px-1 py-1">
+                                  <span className="block text-right text-[11px] font-mono text-slate-600 px-1 py-1">
                                     {formatLacs(Number(ev?.monthly[m]) || 0)}
                                   </span>
                                 ) : (
@@ -341,7 +341,7 @@ export function CascadeForm({ departmentName, fiscalYear, departmentAops, employ
                                     min="0"
                                     value={ev?.monthly[m] ?? ''}
                                     onChange={(e) => setEmpValue(emp.id, m, e.target.value)}
-                                    className="w-full rounded bg-white/10 border border-white/20 px-1 py-1 text-[11px] text-white text-right focus:outline-none focus:ring-1 focus:ring-indigo-500/40"
+                                    className="w-full rounded border border-gray-200 bg-white px-1 py-1 text-[11px] text-gray-900 text-right focus:outline-none focus:ring-1 focus:ring-indigo-500"
                                     placeholder="0"
                                   />
                                 )}
@@ -350,9 +350,9 @@ export function CascadeForm({ departmentName, fiscalYear, departmentAops, employ
                             <td className="py-2 pl-2 text-center">
                               {annual > 0 && (
                                 valid ? (
-                                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 inline" />
+                                  <CheckCircle2 className="h-3.5 w-3.5 text-green-600 inline" />
                                 ) : (
-                                  <XCircle className="h-3.5 w-3.5 text-red-400 inline" />
+                                  <XCircle className="h-3.5 w-3.5 text-red-600 inline" />
                                 )
                               )}
                             </td>
@@ -361,13 +361,13 @@ export function CascadeForm({ departmentName, fiscalYear, departmentAops, employ
                       })}
 
                       {/* Total row */}
-                      <tr className="border-t border-white/10 bg-white/[0.03]">
-                        <td className="py-2 pr-3 text-xs font-semibold text-white/70">Total</td>
-                        <td className="py-2 px-2 text-right text-xs font-mono text-white/80">
+                      <tr className="border-t border-gray-200 bg-gray-50">
+                        <td className="py-2 pr-3 px-4 text-xs font-semibold text-gray-700">Total</td>
+                        <td className="py-2 px-2 text-right text-xs font-mono text-gray-900">
                           {formatLacs(totals.annualTotal)}
                         </td>
                         {MONTHS.map((m) => (
-                          <td key={m} className="py-2 px-1 text-right text-[11px] font-mono text-white/80">
+                          <td key={m} className="py-2 px-1 text-right text-[11px] font-mono text-gray-900">
                             {formatLacs(totals.monthlyTotals[m])}
                           </td>
                         ))}
@@ -375,13 +375,13 @@ export function CascadeForm({ departmentName, fiscalYear, departmentAops, employ
                       </tr>
 
                       {/* Dept target row */}
-                      <tr className="bg-white/[0.02]">
-                        <td className="py-2 pr-3 text-xs font-semibold text-white/50">Dept Target</td>
-                        <td className="py-2 px-2 text-right text-xs font-mono text-white/50">
+                      <tr className="bg-gray-50">
+                        <td className="py-2 pr-3 px-4 text-xs font-semibold text-slate-500">Dept Target</td>
+                        <td className="py-2 px-2 text-right text-xs font-mono text-slate-500">
                           {formatLacs(deptAnnual)}
                         </td>
                         {MONTHS.map((m) => (
-                          <td key={m} className="py-2 px-1 text-right text-[11px] font-mono text-white/50">
+                          <td key={m} className="py-2 px-1 text-right text-[11px] font-mono text-slate-500">
                             {formatLacs(Number((activeDeptAop as unknown as Record<string, unknown>)[m]))}
                           </td>
                         ))}
@@ -390,13 +390,13 @@ export function CascadeForm({ departmentName, fiscalYear, departmentAops, employ
 
                       {/* Unallocated row */}
                       <tr>
-                        <td className="py-2 pr-3 text-xs font-semibold text-white/50">Unallocated</td>
+                        <td className="py-2 pr-3 px-4 text-xs font-semibold text-slate-500">Unallocated</td>
                         <td className={`py-2 px-2 text-right text-xs font-mono ${
                           Math.abs(annualUnallocated) < 0.01
-                            ? 'text-emerald-400'
+                            ? 'text-green-600'
                             : annualUnallocated > 0
-                              ? 'text-amber-400'
-                              : 'text-red-400'
+                              ? 'text-amber-600'
+                              : 'text-red-600'
                         }`}>
                           {Math.abs(annualUnallocated) < 0.01 ? (
                             <CheckCircle2 className="h-3.5 w-3.5 inline" />
@@ -410,10 +410,10 @@ export function CascadeForm({ departmentName, fiscalYear, departmentAops, employ
                           return (
                             <td key={m} className={`py-2 px-1 text-right text-[11px] font-mono ${
                               match
-                                ? 'text-emerald-400'
+                                ? 'text-green-600'
                                 : unalloc > 0
-                                  ? 'text-amber-400'
-                                  : 'text-red-400'
+                                  ? 'text-amber-600'
+                                  : 'text-red-600'
                             }`}>
                               {match ? (
                                 <CheckCircle2 className="h-3 w-3 inline" />
@@ -434,13 +434,13 @@ export function CascadeForm({ departmentName, fiscalYear, departmentAops, employ
                   <div className="flex items-center justify-between pt-4">
                     <div className="flex items-center gap-3">
                       {!isFullyAllocated && deptAnnual > 0 && (
-                        <div className="flex items-center gap-2 text-xs text-amber-400">
+                        <div className="flex items-center gap-2 text-xs text-amber-600">
                           <AlertTriangle className="h-3.5 w-3.5" />
                           &#8377;{formatLacs(Math.abs(annualUnallocated))} L unallocated — assign remaining before locking
                         </div>
                       )}
                       {!allRowsValid && totals.annualTotal > 0 && (
-                        <div className="flex items-center gap-2 text-xs text-amber-400">
+                        <div className="flex items-center gap-2 text-xs text-amber-600">
                           <AlertTriangle className="h-3.5 w-3.5" />
                           Some rows have monthly sum mismatch with annual
                         </div>
@@ -449,7 +449,7 @@ export function CascadeForm({ departmentName, fiscalYear, departmentAops, employ
                     <div className="flex items-center gap-3">
                       <SubmitButton
                         pendingLabel="Saving..."
-                        className="rounded-lg bg-white/10 border border-white/20 px-5 py-2 text-sm font-medium text-white/80 hover:bg-white/15 transition-colors"
+                        className="rounded-lg border border-gray-200 bg-gray-50 px-5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
                       >
                         Save Draft
                       </SubmitButton>

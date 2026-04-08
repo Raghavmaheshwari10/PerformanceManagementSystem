@@ -165,20 +165,20 @@ export function SalaryPage({ currentFy, initialRates, employees }: SalaryPagePro
   return (
     <div className="space-y-6">
       {/* ── Exchange Rates Section ── */}
-      <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur p-6">
-        <h2 className="text-lg font-semibold mb-4">Exchange Rates ({selectedFy})</h2>
+      <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Exchange Rates ({selectedFy})</h2>
         <form action={handleRateSubmit}>
           <input type="hidden" name="fiscal_year" value={selectedFy} />
           <div className="flex flex-wrap items-end gap-4">
             <div>
-              <label className="block text-xs text-white/60 mb-1">Fiscal Year</label>
+              <label className="block text-xs text-slate-500 mb-1">Fiscal Year</label>
               <select
                 value={selectedFy}
                 onChange={(e) => setSelectedFy(e.target.value)}
-                className="rounded-lg bg-white/10 border border-white/10 px-3 py-2 text-sm"
+                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900"
               >
                 {FY_OPTIONS.map((fy) => (
-                  <option key={fy} value={fy} className="bg-slate-900">
+                  <option key={fy} value={fy}>
                     {fy}
                   </option>
                 ))}
@@ -186,43 +186,43 @@ export function SalaryPage({ currentFy, initialRates, employees }: SalaryPagePro
             </div>
 
             <div>
-              <label className="block text-xs text-white/60 mb-1">1 AED = &#x20B9;</label>
+              <label className="block text-xs text-slate-500 mb-1">1 AED = &#x20B9;</label>
               <input
                 type="number"
                 name="aed_to_inr"
                 step="0.0001"
                 value={aedRate}
                 onChange={(e) => setAedRate(e.target.value)}
-                className="w-28 rounded-lg bg-white/10 border border-white/10 px-3 py-2 text-sm"
+                className="w-28 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-white/60 mb-1">1 USD = &#x20B9;</label>
+              <label className="block text-xs text-slate-500 mb-1">1 USD = &#x20B9;</label>
               <input
                 type="number"
                 name="usd_to_inr"
                 step="0.0001"
                 value={usdRate}
                 onChange={(e) => setUsdRate(e.target.value)}
-                className="w-28 rounded-lg bg-white/10 border border-white/10 px-3 py-2 text-sm"
+                className="w-28 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900"
               />
             </div>
 
             <button
               type="submit"
               disabled={ratesPending}
-              className="rounded-lg bg-indigo-600 hover:bg-indigo-500 px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+              className="rounded-lg bg-indigo-600 hover:bg-indigo-500 px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
             >
               {ratesPending ? 'Saving...' : 'Save Rates'}
             </button>
           </div>
 
           {rateState.error && (
-            <p className="mt-2 text-sm text-red-400">{rateState.error}</p>
+            <p className="mt-2 text-sm text-red-600">{rateState.error}</p>
           )}
           {rateState.data === null && rateState.error === null && ratesPending === false && rates.AED ? (
-            <p className="mt-2 text-sm text-emerald-400">
+            <p className="mt-2 text-sm text-green-600">
               Rates saved: 1 AED = &#x20B9;{rates.AED?.toFixed(4)} | 1 USD = &#x20B9;{rates.USD?.toFixed(4)}
             </p>
           ) : null}
@@ -230,12 +230,12 @@ export function SalaryPage({ currentFy, initialRates, employees }: SalaryPagePro
       </div>
 
       {/* ── CSV Import Section ── */}
-      <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur p-6">
-        <h2 className="text-lg font-semibold mb-4">Import CTC Data</h2>
+      <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Import CTC Data</h2>
         <form action={uploadAction}>
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <label className="rounded-lg bg-white/10 border border-white/10 px-4 py-2 text-sm cursor-pointer hover:bg-white/15 transition-colors">
+              <label className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm cursor-pointer hover:bg-gray-100 transition-colors text-gray-700">
                 Choose CSV File
                 <input
                   ref={fileInputRef}
@@ -245,7 +245,7 @@ export function SalaryPage({ currentFy, initialRates, employees }: SalaryPagePro
                   className="hidden"
                 />
               </label>
-              <span className="text-xs text-white/50">or paste below:</span>
+              <span className="text-xs text-slate-500">or paste below:</span>
             </div>
 
             <textarea
@@ -254,10 +254,10 @@ export function SalaryPage({ currentFy, initialRates, employees }: SalaryPagePro
               onChange={(e) => setCsvText(e.target.value)}
               placeholder="email,fixed_ctc,annual_variable,retention_bonus,onetime_bonus,currency"
               rows={4}
-              className="w-full rounded-lg bg-white/10 border border-white/10 px-3 py-2 text-sm font-mono placeholder:text-white/30"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 font-mono placeholder:text-slate-400"
             />
 
-            <p className="text-xs text-white/40">
+            <p className="text-xs text-slate-400">
               Format: email, fixed_ctc, annual_variable, retention_bonus, onetime_bonus, currency (INR/AED/USD)
             </p>
 
@@ -265,32 +265,32 @@ export function SalaryPage({ currentFy, initialRates, employees }: SalaryPagePro
               <button
                 type="button"
                 onClick={downloadTemplate}
-                className="rounded-lg bg-white/10 border border-white/10 px-4 py-2 text-sm hover:bg-white/15 transition-colors"
+                className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
               >
                 Download Template
               </button>
               <button
                 type="submit"
                 disabled={uploadPending}
-                className="rounded-lg bg-indigo-600 hover:bg-indigo-500 px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+                className="rounded-lg bg-indigo-600 hover:bg-indigo-500 px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
               >
                 {uploadPending ? 'Processing...' : 'Upload & Process'}
               </button>
             </div>
 
             {uploadState.error && (
-              <p className="text-sm text-red-400">{uploadState.error}</p>
+              <p className="text-sm text-red-600">{uploadState.error}</p>
             )}
             {uploadState.data && (
               <div className="space-y-1">
                 <p className="text-sm">
-                  <span className="text-emerald-400">{uploadState.data.uploaded} updated</span>
+                  <span className="text-green-600">{uploadState.data.uploaded} updated</span>
                   {uploadState.data.failed > 0 && (
-                    <span className="text-red-400 ml-3">{uploadState.data.failed} failed</span>
+                    <span className="text-red-600 ml-3">{uploadState.data.failed} failed</span>
                   )}
                 </p>
                 {uploadState.data.errors.length > 0 && (
-                  <ul className="text-xs text-red-300/80 space-y-0.5 max-h-32 overflow-y-auto">
+                  <ul className="text-xs text-red-600 space-y-0.5 max-h-32 overflow-y-auto">
                     {uploadState.data.errors.map((err, i) => (
                       <li key={i}>{err}</li>
                     ))}
@@ -303,31 +303,31 @@ export function SalaryPage({ currentFy, initialRates, employees }: SalaryPagePro
       </div>
 
       {/* ── Employee Salary Table ── */}
-      <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur p-6">
+      <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-6">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h2 className="text-lg font-semibold">Employee Salary Table</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Employee Salary Table</h2>
           <div className="flex items-center gap-3">
             <input
               type="text"
               placeholder="Search name or email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-56 rounded-lg bg-white/10 border border-white/10 px-3 py-2 text-sm placeholder:text-white/30"
+              className="w-56 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-slate-400"
             />
             <select
               value={currencyFilter}
               onChange={(e) => setCurrencyFilter(e.target.value)}
-              className="rounded-lg bg-white/10 border border-white/10 px-3 py-2 text-sm"
+              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900"
             >
-              <option value="ALL" className="bg-slate-900">All Currencies</option>
-              <option value="INR" className="bg-slate-900">INR</option>
-              <option value="AED" className="bg-slate-900">AED</option>
-              <option value="USD" className="bg-slate-900">USD</option>
+              <option value="ALL">All Currencies</option>
+              <option value="INR">INR</option>
+              <option value="AED">AED</option>
+              <option value="USD">USD</option>
             </select>
             <button
               type="button"
               onClick={exportCsv}
-              className="rounded-lg bg-white/10 border border-white/10 px-4 py-2 text-sm hover:bg-white/15 transition-colors"
+              className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
             >
               Export CSV
             </button>
@@ -337,31 +337,31 @@ export function SalaryPage({ currentFy, initialRates, employees }: SalaryPagePro
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/10 text-left text-xs text-white/60 uppercase tracking-wider">
-                <th className="pb-3 pr-4">Name</th>
-                <th className="pb-3 pr-4">Dept</th>
-                <th className="pb-3 pr-4">Cur</th>
-                <th className="pb-3 pr-4 text-right">Fixed CTC</th>
-                <th className="pb-3 pr-4 text-right">Annual Variable</th>
-                <th className="pb-3 pr-4 text-right">Retention Bonus</th>
-                <th className="pb-3 pr-4 text-right">One-time Bonus</th>
-                <th className="pb-3 text-right">Total CTC</th>
+              <tr className="border-b border-gray-200 bg-gray-50 text-left text-xs text-gray-500 uppercase tracking-wider">
+                <th className="pb-3 pr-4 px-4 py-3">Name</th>
+                <th className="pb-3 pr-4 px-4 py-3">Dept</th>
+                <th className="pb-3 pr-4 px-4 py-3">Cur</th>
+                <th className="pb-3 pr-4 px-4 py-3 text-right">Fixed CTC</th>
+                <th className="pb-3 pr-4 px-4 py-3 text-right">Annual Variable</th>
+                <th className="pb-3 pr-4 px-4 py-3 text-right">Retention Bonus</th>
+                <th className="pb-3 pr-4 px-4 py-3 text-right">One-time Bonus</th>
+                <th className="pb-3 px-4 py-3 text-right">Total CTC</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-gray-200">
               {filtered.map((emp) => {
                 const rate = getRate(emp.salary_currency)
                 const isNonInr = emp.salary_currency !== 'INR'
                 const total = totalCtc(emp)
                 return (
-                  <tr key={emp.id} className="hover:bg-white/5 transition-colors">
-                    <td className="py-3 pr-4">
-                      <div className="font-medium">{emp.full_name}</div>
-                      <div className="text-xs text-white/40">{emp.email}</div>
+                  <tr key={emp.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="py-3 pr-4 px-4">
+                      <div className="font-medium text-gray-900">{emp.full_name}</div>
+                      <div className="text-xs text-slate-400">{emp.email}</div>
                     </td>
-                    <td className="py-3 pr-4 text-white/70">{emp.department_name}</td>
-                    <td className="py-3 pr-4">
-                      <span className="rounded bg-white/10 px-1.5 py-0.5 text-xs font-medium">
+                    <td className="py-3 pr-4 px-4 text-slate-600">{emp.department_name}</td>
+                    <td className="py-3 pr-4 px-4">
+                      <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-700">
                         {emp.salary_currency}
                       </span>
                     </td>
@@ -376,7 +376,7 @@ export function SalaryPage({ currentFy, initialRates, employees }: SalaryPagePro
 
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-white/40">
+                  <td colSpan={8} className="py-8 text-center text-slate-400">
                     No employees found
                   </td>
                 </tr>
@@ -387,11 +387,11 @@ export function SalaryPage({ currentFy, initialRates, employees }: SalaryPagePro
 
         {/* Total row */}
         {filtered.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
-            <span className="text-sm text-white/60">
+          <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
+            <span className="text-sm text-slate-500">
               {filtered.length} employee{filtered.length !== 1 ? 's' : ''}
             </span>
-            <span className="text-sm font-semibold">
+            <span className="text-sm font-semibold text-gray-900">
               Total CTC (INR): {formatAmount(totalCtcInr, 'INR')}
             </span>
           </div>
@@ -417,10 +417,10 @@ function AmountCell({
   isNonInr: boolean
 }) {
   return (
-    <td className="py-3 pr-4 text-right tabular-nums">
+    <td className="py-3 pr-4 px-4 text-right tabular-nums text-gray-900">
       <div>{formatAmount(value, currency)}</div>
       {isNonInr && value && rate > 0 && (
-        <div className="text-xs text-white/40">{formatInrEquivalent(value, rate)}</div>
+        <div className="text-xs text-slate-400">{formatInrEquivalent(value, rate)}</div>
       )}
     </td>
   )

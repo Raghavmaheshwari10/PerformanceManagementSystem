@@ -16,9 +16,9 @@ export default async function DepartmentHeadAopPage() {
   if (!user.department_id) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">AOP Cascade</h1>
-        <div className="glass rounded-xl border border-white/10 p-6">
-          <p className="text-sm text-white/50 text-center">
+        <h1 className="text-2xl font-semibold text-gray-900">AOP Cascade</h1>
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <p className="text-sm text-slate-500 text-center">
             Your account is not assigned to a department. Contact admin.
           </p>
         </div>
@@ -37,9 +37,9 @@ export default async function DepartmentHeadAopPage() {
   if (!department) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">AOP Cascade</h1>
-        <div className="glass rounded-xl border border-white/10 p-6">
-          <p className="text-sm text-white/50 text-center">Department not found.</p>
+        <h1 className="text-2xl font-semibold text-gray-900">AOP Cascade</h1>
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <p className="text-sm text-slate-500 text-center">Department not found.</p>
         </div>
       </div>
     )
@@ -142,16 +142,16 @@ export default async function DepartmentHeadAopPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">AOP Cascade</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h1 className="text-2xl font-semibold text-gray-900">AOP Cascade</h1>
+        <p className="text-sm text-slate-500 mt-1">
           Cascade department targets to individual team members
         </p>
       </div>
 
       {/* Cascade tree summary */}
       {cascadeTreeData && (
-        <div className="glass rounded-xl border border-white/10 p-5 space-y-3">
-          <h2 className="text-sm font-semibold text-white/70">Cascade Overview</h2>
+        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm space-y-3">
+          <h2 className="text-sm font-semibold text-slate-600">Cascade Overview</h2>
           <AopCascadeTree
             orgAop={cascadeTreeData}
             departments={[{ id: department.id, name: department.name }]}

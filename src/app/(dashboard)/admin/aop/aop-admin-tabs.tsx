@@ -73,7 +73,7 @@ export function AopAdminTabs({
   return (
     <div className="space-y-6">
       {/* View toggle */}
-      <div className="flex items-center gap-1 rounded-lg bg-white/5 border border-white/10 p-1 w-fit">
+      <div className="flex items-center gap-1 rounded-lg bg-gray-100 border border-gray-200 p-1 w-fit">
         {VIEWS.map((view) => {
           const Icon = view.icon
           const isActive = selectedView === view.value
@@ -84,8 +84,8 @@ export function AopAdminTabs({
               onClick={() => updateParam('view', view.value)}
               className={`flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-sm font-medium transition-all ${
                 isActive
-                  ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
-                  : 'text-white/50 hover:text-white/70 border border-transparent'
+                  ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
+                  : 'text-slate-500 hover:text-slate-700 border border-transparent'
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
@@ -114,8 +114,8 @@ export function AopAdminTabs({
                 onClick={() => updateParam('fy', fy)}
                 className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
                   selectedFy === fy
-                    ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
-                    : 'glass-interactive border border-white/10 text-white/60 hover:text-white/80'
+                    ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
+                    : 'border border-gray-200 text-slate-500 hover:text-slate-700 bg-white'
                 }`}
               >
                 {fy}
@@ -124,7 +124,7 @@ export function AopAdminTabs({
           </div>
 
           {/* Metric Tabs for tree view */}
-          <div className="flex border-b border-white/10">
+          <div className="flex border-b border-gray-200">
             {METRICS.map((metric) => (
               <button
                 key={metric.value}
@@ -132,8 +132,8 @@ export function AopAdminTabs({
                 onClick={() => updateParam('metric', metric.value)}
                 className={`px-5 py-2.5 text-sm font-medium transition-all border-b-2 -mb-px ${
                   selectedMetric === metric.value
-                    ? 'border-indigo-500 text-indigo-300'
-                    : 'border-transparent text-white/50 hover:text-white/70 hover:border-white/20'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-gray-200'
                 }`}
               >
                 {metric.label}

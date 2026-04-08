@@ -102,28 +102,28 @@ export function UploadForm() {
   return (
     <div className="space-y-6">
       {/* CSV Format Info */}
-      <div className="rounded-xl border border-white/10 bg-white/5 p-5 backdrop-blur">
+      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
         <div className="flex items-center gap-2 mb-3">
-          <FileSpreadsheet className="h-4 w-4 text-indigo-400" />
-          <h2 className="text-sm font-semibold text-white">CSV Format</h2>
+          <FileSpreadsheet className="h-4 w-4 text-indigo-600" />
+          <h2 className="text-sm font-semibold text-gray-900">CSV Format</h2>
         </div>
-        <div className="space-y-2 text-sm text-white/60">
+        <div className="space-y-2 text-sm text-slate-600">
           <p>
-            <span className="font-mono text-white/80">employee_email, metric, month, fy, actual_value</span>
+            <span className="font-mono text-gray-900">employee_email, metric, month, fy, actual_value</span>
           </p>
           <p>
-            <span className="text-white/40">Metrics:</span>{' '}
-            <span className="font-mono text-white/70">{VALID_METRICS.join(', ')}</span>
+            <span className="text-slate-400">Metrics:</span>{' '}
+            <span className="font-mono text-slate-600">{VALID_METRICS.join(', ')}</span>
           </p>
           <p>
-            <span className="text-white/40">Months:</span>{' '}
-            <span className="font-mono text-white/70">{VALID_MONTHS.join(', ')}</span>
+            <span className="text-slate-400">Months:</span>{' '}
+            <span className="font-mono text-slate-600">{VALID_MONTHS.join(', ')}</span>
           </p>
         </div>
         <button
           type="button"
           onClick={handleDownloadTemplate}
-          className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
         >
           <Download className="h-3.5 w-3.5" />
           Download Template
@@ -131,33 +131,33 @@ export function UploadForm() {
       </div>
 
       {/* Upload Section */}
-      <form ref={formRef} action={formAction} className="rounded-xl border border-white/10 bg-white/5 p-5 backdrop-blur">
+      <form ref={formRef} action={formAction} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
-          <Upload className="h-4 w-4 text-indigo-400" />
-          <h2 className="text-sm font-semibold text-white">Upload</h2>
+          <Upload className="h-4 w-4 text-indigo-600" />
+          <h2 className="text-sm font-semibold text-gray-900">Upload</h2>
         </div>
 
         {/* File Input */}
         <div className="mb-4">
-          <label className="block text-xs font-medium text-white/50 mb-1.5">Choose a CSV file</label>
+          <label className="block text-xs font-medium text-slate-500 mb-1.5">Choose a CSV file</label>
           <input
             ref={fileInputRef}
             type="file"
             accept=".csv,text/csv"
             onChange={handleFileChange}
-            className="block w-full text-sm text-white/60 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-500/20 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-indigo-300 hover:file:bg-indigo-500/30 file:cursor-pointer file:transition-colors"
+            className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-100 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-indigo-700 hover:file:bg-indigo-200 file:cursor-pointer file:transition-colors"
           />
         </div>
 
         {/* Or paste */}
         <div className="mb-4">
-          <label className="block text-xs font-medium text-white/50 mb-1.5">Or paste CSV data below</label>
+          <label className="block text-xs font-medium text-slate-500 mb-1.5">Or paste CSV data below</label>
           <textarea
             value={csvText}
             onChange={handleTextChange}
             rows={6}
             placeholder="employee_email,metric,month,fy,actual_value&#10;raghav@emb.global,delivered_revenue,apr,FY26,8500000"
-            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 font-mono placeholder:text-white/20 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30 resize-y"
+            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 font-mono placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/30 resize-y"
           />
         </div>
 
@@ -167,28 +167,28 @@ export function UploadForm() {
         {/* Preview Table */}
         {preview.length > 0 && (
           <div className="mb-4">
-            <p className="text-xs font-medium text-white/50 mb-2">
+            <p className="text-xs font-medium text-slate-500 mb-2">
               Preview (first {preview.length} of {totalRows} rows)
             </p>
-            <div className="overflow-x-auto rounded-lg border border-white/10">
+            <div className="overflow-x-auto rounded-lg border border-gray-200">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-white/10 bg-white/5">
-                    <th className="px-3 py-2 text-left font-medium text-white/50">Email</th>
-                    <th className="px-3 py-2 text-left font-medium text-white/50">Metric</th>
-                    <th className="px-3 py-2 text-left font-medium text-white/50">Month</th>
-                    <th className="px-3 py-2 text-left font-medium text-white/50">FY</th>
-                    <th className="px-3 py-2 text-right font-medium text-white/50">Value</th>
+                  <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Metric</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Month</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">FY</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-500 uppercase tracking-wider">Value</th>
                   </tr>
                 </thead>
                 <tbody>
                   {preview.map((row, idx) => (
-                    <tr key={idx} className="border-b border-white/5 last:border-0">
-                      <td className="px-3 py-1.5 text-white/70 truncate max-w-[180px]">{row.email}</td>
-                      <td className="px-3 py-1.5 text-white/70">{row.metric}</td>
-                      <td className="px-3 py-1.5 text-white/70">{row.month}</td>
-                      <td className="px-3 py-1.5 text-white/70">{row.fy}</td>
-                      <td className="px-3 py-1.5 text-white/70 text-right font-mono">{formatIndianNumber(row.value)}</td>
+                    <tr key={idx} className="border-b border-gray-200 last:border-0">
+                      <td className="px-3 py-1.5 text-slate-600 truncate max-w-[180px]">{row.email}</td>
+                      <td className="px-3 py-1.5 text-slate-600">{row.metric}</td>
+                      <td className="px-3 py-1.5 text-slate-600">{row.month}</td>
+                      <td className="px-3 py-1.5 text-slate-600">{row.fy}</td>
+                      <td className="px-3 py-1.5 text-slate-600 text-right font-mono">{formatIndianNumber(row.value)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -210,28 +210,28 @@ export function UploadForm() {
 
       {/* Results Section */}
       {state.data && (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-5 backdrop-blur">
-          <h2 className="text-sm font-semibold text-white mb-3">Results</h2>
+        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <h2 className="text-sm font-semibold text-gray-900 mb-3">Results</h2>
           <div className="flex items-center gap-6 mb-3">
             <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-              <span className="text-sm text-white/80">
-                Uploaded: <span className="font-semibold text-emerald-400">{state.data.uploaded}</span>
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <span className="text-sm text-slate-700">
+                Uploaded: <span className="font-semibold text-green-600">{state.data.uploaded}</span>
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <XCircle className="h-4 w-4 text-red-400" />
-              <span className="text-sm text-white/80">
-                Failed: <span className="font-semibold text-red-400">{state.data.failed}</span>
+              <XCircle className="h-4 w-4 text-red-600" />
+              <span className="text-sm text-slate-700">
+                Failed: <span className="font-semibold text-red-600">{state.data.failed}</span>
               </span>
             </div>
           </div>
           {state.data.errors.length > 0 && (
             <div className="space-y-1">
-              <p className="text-xs font-medium text-white/50 mb-1">Errors:</p>
+              <p className="text-xs font-medium text-slate-500 mb-1">Errors:</p>
               {state.data.errors.map((err, idx) => (
-                <div key={idx} className="flex items-start gap-1.5 text-xs text-red-300/80">
-                  <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0 text-red-400/60" />
+                <div key={idx} className="flex items-start gap-1.5 text-xs text-red-600">
+                  <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0 text-red-500" />
                   <span>{err}</span>
                 </div>
               ))}
@@ -242,7 +242,7 @@ export function UploadForm() {
 
       {/* Error (top-level) */}
       {state.error && !state.data && (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
           {state.error}
         </div>
       )}
