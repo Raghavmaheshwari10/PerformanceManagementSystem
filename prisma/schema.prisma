@@ -1225,6 +1225,7 @@ model EmployeeAop {
   original_record EmployeeAop?       @relation("AopReplacement", fields: [replacement_for], references: [id])
   replacements    EmployeeAop[]      @relation("AopReplacement")
 
+  @@unique([department_aop_id, employee_id])
   @@map("employee_aops")
 }
 
