@@ -274,7 +274,7 @@ export function Sidebar({
         {visibleItems.map((item, idx) => {
           const Icon = item.icon
           const isActive = item.href !== '#help' &&
-            (pathname === item.href || (item.href !== '/admin' && item.href !== '/employee' && pathname.startsWith(item.href)))
+            (pathname === item.href || (item.href !== '/admin' && item.href !== '/employee' && pathname.startsWith(item.href + '/')))
           const isExactActive = pathname === item.href
           const active = isActive || isExactActive
           const showDivider = item.section === 'divider' && idx > 0
@@ -379,7 +379,7 @@ export function Sidebar({
         {visibleItems.map((item, idx) => {
           const Icon = item.icon
           const isActive = item.href !== '#help' &&
-            (pathname === item.href || (item.href !== '/admin' && item.href !== '/employee' && pathname.startsWith(item.href)))
+            (pathname === item.href || (item.href !== '/admin' && item.href !== '/employee' && pathname.startsWith(item.href + '/')))
           const isExactActive = pathname === item.href
           const active = isActive || isExactActive
           const showDivider = item.section === 'divider' && idx > 0
