@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getCascadeTree } from '@/lib/db/aop'
 import { AopForm } from './aop-form'
 import { AopAdminTabs } from './aop-admin-tabs'
-import type { AopMetric } from '@prisma/client'
+import type { AopMetric } from '@/lib/types'
 
 /** Compute current fiscal year: if month >= April, FY starts this year; else last year */
 function currentFiscalYear(): string {

@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import type { AopMetric, AopCascadeStatus } from '@prisma/client'
+import type { AopMetric, AopCascadeStatus } from '@/lib/types'
 
 const MONTHS = ['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'] as const
 
@@ -499,7 +499,3 @@ export async function createReplacementAop(data: {
   })
 }
 
-// ── Exported constants ──
-
-export { MONTHS }
-export type { MonthlyTargets, AopMetric, AopCascadeStatus }
