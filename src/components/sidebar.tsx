@@ -92,6 +92,34 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Docs',             href: '/docs',                   icon: BookOpen,        section: 'divider' },
     { label: 'Help',             href: '#help',                   icon: HelpCircle },
   ],
+  superadmin: [
+    { label: 'Dashboard',        href: '/admin',                  icon: LayoutDashboard },
+    { label: 'Cycles',           href: '/admin/cycles',           icon: CalendarClock },
+    { label: 'Users',            href: '/admin/users',            icon: UserCog,         section: 'divider' },
+    { label: 'Departments',      href: '/admin/departments',      icon: Building2 },
+    { label: 'Roles',            href: '/admin/roles',            icon: BadgeCheck },
+    { label: 'KPI Templates',    href: '/admin/kpi-templates',    icon: FileBarChart,    section: 'divider' },
+    { label: 'KRA Templates',    href: '/admin/kra-templates',    icon: Target },
+    { label: 'AOP Templates',    href: '/admin/aop-templates',    icon: FileSpreadsheet },
+    { label: 'AOP Targets',      href: '/admin/aop',              icon: Crosshair },
+    { label: 'Upload MIS Actuals', href: '/admin/aop/upload',     icon: Upload },
+    { label: 'Salary Data',        href: '/admin/aop/salary',     icon: DollarSign },
+    { label: 'MIS Integration',  href: '/admin/mis',              icon: FileSpreadsheet },
+    { label: 'Competencies',     href: '/admin/competencies',     icon: Target,          section: 'divider' },
+    { label: 'Review Templates', href: '/admin/review-templates', icon: FileSpreadsheet },
+    { label: 'Email Templates',  href: '/admin/email-templates',  icon: Mail },
+    { label: 'Notifications',    href: '/admin/notifications',    icon: Bell },
+    { label: 'Payout Config',    href: '/admin/payout-config',    icon: Wallet,          section: 'divider' },
+    { label: 'Payouts',          href: '/admin/payouts',          icon: Settings2 },
+    { label: 'Reports',          href: '/admin/reports',          icon: FileBarChart },
+    { label: 'Top Talent',       href: '/admin/top-talent',       icon: Star },
+    { label: 'Competency Gaps',  href: '/admin/competency-gaps',  icon: Target },
+    { label: 'Goal Cascading',   href: '/admin/goal-cascading',   icon: Target },
+    { label: 'PIP',              href: '/admin/pip',              icon: AlertTriangle },
+    { label: 'Audit Log',        href: '/admin/audit-log',        icon: ScrollText },
+    { label: 'Docs',             href: '/docs',                   icon: BookOpen,        section: 'divider' },
+    { label: 'Help',             href: '#help',                   icon: HelpCircle },
+  ],
   department_head: [
     { label: 'AOP Cascade',  href: '/department-head/aop',    icon: Crosshair },
     { label: 'My Team',      href: '/department-head/team',   icon: Users2 },
@@ -102,6 +130,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
 
 const ROLE_COLORS: Record<UserRole, string> = {
   admin:           'bg-indigo-600',
+  superadmin:      'bg-red-600',
   employee:        'bg-emerald-600',
   manager:         'bg-amber-500',
   hrbp:            'bg-violet-600',
@@ -122,6 +151,7 @@ function UserAvatar({ name, role }: { name: string; role?: UserRole }) {
 
 const ROLE_HOME: Record<UserRole, string> = {
   admin: '/admin',
+  superadmin: '/admin',
   manager: '/manager',
   hrbp: '/hrbp',
   employee: '/employee',
@@ -130,6 +160,7 @@ const ROLE_HOME: Record<UserRole, string> = {
 
 const ROLE_DISPLAY: Record<string, string> = {
   admin: 'Admin',
+  superadmin: 'Super Admin',
   manager: 'Manager',
   hrbp: 'HRBP',
   employee: 'Employee',
@@ -166,7 +197,7 @@ export function Sidebar({
   }
 
   // Determine active view based on current path
-  const activeView: UserRole = pathname.startsWith('/admin') ? 'admin'
+  const activeView: UserRole = pathname.startsWith('/admin') ? (role === 'superadmin' ? 'superadmin' : 'admin')
     : pathname.startsWith('/manager') ? 'manager'
     : pathname.startsWith('/hrbp') ? 'hrbp'
     : pathname.startsWith('/department-head') ? 'department_head'

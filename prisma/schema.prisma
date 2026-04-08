@@ -19,6 +19,7 @@ enum UserRole {
   manager
   hrbp
   admin
+  superadmin
   department_head
 
   @@map("user_role")
@@ -491,6 +492,8 @@ model KpiTemplate {
   kra_template_id String?  @db.Uuid
   sort_order      Int      @default(0)
   is_active       Boolean  @default(true)
+  is_protected    Boolean  @default(false)
+  created_by      String?  @db.Uuid
   created_at      DateTime @default(now()) @db.Timestamptz(6)
 
   role_slug    RoleSlug?    @relation(fields: [role_slug_id], references: [id], onDelete: SetNull)
@@ -513,6 +516,8 @@ model KraTemplate {
   weight        Decimal? @db.Decimal(5, 2)
   sort_order    Int      @default(0)
   is_active     Boolean  @default(true)
+  is_protected  Boolean  @default(false)
+  created_by    String?  @db.Uuid
   created_at    DateTime @default(now()) @db.Timestamptz(6)
 
   role_slug     RoleSlug?     @relation(fields: [role_slug_id], references: [id], onDelete: SetNull)

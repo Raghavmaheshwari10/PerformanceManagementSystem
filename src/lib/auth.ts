@@ -36,6 +36,11 @@ export async function requireRole(allowedRoles: UserRole[]) {
   // Direct role match
   if (allowedRoles.includes(user.role)) return user
 
+  // superadmin inherits admin + department_head + manager + employee access
+  if (user.role === 'superadmin') {
+    if (allowedRoles.includes('admin') || allowedRoles.includes('department_head') || allowedRoles.includes('manager') || allowedRoles.includes('employee')) return user
+  }
+
   // department_head inherits manager + employee access
   if (allowedRoles.includes('manager') && user.role === 'department_head') return user
   if (allowedRoles.includes('employee') && user.role === 'department_head') return user
@@ -48,9 +53,9 @@ export async function requireRole(allowedRoles: UserRole[]) {
     if (hasReports > 0) return user
   }
 
-  // Multi-role: if 'employee' is allowed, managers/HRBPs/admins can access employee pages
+  // Multi-role: if 'employee' is allowed, managers/HRBPs/admins/superadmins can access employee pages
   if (allowedRoles.includes('employee')) {
-    if (['manager', 'hrbp', 'admin', 'department_head'].includes(user.role)) return user
+    if (['manager', 'hrbp', 'admin', 'superadmin', 'department_head'].includes(user.role)) return user
   }
 
   redirect('/unauthorized')
@@ -72,7 +77,7 @@ export async function requireManagerOwnership(employeeId: string, managerId: str
     where: { id: managerId },
     select: { role: true },
   })
-  if (caller && (caller.role === 'admin' || caller.role === 'hrbp' || caller.role === 'department_head')) return
+  if (caller && (caller.role === 'admin' || caller.role === 'superadmin' || caller.role === 'hrbp' || caller.role === 'department_head')) return
 
   const employee = await prisma.user.findUnique({
     where: { id: employeeId },
@@ -89,6 +94,7 @@ export function getRoleDashboardPath(role: UserRole): string {
     case 'manager':         return '/manager'
     case 'hrbp':            return '/hrbp'
     case 'admin':           return '/admin'
+    case 'superadmin':      return '/admin'
     case 'department_head': return '/department-head'
   }
 }
