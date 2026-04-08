@@ -170,6 +170,43 @@ export async function uploadMisActuals(
     }
   }
 
+  // Notify affected department heads about the MIS upload
+  if (affectedAopIds.size > 0 && upserts.length > 0) {
+    try {
+      // Get the month from the first successfully uploaded row
+      const uploadedMonth = upserts[0]?.month ?? 'the latest period'
+
+      // Find the department_ids for all affected EmployeeAops
+      const affectedEmployeeAops = await prisma.employeeAop.findMany({
+        where: { id: { in: [...affectedAopIds] } },
+        select: { department_aop: { select: { department_id: true } } },
+      })
+      const deptIds = [...new Set(affectedEmployeeAops.map((ea) => ea.department_aop.department_id).filter(Boolean))] as string[]
+
+      if (deptIds.length > 0) {
+        const deptHeads = await prisma.user.findMany({
+          where: { role: 'department_head', department_id: { in: deptIds }, is_active: true },
+          select: { id: true },
+        })
+        if (deptHeads.length > 0) {
+          await prisma.notification.createMany({
+            data: deptHeads.map((dh) => ({
+              recipient_id: dh.id,
+              type: 'aop_mis_uploaded' as const,
+              payload: {
+                title: 'MIS Actuals Updated',
+                body: `New MIS actuals have been uploaded for your department for ${uploadedMonth}. Your team's KPI achievements have been updated.`,
+                month: uploadedMonth,
+              },
+            })),
+          })
+        }
+      }
+    } catch {
+      // Non-fatal: notification failure should not block upload result
+    }
+  }
+
   // Audit log
   await prisma.auditLog.create({
     data: {

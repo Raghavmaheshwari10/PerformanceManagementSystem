@@ -4,7 +4,7 @@ export type UserRole = "employee" | "manager" | "hrbp" | "admin" | "superadmin" 
 export type CycleStatus = "draft" | "kpi_setting" | "self_review" | "manager_review" | "calibrating" | "locked" | "published"
 export type RatingTier = "FEE" | "EE" | "ME" | "SME" | "BE"
 export type ReviewStatus = "draft" | "submitted"
-export type NotificationType = "cycle_kpi_setting_open" | "cycle_self_review_open" | "cycle_manager_review_open" | "cycle_published" | "review_submitted" | "manager_review_submitted" | "admin_message" | "review_reminder" | "meeting_scheduled" | "meeting_reminder" | "meeting_mom_submitted"
+export type NotificationType = "cycle_kpi_setting_open" | "cycle_self_review_open" | "cycle_manager_review_open" | "cycle_published" | "review_submitted" | "manager_review_submitted" | "admin_message" | "review_reminder" | "meeting_scheduled" | "meeting_reminder" | "meeting_mom_submitted" | "aop_dept_target_assigned" | "aop_cascade_locked" | "aop_employee_targets_set" | "aop_mis_uploaded"
 export type CycleType = "monthly" | "quarterly" | "halfyearly" | "annual"
 export type NotificationStatus = "pending" | "sent" | "failed"
 

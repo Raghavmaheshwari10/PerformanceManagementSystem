@@ -187,10 +187,13 @@ export async function saveDepartmentSplit(_prev: ActionResult, formData: FormDat
       await prisma.notification.createMany({
         data: deptHeads.map((head) => ({
           recipient_id: head.id,
-          type: 'admin_message' as const,
+          type: 'aop_dept_target_assigned' as const,
           payload: {
-            title: 'AOP Targets Updated',
-            body: `Your department AOP targets for ${orgAop.fiscal_year} (${orgAop.metric.replace(/_/g, ' ')}) have been set by admin.`,
+            title: 'AOP Targets Assigned',
+            body: `Your department has been assigned ${orgAop.metric.replace(/_/g, ' ')} targets of ₹${Number(orgAop.annual_target).toLocaleString('en-IN')}L for FY ${orgAop.fiscal_year}. Please cascade targets to your team.`,
+            fiscal_year: orgAop.fiscal_year,
+            metric: orgAop.metric,
+            annual_target: Number(orgAop.annual_target),
           },
         })),
       })

@@ -89,6 +89,10 @@ enum NotificationType {
   meeting_reminder
   meeting_mom_submitted
   kpi_comment
+  aop_dept_target_assigned
+  aop_cascade_locked
+  aop_employee_targets_set
+  aop_mis_uploaded
 
   @@map("notification_type")
 }
@@ -1192,31 +1196,34 @@ model DepartmentAop {
 }
 
 model EmployeeAop {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  department_aop_id String   @db.Uuid
-  employee_id       String   @db.Uuid
-  annual_target     Decimal  @db.Decimal(15, 2)
-  apr               Decimal  @db.Decimal(15, 2)
-  may               Decimal  @db.Decimal(15, 2)
-  jun               Decimal  @db.Decimal(15, 2)
-  jul               Decimal  @db.Decimal(15, 2)
-  aug               Decimal  @db.Decimal(15, 2)
-  sep               Decimal  @db.Decimal(15, 2)
-  oct               Decimal  @db.Decimal(15, 2)
-  nov               Decimal  @db.Decimal(15, 2)
-  dec               Decimal  @db.Decimal(15, 2)
-  jan               Decimal  @db.Decimal(15, 2)
-  feb               Decimal  @db.Decimal(15, 2)
-  mar               Decimal  @db.Decimal(15, 2)
-  created_at        DateTime @default(now()) @db.Timestamptz(6)
-  updated_at        DateTime @default(now()) @db.Timestamptz(6)
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  department_aop_id String    @db.Uuid
+  employee_id       String    @db.Uuid
+  annual_target     Decimal   @db.Decimal(15, 2)
+  apr               Decimal   @db.Decimal(15, 2)
+  may               Decimal   @db.Decimal(15, 2)
+  jun               Decimal   @db.Decimal(15, 2)
+  jul               Decimal   @db.Decimal(15, 2)
+  aug               Decimal   @db.Decimal(15, 2)
+  sep               Decimal   @db.Decimal(15, 2)
+  oct               Decimal   @db.Decimal(15, 2)
+  nov               Decimal   @db.Decimal(15, 2)
+  dec               Decimal   @db.Decimal(15, 2)
+  jan               Decimal   @db.Decimal(15, 2)
+  feb               Decimal   @db.Decimal(15, 2)
+  mar               Decimal   @db.Decimal(15, 2)
+  exited_at         DateTime? @db.Timestamptz(6)
+  replacement_for   String?   @db.Uuid
+  created_at        DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime  @default(now()) @db.Timestamptz(6)
 
-  department_aop DepartmentAop     @relation(fields: [department_aop_id], references: [id], onDelete: Cascade)
-  employee       User              @relation("EmployeeAops", fields: [employee_id], references: [id])
-  mis_actuals    EmployeeMisActual[]
-  kpis           Kpi[]
+  department_aop  DepartmentAop      @relation(fields: [department_aop_id], references: [id], onDelete: Cascade)
+  employee        User               @relation("EmployeeAops", fields: [employee_id], references: [id])
+  mis_actuals     EmployeeMisActual[]
+  kpis            Kpi[]
+  original_record EmployeeAop?       @relation("AopReplacement", fields: [replacement_for], references: [id])
+  replacements    EmployeeAop[]      @relation("AopReplacement")
 
-  @@unique([department_aop_id, employee_id])
   @@map("employee_aops")
 }
 

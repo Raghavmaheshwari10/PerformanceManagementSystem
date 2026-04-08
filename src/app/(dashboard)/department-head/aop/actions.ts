@@ -120,10 +120,38 @@ export async function lockCascade(_prev: ActionResult, formData: FormData): Prom
       await prisma.notification.createMany({
         data: employeeAops.map((ea) => ({
           recipient_id: ea.employee_id,
-          type: 'admin_message' as const,
+          type: 'aop_employee_targets_set' as const,
           payload: {
             title: 'AOP Targets Locked',
             body: `Your ${deptAop.org_aop.metric.replace(/_/g, ' ')} targets for ${deptAop.org_aop.fiscal_year} have been locked by your department head.`,
+            fiscal_year: deptAop.org_aop.fiscal_year,
+            metric: deptAop.org_aop.metric,
+          },
+        })),
+      })
+    }
+
+    // Notify all admin/superadmin users about the cascade lock
+    const dept = await prisma.department.findUnique({
+      where: { id: deptAop.department_id },
+      select: { name: true },
+    })
+    const deptName = dept?.name ?? deptAop.department_id
+    const admins = await prisma.user.findMany({
+      where: { role: { in: ['admin', 'superadmin'] }, is_active: true },
+      select: { id: true },
+    })
+    if (admins.length > 0) {
+      await prisma.notification.createMany({
+        data: admins.map((a) => ({
+          recipient_id: a.id,
+          type: 'aop_cascade_locked' as const,
+          payload: {
+            title: 'AOP Cascade Locked',
+            body: `${deptName} department has locked their ${deptAop.org_aop.metric.replace(/_/g, ' ')} targets for FY ${deptAop.org_aop.fiscal_year}.`,
+            department_name: deptName,
+            fiscal_year: deptAop.org_aop.fiscal_year,
+            metric: deptAop.org_aop.metric,
           },
         })),
       })
