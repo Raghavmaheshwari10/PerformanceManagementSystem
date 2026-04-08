@@ -39,7 +39,15 @@ function notificationMessage(type: string, p: Record<string, string | undefined>
     case 'feedback_received':
       return name ? `${name} sent you feedback.` : 'You received new feedback.'
     case 'admin_message':
-      return p.text ?? 'You have a new message from admin.'
+      return p.title ? `${p.title}: ${p.body ?? ''}` : (p.text ?? 'You have a new message from admin.')
+    case 'aop_dept_target_assigned':
+      return p.body ?? 'AOP targets have been assigned to your department.'
+    case 'aop_cascade_locked':
+      return p.body ?? 'A department has locked their AOP cascade targets.'
+    case 'aop_employee_targets_set':
+      return p.body ?? 'Your AOP targets have been set by your department head.'
+    case 'aop_mis_uploaded':
+      return p.body ?? 'MIS actuals have been uploaded for your department.'
     default:
       return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
   }
@@ -91,6 +99,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
   // Users with direct reports get manager view
   if (hasDirectReports && !availableRoles.includes('manager')) {
+    availableRoles.push('manager')
+  }
+  // Department heads always get manager view (they manage teams)
+  if (user.role === 'department_head' && !availableRoles.includes('manager')) {
     availableRoles.push('manager')
   }
 
