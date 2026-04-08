@@ -21,6 +21,7 @@ enum UserRole {
   admin
   superadmin
   department_head
+  founder
 
   @@map("user_role")
 }

@@ -126,6 +126,10 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'My Review',    href: '/department-head/review', icon: ClipboardCheck },
     { label: 'Help',         href: '#help',                   icon: HelpCircle },
   ],
+  founder: [
+    { label: 'Founder View', href: '/admin/founder',          icon: Crown },
+    { label: 'Help',         href: '#help',                   icon: HelpCircle },
+  ],
 }
 
 const ROLE_COLORS: Record<UserRole, string> = {
@@ -135,6 +139,7 @@ const ROLE_COLORS: Record<UserRole, string> = {
   manager:         'bg-amber-500',
   hrbp:            'bg-violet-600',
   department_head: 'bg-cyan-600',
+  founder:         'bg-yellow-600',
 }
 
 function UserAvatar({ name, role }: { name: string; role?: UserRole }) {
@@ -156,6 +161,7 @@ const ROLE_HOME: Record<UserRole, string> = {
   hrbp: '/hrbp',
   employee: '/employee',
   department_head: '/department-head',
+  founder: '/admin/founder',
 }
 
 const ROLE_DISPLAY: Record<string, string> = {
@@ -165,6 +171,7 @@ const ROLE_DISPLAY: Record<string, string> = {
   hrbp: 'HRBP',
   employee: 'Employee',
   department_head: 'Department Head',
+  founder: 'Founder',
 }
 
 const STORAGE_KEY = 'pms-sidebar-collapsed'
@@ -197,28 +204,16 @@ export function Sidebar({
   }
 
   // Determine active view based on current path
-  const activeView: UserRole = pathname.startsWith('/admin') ? (role === 'superadmin' ? 'superadmin' : 'admin')
+  const activeView: UserRole = pathname.startsWith('/admin') ? (role === 'superadmin' ? 'superadmin' : role === 'founder' ? 'founder' : 'admin')
     : pathname.startsWith('/manager') ? 'manager'
     : pathname.startsWith('/hrbp') ? 'hrbp'
     : pathname.startsWith('/department-head') ? 'department_head'
     : 'employee'
 
   const currentRole = availableRoles.includes(activeView) ? activeView : role
-  const baseItems = NAV_ITEMS[currentRole].filter(
+  const visibleItems = NAV_ITEMS[currentRole].filter(
     item => !item.requireAlsoEmployee || isAlsoEmployee
   )
-  // Inject "Founder View" link after Salary Data when user is a founder
-  const visibleItems = (currentRole === 'admin' || currentRole === 'superadmin') && isFounder
-    ? (() => {
-        const salaryIdx = baseItems.findIndex((it) => it.href === '/admin/aop/salary')
-        const insertAt = salaryIdx >= 0 ? salaryIdx + 1 : baseItems.length
-        return [
-          ...baseItems.slice(0, insertAt),
-          { label: 'Founder View', href: '/admin/founder', icon: Crown, section: undefined } as NavItem,
-          ...baseItems.slice(insertAt),
-        ]
-      })()
-    : baseItems
 
   async function handleSignOut() {
     await signOut({ redirect: false })

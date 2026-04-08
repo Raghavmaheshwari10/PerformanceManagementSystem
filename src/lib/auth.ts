@@ -41,6 +41,12 @@ export async function requireRole(allowedRoles: UserRole[]) {
     if (allowedRoles.includes('admin') || allowedRoles.includes('department_head') || allowedRoles.includes('manager') || allowedRoles.includes('employee')) return user
   }
 
+  // founder has read-only access to founder view and employee self-review only
+  if (user.role === 'founder') {
+    if (allowedRoles.includes('founder')) return user
+    if (allowedRoles.includes('employee')) return user  // can view own review
+  }
+
   // department_head inherits manager + employee access
   if (allowedRoles.includes('manager') && user.role === 'department_head') return user
   if (allowedRoles.includes('employee') && user.role === 'department_head') return user
@@ -96,5 +102,6 @@ export function getRoleDashboardPath(role: UserRole): string {
     case 'admin':           return '/admin'
     case 'superadmin':      return '/admin'
     case 'department_head': return '/department-head'
+    case 'founder':         return '/admin/founder'
   }
 }

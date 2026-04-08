@@ -13,24 +13,9 @@ function currentFiscalYear(): string {
 export default async function FounderViewPage(props: {
   searchParams: Promise<{ fy?: string }>
 }) {
-  const user = await requireRole(['admin'])
+  // Accessible by founder role, or admin/superadmin with is_founder flag (backwards compat)
+  const user = await requireRole(['admin', 'founder'])
   const searchParams = await props.searchParams
-
-  // Check founder flag
-  if (!user.is_founder) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <div className="bg-white/5 border border-white/10 rounded-xl p-10 text-center max-w-md">
-          <div className="text-4xl mb-4">🔒</div>
-          <h2 className="text-xl font-semibold text-white mb-2">Access Restricted</h2>
-          <p className="text-white/50 text-sm">
-            The Founder View is only accessible to users with the founder flag enabled.
-            Contact your system administrator if you believe this is an error.
-          </p>
-        </div>
-      </div>
-    )
-  }
 
   const selectedFy = searchParams.fy || currentFiscalYear()
 
