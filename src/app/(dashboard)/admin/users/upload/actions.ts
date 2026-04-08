@@ -138,7 +138,7 @@ export async function uploadUsersWithMapping(
       continue
     }
 
-    const VALID_ROLES = ['employee', 'manager', 'hrbp', 'admin'] as const
+    const VALID_ROLES = ['employee', 'manager', 'hrbp', 'department_head', 'admin', 'founder', 'superadmin'] as const
     const userData: Record<string, unknown> = {
       email: mapped.email,
       full_name: mapped.full_name || mapped.email,
@@ -150,7 +150,7 @@ export async function uploadUsersWithMapping(
       if (VALID_ROLES.includes(roleLower as typeof VALID_ROLES[number])) {
         userData.role = roleLower
       } else {
-        skippedReasons.push(`Invalid role "${mapped.role}" for ${mapped.email} — defaulting to "employee". Valid: Employee, Manager, HRBP, Admin`)
+        skippedReasons.push(`Invalid role "${mapped.role}" for ${mapped.email} — defaulting to "employee". Valid: Employee, Manager, HRBP, Department_Head, Admin, Founder, Superadmin`)
       }
     }
     if (mapped.emp_code) userData.emp_code = mapped.emp_code
@@ -174,11 +174,15 @@ export async function uploadUsersWithMapping(
 
     const existing = await prisma.user.findUnique({
       where: { email: mapped.email },
-      select: { id: true },
+      select: { id: true, role: true },
     })
 
     if (existing) {
       emailToId.set(mapped.email, existing.id)
+      // Never overwrite superadmin/founder roles via CSV upload
+      if (['superadmin', 'founder'].includes(existing.role)) {
+        delete userData.role
+      }
       await prisma.user.update({
         where: { email: mapped.email },
         data: userData as Parameters<typeof prisma.user.update>[0]['data'],
