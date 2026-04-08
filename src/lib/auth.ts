@@ -33,6 +33,9 @@ export const getCurrentUser = cache(async () => {
 export async function requireRole(allowedRoles: UserRole[]) {
   const user = await getCurrentUser()
 
+  // Superadmin inherits all roles
+  if (user.role === 'superadmin') return user
+
   // Direct role match
   if (allowedRoles.includes(user.role)) return user
 
@@ -59,7 +62,7 @@ export async function requireRole(allowedRoles: UserRole[]) {
     if (hasReports > 0) return user
   }
 
-  // Multi-role: if 'employee' is allowed, managers/HRBPs/admins/superadmins can access employee pages
+  // Multi-role: if 'employee' is allowed, managers/HRBPs/admins/superadmins/dept-heads can access employee pages
   if (allowedRoles.includes('employee')) {
     if (['manager', 'hrbp', 'admin', 'superadmin', 'department_head'].includes(user.role)) return user
   }
@@ -83,7 +86,7 @@ export async function requireManagerOwnership(employeeId: string, managerId: str
     where: { id: managerId },
     select: { role: true },
   })
-  if (caller && (caller.role === 'admin' || caller.role === 'superadmin' || caller.role === 'hrbp' || caller.role === 'department_head')) return
+  if (caller && (['admin', 'hrbp', 'superadmin', 'department_head'].includes(caller.role))) return
 
   const employee = await prisma.user.findUnique({
     where: { id: employeeId },

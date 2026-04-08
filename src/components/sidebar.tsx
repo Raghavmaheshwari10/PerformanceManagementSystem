@@ -155,23 +155,23 @@ function UserAvatar({ name, role }: { name: string; role?: UserRole }) {
 }
 
 const ROLE_HOME: Record<UserRole, string> = {
-  admin: '/admin',
-  superadmin: '/admin',
-  manager: '/manager',
-  hrbp: '/hrbp',
-  employee: '/employee',
+  admin:           '/admin',
+  superadmin:      '/admin',
+  manager:         '/manager',
+  hrbp:            '/hrbp',
+  employee:        '/employee',
   department_head: '/department-head',
-  founder: '/admin/founder',
+  founder:         '/admin/founder',
 }
 
 const ROLE_DISPLAY: Record<string, string> = {
-  admin: 'Admin',
-  superadmin: 'Super Admin',
-  manager: 'Manager',
-  hrbp: 'HRBP',
-  employee: 'Employee',
+  admin:           'Admin',
+  superadmin:      'Super Admin',
+  manager:         'Manager',
+  hrbp:            'HRBP',
+  employee:        'Employee',
   department_head: 'Department Head',
-  founder: 'Founder',
+  founder:         'Founder',
 }
 
 const STORAGE_KEY = 'pms-sidebar-collapsed'

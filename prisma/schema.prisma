@@ -18,10 +18,10 @@ enum UserRole {
   employee
   manager
   hrbp
-  admin
-  superadmin
   department_head
+  admin
   founder
+  superadmin
 
   @@map("user_role")
 }
@@ -231,6 +231,7 @@ model Department {
   cycle_departments CycleDepartment[]
   kpi_templates   KpiTemplate[]
   kra_templates   KraTemplate[]
+  kra_template_departments KraTemplateDepartment[]
   competencies    Competency[]
   aop_targets     AopTarget[]
   dept_goals      DeptGoal[]
@@ -527,12 +528,25 @@ model KraTemplate {
 
   role_slug     RoleSlug?     @relation(fields: [role_slug_id], references: [id], onDelete: SetNull)
   department    Department?   @relation(fields: [department_id], references: [id])
+  departments   KraTemplateDepartment[]
   kpi_templates KpiTemplate[]
   kras          Kra[]
 
   @@index([role_slug_id], name: "idx_kra_templates_role")
   @@index([department_id], name: "idx_kra_templates_dept")
   @@map("kra_templates")
+}
+
+model KraTemplateDepartment {
+  kra_template_id String @db.Uuid
+  department_id   String @db.Uuid
+
+  kra_template KraTemplate @relation(fields: [kra_template_id], references: [id], onDelete: Cascade)
+  department   Department  @relation(fields: [department_id], references: [id], onDelete: Cascade)
+
+  @@id([kra_template_id, department_id])
+  @@index([department_id], name: "idx_kra_template_departments_dept")
+  @@map("kra_template_departments")
 }
 
 model Review {

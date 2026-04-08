@@ -462,17 +462,17 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
     return { data: null, error: 'Only a superadmin can delete another superadmin account.' }
   }
 
-  // Check for dependent records
-  const [reviews, appraisals, kpis] = await Promise.all([
+  // Check for dependent records that represent submitted work
+  // KPIs are safe to cascade-delete (handled in the transaction below)
+  const [reviews, appraisals] = await Promise.all([
     prisma.review.count({ where: { employee_id: userId } }),
     prisma.appraisal.count({ where: { OR: [{ employee_id: userId }, { manager_id: userId }] } }),
-    prisma.kpi.count({ where: { OR: [{ employee_id: userId }, { manager_id: userId }] } }),
   ])
 
-  if (reviews > 0 || appraisals > 0 || kpis > 0) {
+  if (reviews > 0 || appraisals > 0) {
     return {
       data: null,
-      error: `Cannot delete: user has ${reviews} review(s), ${appraisals} appraisal(s), ${kpis} KPI(s). Deactivate instead.`,
+      error: `Cannot delete: user has ${reviews} review(s), ${appraisals} appraisal(s). Deactivate instead.`,
     }
   }
 

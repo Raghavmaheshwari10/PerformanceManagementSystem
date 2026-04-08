@@ -17,7 +17,7 @@ interface RoleOption {
 
 interface Props {
   action: (prev: ActionResult, formData: FormData) => Promise<ActionResult>
-  defaultValues?: Partial<KraTemplate>
+  defaultValues?: Partial<KraTemplate> & { department_ids?: string[] }
   departments: { id: string; name: string }[]
   roleOptions?: RoleOption[]
 }
@@ -65,14 +65,20 @@ export function KraTemplateForm({ action, defaultValues = {}, departments, roleO
           </select>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="department_id">Department</Label>
-          <select id="department_id" name="department_id" defaultValue={defaultValues.department_id ?? ''}
-            className="w-full rounded-md border bg-background px-3 py-1.5 text-sm">
-            <option value="">— None —</option>
-            {departments.map(d => (
-              <option key={d.id} value={d.id}>{d.name}</option>
-            ))}
-          </select>
+          <Label>Departments</Label>
+          <div className="max-h-40 overflow-y-auto rounded-md border bg-background p-2 space-y-1">
+            {departments.map(d => {
+              const checked = defaultValues.department_ids?.includes(d.id) ?? defaultValues.department_id === d.id
+              return (
+                <label key={d.id} className="flex items-center gap-2 rounded px-2 py-1 text-sm hover:bg-muted/50 cursor-pointer">
+                  <input type="checkbox" name="department_ids" value={d.id} defaultChecked={checked} className="rounded" />
+                  {d.name}
+                </label>
+              )
+            })}
+            {departments.length === 0 && <p className="text-xs text-muted-foreground px-2">No departments</p>}
+          </div>
+          <p className="text-[11px] text-muted-foreground">Leave unchecked for org-wide</p>
         </div>
       </div>
 
