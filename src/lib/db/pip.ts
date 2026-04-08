@@ -104,6 +104,7 @@ export async function fetchPipList(options?: {
   hrbpDepartmentIds?: string[]
   employeeId?: string
 }): Promise<PipListItem[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const where: any = {}
 
   if (options?.status) {
@@ -282,6 +283,7 @@ export async function fetchPipStats(options?: {
   managerId?: string
   hrbpDepartmentIds?: string[]
 }): Promise<PipStats> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const baseWhere: any = {}
 
   if (options?.managerId) {

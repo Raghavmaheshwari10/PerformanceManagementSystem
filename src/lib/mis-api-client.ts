@@ -28,12 +28,14 @@ async function fetchMis<T>(path: string, params: Record<string, string>): Promis
 export async function fetchAopTargets(fiscalYear: number, updatedSince?: string) {
   const params: Record<string, string> = { fiscal_year: String(fiscalYear) }
   if (updatedSince) params.updated_since = updatedSince
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return fetchMis<{ data: any[]; meta: { total: number } }>('/api/v1/aop/targets', params)
 }
 
 export async function fetchMisActuals(fiscalYear: number, month: number, updatedSince?: string) {
   const params: Record<string, string> = { fiscal_year: String(fiscalYear), month: String(month) }
   if (updatedSince) params.updated_since = updatedSince
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return fetchMis<{ data: any[]; meta: { total: number } }>('/api/v1/mis/actuals', params)
 }
 

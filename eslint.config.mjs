@@ -12,7 +12,18 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Supabase edge functions are not Next.js code
+    "supabase/**",
   ]),
+  // Relax strict rules for test files — mocks legitimately use `any`
+  {
+    files: ["src/**/*.test.ts", "src/**/*.test.tsx", "src/test/**"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unsafe-function-type": "off",
+      "@typescript-eslint/no-unused-vars": "warn",
+    },
+  },
 ]);
 
 export default eslintConfig;

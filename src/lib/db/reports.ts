@@ -75,7 +75,9 @@ export async function fetchCycleReports(opts?: {
 
   for (const cycle of cycles) {
     const cycleDeptIds = cycle.departments.map(d => d.department_id)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const appraisalWhere: any = { cycle_id: cycle.id }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const reviewWhere: any = { cycle_id: cycle.id, status: 'submitted' as const }
 
     // Scope by employee IDs (manager view)
@@ -217,6 +219,7 @@ export async function fetchEmployeeRows(
   cycleId: string,
   opts?: { departmentIds?: string[]; employeeIds?: string[] }
 ): Promise<EmployeeReportRow[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const where: any = { cycle_id: cycleId }
   if (opts?.employeeIds?.length) {
     where.employee_id = { in: opts.employeeIds }

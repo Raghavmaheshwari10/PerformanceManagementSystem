@@ -81,6 +81,7 @@ export async function fetchCompetencyGapData(
   const questionIds = Array.from(questionCompetencyMap.keys())
 
   // 3. Get reviews for this cycle (with optional filters)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const reviewWhere: any = { cycle_id: cycleId }
   if (options?.managerId) {
     reviewWhere.employee = { manager_id: options.managerId }

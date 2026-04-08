@@ -141,6 +141,7 @@ export async function fetchTopTalentPool(options?: {
   const tiers = config.rating_tiers as RatingTier[]
 
   // Build appraisal filter
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const appraisalWhere: any = {
     cycle_id: targetCycle.id,
     is_exit_frozen: false,
