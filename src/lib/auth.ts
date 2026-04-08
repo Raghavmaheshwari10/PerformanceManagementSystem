@@ -39,11 +39,6 @@ export async function requireRole(allowedRoles: UserRole[]) {
   // Direct role match
   if (allowedRoles.includes(user.role)) return user
 
-  // superadmin inherits admin + department_head + manager + employee access
-  if (user.role === 'superadmin') {
-    if (allowedRoles.includes('admin') || allowedRoles.includes('department_head') || allowedRoles.includes('manager') || allowedRoles.includes('employee')) return user
-  }
-
   // founder has read-only access to founder view and employee self-review only
   if (user.role === 'founder') {
     if (allowedRoles.includes('founder')) return user
