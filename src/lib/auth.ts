@@ -81,9 +81,12 @@ export async function requireManagerOwnership(employeeId: string, managerId: str
 
 export function getRoleDashboardPath(role: UserRole): string {
   switch (role) {
-    case 'employee': return '/employee'
-    case 'manager':  return '/manager'
-    case 'hrbp':     return '/hrbp'
-    case 'admin':    return '/admin'
+    case 'employee':        return '/employee'
+    case 'manager':         return '/manager'
+    case 'hrbp':            return '/hrbp'
+    case 'department_head': return '/manager'
+    case 'founder':         return '/admin/founder'
+    case 'superadmin':
+    case 'admin':           return '/admin'
   }
 }

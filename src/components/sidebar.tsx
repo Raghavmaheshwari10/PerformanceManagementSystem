@@ -76,13 +76,35 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Docs',             href: '/docs',                   icon: BookOpen,        section: 'divider' },
     { label: 'Help',             href: '#help',                   icon: HelpCircle },
   ],
+  superadmin: [
+    { label: 'Dashboard',        href: '/admin',                  icon: LayoutDashboard },
+    { label: 'Cycles',           href: '/admin/cycles',           icon: CalendarClock },
+    { label: 'Users',            href: '/admin/users',            icon: UserCog,         section: 'divider' },
+    { label: 'Departments',      href: '/admin/departments',      icon: Building2 },
+    { label: 'KPI Templates',    href: '/admin/kpi-templates',    icon: FileBarChart,    section: 'divider' },
+    { label: 'KRA Templates',    href: '/admin/kra-templates',    icon: Target },
+    { label: 'MIS Integration',  href: '/admin/mis',              icon: FileSpreadsheet },
+    { label: 'Help',             href: '#help',                   icon: HelpCircle,      section: 'divider' },
+  ],
+  founder: [
+    { label: 'Founder View', href: '/admin/founder', icon: LayoutDashboard },
+    { label: 'Help',         href: '#help',          icon: HelpCircle,  section: 'divider' },
+  ],
+  department_head: [
+    { label: 'My Team',   href: '/manager',           icon: Users2 },
+    { label: 'My Review', href: '/employee',           icon: ClipboardCheck, section: 'divider' },
+    { label: 'Help',      href: '#help',               icon: HelpCircle },
+  ],
 }
 
 const ROLE_COLORS: Record<UserRole, string> = {
-  admin:    'bg-indigo-600',
-  employee: 'bg-emerald-600',
-  manager:  'bg-amber-500',
-  hrbp:     'bg-violet-600',
+  admin:           'bg-indigo-600',
+  superadmin:      'bg-red-600',
+  founder:         'bg-yellow-600',
+  department_head: 'bg-cyan-600',
+  employee:        'bg-emerald-600',
+  manager:         'bg-amber-500',
+  hrbp:            'bg-violet-600',
 }
 
 function UserAvatar({ name, role }: { name: string; role?: UserRole }) {
@@ -98,17 +120,23 @@ function UserAvatar({ name, role }: { name: string; role?: UserRole }) {
 }
 
 const ROLE_HOME: Record<UserRole, string> = {
-  admin: '/admin',
-  manager: '/manager',
-  hrbp: '/hrbp',
-  employee: '/employee',
+  superadmin:      '/admin',
+  admin:           '/admin',
+  founder:         '/admin/founder',
+  department_head: '/manager',
+  manager:         '/manager',
+  hrbp:            '/hrbp',
+  employee:        '/employee',
 }
 
 const ROLE_DISPLAY: Record<string, string> = {
-  admin: 'Admin',
-  manager: 'Manager',
-  hrbp: 'HRBP',
-  employee: 'Employee',
+  superadmin:      'Super Admin',
+  admin:           'Admin',
+  founder:         'Founder',
+  department_head: 'Dept Head',
+  manager:         'Manager',
+  hrbp:            'HRBP',
+  employee:        'Employee',
 }
 
 const STORAGE_KEY = 'pms-sidebar-collapsed'

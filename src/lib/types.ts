@@ -1,6 +1,6 @@
 export type ActionResult<T = null> = { data: T; error: null } | { data: null; error: string }
 
-export type UserRole = "employee" | "manager" | "hrbp" | "admin"
+export type UserRole = "employee" | "manager" | "hrbp" | "department_head" | "admin" | "founder" | "superadmin"
 export type CycleStatus = "draft" | "kpi_setting" | "self_review" | "manager_review" | "calibrating" | "locked" | "published"
 export type RatingTier = "FEE" | "EE" | "ME" | "SME" | "BE"
 export type ReviewStatus = "draft" | "submitted"

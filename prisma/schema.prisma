@@ -18,7 +18,10 @@ enum UserRole {
   employee
   manager
   hrbp
+  department_head
   admin
+  founder
+  superadmin
 
   @@map("user_role")
 }
