@@ -28,7 +28,10 @@ export const ROLE_LABELS: Record<string, string> = {
   employee: 'Employee',
   manager: 'Manager',
   hrbp: 'HRBP',
+  department_head: 'Department Head',
   admin: 'Admin',
+  founder: 'Founder',
+  superadmin: 'Super Admin',
 }
 
 export const GOAL_TYPE_LABELS: Record<string, string> = {
