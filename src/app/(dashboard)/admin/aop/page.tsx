@@ -1,6 +1,9 @@
 import { requireRole } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getCascadeTree } from '@/lib/db/aop'
 import { AopForm } from './aop-form'
+import { AopAdminTabs } from './aop-admin-tabs'
+import type { AopMetric } from '@prisma/client'
 
 /** Compute current fiscal year: if month >= April, FY starts this year; else last year */
 function currentFiscalYear(): string {
@@ -10,13 +13,14 @@ function currentFiscalYear(): string {
 }
 
 export default async function AdminAopPage(props: {
-  searchParams: Promise<{ fy?: string; metric?: string }>
+  searchParams: Promise<{ fy?: string; metric?: string; view?: string }>
 }) {
   await requireRole(['admin'])
   const searchParams = await props.searchParams
 
   const selectedFy = searchParams.fy || currentFiscalYear()
   const selectedMetric = searchParams.metric || 'delivered_revenue'
+  const selectedView = searchParams.view || 'targets'
 
   const [departments, orgAops] = await Promise.all([
     prisma.department.findMany({
@@ -34,6 +38,52 @@ export default async function AdminAopPage(props: {
       orderBy: { metric: 'asc' },
     }),
   ])
+
+  // Fetch cascade tree data if tree view is selected
+  let cascadeTree = null
+  if (selectedView === 'tree') {
+    const raw = await getCascadeTree(selectedFy, selectedMetric as AopMetric)
+    if (raw) {
+      cascadeTree = {
+        id: raw.id,
+        fiscal_year: raw.fiscal_year,
+        metric: raw.metric,
+        annual_target: Number(raw.annual_target),
+        department_aops: raw.department_aops.map((da) => ({
+          id: da.id,
+          department: { id: da.department.id, name: da.department.name },
+          status: da.status as string,
+          annual_target: Number(da.annual_target),
+          employee_aops: da.employee_aops.map((ea) => ({
+            id: ea.id,
+            employee: { id: ea.employee.id, full_name: ea.employee.full_name },
+            annual_target: Number(ea.annual_target),
+          })),
+        })),
+      }
+    }
+  }
+
+  // Fetch dept heads for tree view
+  let departmentsWithHeads: { id: string; name: string; dept_head?: string }[] = departments
+  if (selectedView === 'tree') {
+    const deptHeads = await prisma.user.findMany({
+      where: {
+        role: 'department_head',
+        is_active: true,
+        department_id: { in: departments.map((d) => d.id) },
+      },
+      select: { department_id: true, full_name: true },
+    })
+    const headMap: Record<string, string> = {}
+    for (const h of deptHeads) {
+      if (h.department_id) headMap[h.department_id] = h.full_name
+    }
+    departmentsWithHeads = departments.map((d) => ({
+      ...d,
+      dept_head: headMap[d.id],
+    }))
+  }
 
   // Serialize Decimal fields to numbers for client component
   const serializedOrgAops = orgAops.map((oa) => ({
@@ -83,11 +133,14 @@ export default async function AdminAopPage(props: {
         </p>
       </div>
 
-      <AopForm
+      <AopAdminTabs
         departments={departments}
+        departmentsWithHeads={departmentsWithHeads}
         orgAops={serializedOrgAops}
         selectedFy={selectedFy}
         selectedMetric={selectedMetric}
+        selectedView={selectedView}
+        cascadeTree={cascadeTree}
       />
     </div>
   )

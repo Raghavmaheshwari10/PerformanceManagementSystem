@@ -1,6 +1,7 @@
 import { requireRole } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { CascadeForm } from './cascade-form'
+import { AopCascadeTree } from '@/components/aop-cascade-tree'
 
 /** Compute current fiscal year: if month >= April, FY starts this year; else last year */
 function currentFiscalYear(): string {
@@ -114,6 +115,28 @@ export default async function DepartmentHeadAopPage() {
     })),
   }))
 
+  // Build cascade tree data for the summary view (first metric with data)
+  const firstDeptAop = serializedDeptAops[0]
+  const cascadeTreeData = firstDeptAop
+    ? {
+        id: firstDeptAop.org_aop_id,
+        fiscal_year: firstDeptAop.fiscal_year,
+        metric: firstDeptAop.metric,
+        annual_target: firstDeptAop.annual_target, // dept target shown as "org" in single-dept view
+        department_aops: serializedDeptAops.map((da) => ({
+          id: da.id,
+          department: { id: da.department_id, name: department.name },
+          status: da.status,
+          annual_target: da.annual_target,
+          employee_aops: da.employee_aops.map((ea) => ({
+            id: ea.id,
+            employee: { id: ea.employee_id, full_name: ea.employee_name },
+            annual_target: ea.annual_target,
+          })),
+        })),
+      }
+    : null
+
   return (
     <div className="space-y-6">
       <div>
@@ -122,6 +145,18 @@ export default async function DepartmentHeadAopPage() {
           Cascade department targets to individual team members
         </p>
       </div>
+
+      {/* Cascade tree summary */}
+      {cascadeTreeData && (
+        <div className="glass rounded-xl border border-white/10 p-5 space-y-3">
+          <h2 className="text-sm font-semibold text-white/70">Cascade Overview</h2>
+          <AopCascadeTree
+            orgAop={cascadeTreeData}
+            departments={[{ id: department.id, name: department.name }]}
+            singleDepartmentId={department.id}
+          />
+        </div>
+      )}
 
       <CascadeForm
         departmentName={department.name}
