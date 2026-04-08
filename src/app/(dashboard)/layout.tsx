@@ -116,7 +116,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 </div>
                 <div>
                   <Greeting name={firstName} />
-                  <p className="text-xs text-slate-500">{user.role === 'hrbp' ? 'HRBP' : user.role.charAt(0).toUpperCase() + user.role.slice(1)} Dashboard</p>
+                  <p className="text-xs text-slate-500">{{ admin: 'Admin', hrbp: 'HRBP', manager: 'Manager', employee: 'Employee', department_head: 'Department Head' }[user.role as string] ?? user.role} Dashboard</p>
                 </div>
               </div>
               {/* Spacer for mobile (hamburger takes left side) */}
