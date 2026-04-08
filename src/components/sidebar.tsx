@@ -207,9 +207,17 @@ export function Sidebar({
   const baseItems = NAV_ITEMS[currentRole].filter(
     item => !item.requireAlsoEmployee || isAlsoEmployee
   )
-  // Inject "Founder View" link at the top of admin nav when user is a founder
-  const visibleItems = (currentRole === 'admin' && isFounder)
-    ? [{ label: 'Founder View', href: '/admin/founder', icon: Crown, section: undefined } as NavItem, ...baseItems]
+  // Inject "Founder View" link after Salary Data when user is a founder
+  const visibleItems = (currentRole === 'admin' || currentRole === 'superadmin') && isFounder
+    ? (() => {
+        const salaryIdx = baseItems.findIndex((it) => it.href === '/admin/aop/salary')
+        const insertAt = salaryIdx >= 0 ? salaryIdx + 1 : baseItems.length
+        return [
+          ...baseItems.slice(0, insertAt),
+          { label: 'Founder View', href: '/admin/founder', icon: Crown, section: undefined } as NavItem,
+          ...baseItems.slice(insertAt),
+        ]
+      })()
     : baseItems
 
   async function handleSignOut() {
