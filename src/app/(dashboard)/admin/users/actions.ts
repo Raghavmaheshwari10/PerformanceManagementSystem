@@ -113,6 +113,11 @@ export async function createUser(_prev: ActionResult | null, formData: FormData)
   const email         = (formData.get('email') as string)?.trim()
   const full_name     = (formData.get('full_name') as string)?.trim()
   const role          = formData.get('role') as UserRole
+
+  // Only superadmin can create superadmin users
+  if (role === 'superadmin' && admin.role !== 'superadmin') {
+    return { data: null, error: 'Only a superadmin can assign the superadmin role.' }
+  }
   const department_id = (formData.get('department_id') as string) || null
   const designation   = (formData.get('designation') as string)?.trim() || null
   const variable_pay  = parseFloat(formData.get('variable_pay') as string) || 0
@@ -188,6 +193,12 @@ export async function updateUser(_prev: ActionResult | null, formData: FormData)
   const emp_code      = (formData.get('emp_code') as string)?.trim() || null
   const full_name     = (formData.get('full_name') as string)?.trim()
   const role          = formData.get('role') as UserRole
+
+  // Only superadmin can assign or remove the superadmin role
+  const target = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } })
+  if ((role === 'superadmin' || target?.role === 'superadmin') && admin.role !== 'superadmin') {
+    return { data: null, error: 'Only a superadmin can assign or remove the superadmin role.' }
+  }
   const department_id = formData.get('department_id') as string || null
   const designation   = (formData.get('designation') as string)?.trim() || null
   const variable_pay  = parseFloat(formData.get('variable_pay') as string) || 0
@@ -320,6 +331,11 @@ export async function updateUserRole(userId: string, role: string): Promise<void
     select: { role: true },
   })
 
+  // Only superadmin can assign or remove the superadmin role
+  if ((role === 'superadmin' || target?.role === 'superadmin') && user.role !== 'superadmin') {
+    throw new Error('Only a superadmin can assign or remove the superadmin role.')
+  }
+
   try {
     await prisma.user.update({
       where: { id: userId },
@@ -440,6 +456,12 @@ export async function revokeInvite(userId: string): Promise<ActionResult> {
 export async function deleteUser(userId: string): Promise<ActionResult> {
   const admin = await requireRole(['admin'])
 
+  // Only superadmin can delete a superadmin account
+  const targetUser = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } })
+  if (targetUser?.role === 'superadmin' && admin.role !== 'superadmin') {
+    return { data: null, error: 'Only a superadmin can delete another superadmin account.' }
+  }
+
   // Check for dependent records
   const [reviews, appraisals, kpis] = await Promise.all([
     prisma.review.count({ where: { employee_id: userId } }),
@@ -524,6 +546,18 @@ export async function bulkUpdateDepartment(userIds: string[], departmentId: stri
 export async function bulkUpdateRole(userIds: string[], role: UserRole): Promise<ActionResult> {
   const admin = await requireRole(['admin'])
 
+  // Only superadmin can bulk-assign superadmin role
+  if (role === 'superadmin' && admin.role !== 'superadmin') {
+    return { data: null, error: 'Only a superadmin can assign the superadmin role.' }
+  }
+  // Check if any target users are superadmins (non-superadmin cannot change their role)
+  if (admin.role !== 'superadmin') {
+    const superadmins = await prisma.user.count({ where: { id: { in: userIds }, role: 'superadmin' } })
+    if (superadmins > 0) {
+      return { data: null, error: 'Only a superadmin can change the role of a superadmin account.' }
+    }
+  }
+
   await prisma.user.updateMany({
     where: { id: { in: userIds } },
     data: { role: role as import('@prisma/client').UserRole },
@@ -565,6 +599,14 @@ export async function bulkToggleActive(userIds: string[], isActive: boolean): Pr
 
 export async function bulkDeleteUsers(userIds: string[]): Promise<ActionResult> {
   const admin = await requireRole(['admin'])
+
+  // Only superadmin can delete superadmin accounts
+  if (admin.role !== 'superadmin') {
+    const superadmins = await prisma.user.count({ where: { id: { in: userIds }, role: 'superadmin' } })
+    if (superadmins > 0) {
+      return { data: null, error: 'Only a superadmin can delete a superadmin account.' }
+    }
+  }
 
   const blocked: string[] = []
   const deletable: string[] = []
