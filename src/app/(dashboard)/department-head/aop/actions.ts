@@ -2,7 +2,7 @@
 
 import { requireRole } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { upsertEmployeeAop, lockDepartmentCascade } from '@/lib/db/aop'
+import { upsertEmployeeAop, lockDepartmentCascade, markEmployeeExited, createReplacementAop } from '@/lib/db/aop'
 import { revalidatePath } from 'next/cache'
 import { createKpisFromCascade } from '@/lib/aop-kpi-sync'
 import type { ActionResult } from '@/lib/types'
@@ -184,6 +184,115 @@ export async function lockCascade(_prev: ActionResult, formData: FormData): Prom
     }
   } catch (e) {
     return { data: null, error: e instanceof Error ? e.message : 'Failed to lock cascade' }
+  }
+
+  revalidatePath('/department-head/aop')
+  return { data: null, error: null }
+}
+
+export async function markExit(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const user = await requireRole(['department_head'])
+
+  const employee_aop_id = (formData.get('employee_aop_id') as string)?.trim()
+  const exited_at_str = (formData.get('exited_at') as string)?.trim()
+
+  if (!employee_aop_id) return { data: null, error: 'Employee AOP ID is required' }
+  if (!exited_at_str) return { data: null, error: 'Exit date is required' }
+
+  const exitedAt = new Date(exited_at_str)
+  if (isNaN(exitedAt.getTime())) return { data: null, error: 'Invalid exit date' }
+
+  // Verify the employee AOP belongs to this department head's department
+  const empAop = await prisma.employeeAop.findUnique({
+    where: { id: employee_aop_id },
+    include: { department_aop: { include: { org_aop: true } } },
+  })
+  if (!empAop) return { data: null, error: 'Employee AOP record not found' }
+  if (empAop.department_aop.department_id !== user.department_id) {
+    return { data: null, error: 'You can only manage exits for your own department' }
+  }
+  if (empAop.exited_at) return { data: null, error: 'Employee has already been marked as exited' }
+
+  try {
+    await markEmployeeExited(employee_aop_id, exitedAt)
+    await prisma.auditLog.create({
+      data: {
+        changed_by: user.id,
+        action: 'aop_employee_exited',
+        entity_type: 'employee_aop',
+        entity_id: employee_aop_id,
+        new_value: { exited_at: exitedAt.toISOString() },
+      },
+    })
+  } catch (e) {
+    return { data: null, error: e instanceof Error ? e.message : 'Failed to mark employee as exited' }
+  }
+
+  revalidatePath('/department-head/aop')
+  return { data: null, error: null }
+}
+
+export async function assignReplacement(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const user = await requireRole(['department_head'])
+
+  const original_employee_aop_id = (formData.get('original_employee_aop_id') as string)?.trim()
+  const replacement_employee_id = (formData.get('replacement_employee_id') as string)?.trim()
+
+  if (!original_employee_aop_id) return { data: null, error: 'Original employee AOP ID is required' }
+  if (!replacement_employee_id) return { data: null, error: 'Replacement employee ID is required' }
+
+  // Verify the original employee AOP belongs to this department
+  const originalEmpAop = await prisma.employeeAop.findUnique({
+    where: { id: original_employee_aop_id },
+    include: { department_aop: { include: { org_aop: true } } },
+  })
+  if (!originalEmpAop) return { data: null, error: 'Original employee AOP record not found' }
+  if (originalEmpAop.department_aop.department_id !== user.department_id) {
+    return { data: null, error: 'You can only manage replacements for your own department' }
+  }
+  if (!originalEmpAop.exited_at) {
+    return { data: null, error: 'Original employee must be marked as exited before assigning a replacement' }
+  }
+
+  // Parse monthly targets for replacement
+  const MONTH_KEYS = ['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'] as const
+  const monthly = {} as Record<(typeof MONTH_KEYS)[number], number>
+  for (const m of MONTH_KEYS) {
+    monthly[m] = Number(formData.get(`monthly_${m}`) ?? 0)
+  }
+
+  try {
+    const newEmpAop = await createReplacementAop({
+      original_employee_aop_id,
+      replacement_employee_id,
+      monthly,
+    })
+
+    await prisma.auditLog.create({
+      data: {
+        changed_by: user.id,
+        action: 'aop_replacement_assigned',
+        entity_type: 'employee_aop',
+        entity_id: newEmpAop.id,
+        new_value: {
+          original_employee_aop_id,
+          replacement_employee_id,
+        },
+      },
+    })
+
+    // Auto-create KPIs for the replacement employee in active cycles
+    const activeCycles = await prisma.cycle.findMany({
+      where: {
+        fiscal_year: originalEmpAop.department_aop.org_aop.fiscal_year,
+        status: { not: 'published' },
+      },
+    })
+    for (const cycle of activeCycles) {
+      await createKpisFromCascade(originalEmpAop.department_aop_id, cycle.id)
+    }
+  } catch (e) {
+    return { data: null, error: e instanceof Error ? e.message : 'Failed to assign replacement' }
   }
 
   revalidatePath('/department-head/aop')

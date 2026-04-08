@@ -1,9 +1,9 @@
 'use client'
 
 import { useActionState, useState, useMemo } from 'react'
-import { saveEmployeeCascade, lockCascade } from './actions'
+import { saveEmployeeCascade, lockCascade, markExit, assignReplacement } from './actions'
 import { SubmitButton } from '@/components/submit-button'
-import { CheckCircle2, XCircle, AlertTriangle, Lock } from 'lucide-react'
+import { CheckCircle2, XCircle, AlertTriangle, Lock, LogOut, UserPlus } from 'lucide-react'
 import type { ActionResult } from '@/lib/types'
 
 const MONTHS = ['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'] as const
@@ -30,6 +30,8 @@ interface SerializedEmployeeAop {
   apr: number; may: number; jun: number; jul: number
   aug: number; sep: number; oct: number; nov: number
   dec: number; jan: number; feb: number; mar: number
+  exited_at: string | null
+  replacement_for: string | null
 }
 
 interface SerializedDeptAop {
@@ -112,9 +114,15 @@ export function CascadeForm({ departmentName, fiscalYear, departmentAops, employ
     })
   }
 
+  // Exit / replacement UI state
+  const [exitingEmpAopId, setExitingEmpAopId] = useState<string | null>(null)
+  const [replacingEmpAopId, setReplacingEmpAopId] = useState<string | null>(null)
+
   // Server action states
   const [saveState, saveAction] = useActionState(saveEmployeeCascade, INITIAL)
   const [lockState, lockAction] = useActionState(lockCascade, INITIAL)
+  const [exitState, exitAction] = useActionState(markExit, INITIAL)
+  const [replaceState, replaceAction] = useActionState(assignReplacement, INITIAL)
 
   // Totals computation
   const totals = useMemo(() => {

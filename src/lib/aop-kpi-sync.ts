@@ -4,10 +4,10 @@ import { prisma } from '@/lib/prisma'
 
 const MONTHS = ['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'] as const
 
-const METRIC_NAMES: Record<string, string> = {
+const AOP_KPI_TITLES: Record<string, string> = {
   delivered_revenue: 'Delivered Revenue',
   gross_margin: 'Gross Margin',
-  gmv: 'GMV (New Orders)',
+  gmv: 'New Sales (GMV)',
 }
 
 /**
@@ -39,13 +39,14 @@ function getCycleMonths(cycleType: string, period: string | null): string[] {
 }
 
 /**
- * Auto-create KPIs for each employee in a locked AOP cascade.
+ * Auto-assign KPIs for each employee in a locked AOP cascade.
  *
- * For each EmployeeAop under the given DepartmentAop, this creates:
- * - A KRA "AOP Targets" (if one doesn't already exist for that employee+cycle)
- * - A KPI with the metric name, target summed from the relevant months
+ * Uses protected KPI templates ("Delivered Revenue", "Gross Margin", "New Sales (GMV)")
+ * when they exist; falls back to creating KPIs directly otherwise.
  *
- * Idempotent: skips employees who already have a KPI linked to the same employee_aop_id + cycle.
+ * Skips employees with exited_at set.
+ * Idempotent: if a KPI already exists for the same employee_aop_id + cycle, it updates
+ * the target only if it has changed.
  */
 export async function createKpisFromCascade(departmentAopId: string, cycleId: string) {
   // 1. Get DepartmentAop with parent OrgAop (for metric) and all EmployeeAops
@@ -57,23 +58,33 @@ export async function createKpisFromCascade(departmentAopId: string, cycleId: st
     },
   })
 
-  const metric = deptAop.org_aop.metric // e.g., 'delivered_revenue'
-  const metricName = METRIC_NAMES[metric] || metric
+  const metric = deptAop.org_aop.metric
+  const kpiTitle = AOP_KPI_TITLES[metric] ?? metric
 
   // 2. Get cycle to determine which months it covers
   const cycle = await prisma.cycle.findUniqueOrThrow({ where: { id: cycleId } })
   const cycleMonths = getCycleMonths(cycle.cycle_type, cycle.period)
   if (cycleMonths.length === 0) return
 
-  // 3. For each employee AOP
+  // 3. Look up the protected KPI template for this metric (for kra_template_id linkage)
+  const kpiTemplate = await prisma.kpiTemplate.findFirst({
+    where: { title: kpiTitle, is_protected: true },
+    include: { kra_template: true },
+  })
+  const kraTitle = 'AOP Targets'
+
+  // 4. For each employee AOP
   for (const empAop of deptAop.employee_aops) {
+    // Skip exited employees
+    if (empAop.exited_at) continue
+
     // a. Sum monthly targets for the cycle's months
     const targetValue = cycleMonths.reduce((sum, month) => {
       const val = (empAop as Record<string, unknown>)[month]
       return sum + Number(val || 0)
     }, 0)
 
-    // b. Skip if KPI already exists for this employee+cycle+employee_aop (idempotent)
+    // b. Idempotent check — skip or update if already exists
     const existing = await prisma.kpi.findFirst({
       where: {
         cycle_id: cycleId,
@@ -82,24 +93,27 @@ export async function createKpisFromCascade(departmentAopId: string, cycleId: st
         employee_aop_id: empAop.id,
       },
     })
-    if (existing) continue
+    if (existing) {
+      // Update target if it changed
+      if (Number(existing.target) !== targetValue) {
+        await prisma.kpi.update({ where: { id: existing.id }, data: { target: targetValue } })
+      }
+      continue
+    }
 
-    // c. Find or create a KRA "AOP Targets" for this employee in this cycle
+    // c. Find or create KRA "AOP Targets" for this employee in this cycle
     let kra = await prisma.kra.findFirst({
-      where: {
-        cycle_id: cycleId,
-        employee_id: empAop.employee_id,
-        title: 'AOP Targets',
-      },
+      where: { cycle_id: cycleId, employee_id: empAop.employee_id, title: kraTitle },
     })
     if (!kra) {
       kra = await prisma.kra.create({
         data: {
           cycle_id: cycleId,
           employee_id: empAop.employee_id,
-          title: 'AOP Targets',
+          title: kraTitle,
           category: 'performance',
-          weight: 100, // will be adjusted if other KRAs exist
+          weight: null,
+          kra_template_id: kpiTemplate?.kra_template?.id ?? null,
         },
       })
     }
@@ -107,25 +121,24 @@ export async function createKpisFromCascade(departmentAopId: string, cycleId: st
     // d. Get the employee's manager_id (required by Kpi model)
     const managerId = empAop.employee.manager_id
     if (!managerId) {
-      // Cannot create KPI without a manager — skip this employee
       console.warn(
         `[aop-kpi-sync] Skipping employee ${empAop.employee_id}: no manager_id assigned`
       )
       continue
     }
 
-    // e. Create KPI
+    // e. Create KPI linked to the protected template (if available)
     await prisma.kpi.create({
       data: {
         cycle_id: cycleId,
         employee_id: empAop.employee_id,
         manager_id: managerId,
         kra_id: kra.id,
-        title: metricName,
-        description: `Auto-created from AOP cascade (${deptAop.org_aop.fiscal_year})`,
+        title: kpiTitle,
+        description: `AOP target for ${deptAop.org_aop.fiscal_year}`,
         unit: 'number',
         target: targetValue,
-        weight: 0, // will be set by manager or auto-distributed
+        weight: null,
         is_aop_linked: true,
         employee_aop_id: empAop.id,
       },
