@@ -1,11 +1,11 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useState, useMemo } from 'react'
 import { createCycle } from '../../actions'
 import { SubmitButton } from '@/components/submit-button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import type { ActionResult } from '@/lib/types'
+import type { ActionResult, CycleType } from '@/lib/types'
 
 interface ReviewTemplateOption {
   id: string
@@ -23,6 +23,55 @@ interface Props {
 
 const INITIAL: ActionResult = { data: null, error: null }
 
+const PERIOD_OPTIONS: Record<CycleType, { value: string; label: string }[]> = {
+  monthly: [
+    { value: 'apr', label: 'Apr' },
+    { value: 'may', label: 'May' },
+    { value: 'jun', label: 'Jun' },
+    { value: 'jul', label: 'Jul' },
+    { value: 'aug', label: 'Aug' },
+    { value: 'sep', label: 'Sep' },
+    { value: 'oct', label: 'Oct' },
+    { value: 'nov', label: 'Nov' },
+    { value: 'dec', label: 'Dec' },
+    { value: 'jan', label: 'Jan' },
+    { value: 'feb', label: 'Feb' },
+    { value: 'mar', label: 'Mar' },
+  ],
+  quarterly: [
+    { value: 'Q1', label: 'Q1 (Apr-Jun)' },
+    { value: 'Q2', label: 'Q2 (Jul-Sep)' },
+    { value: 'Q3', label: 'Q3 (Oct-Dec)' },
+    { value: 'Q4', label: 'Q4 (Jan-Mar)' },
+  ],
+  halfyearly: [
+    { value: 'H1', label: 'H1 (Apr-Sep)' },
+    { value: 'H2', label: 'H2 (Oct-Mar)' },
+  ],
+  annual: [],
+}
+
+const CYCLE_TYPE_LABELS: Record<CycleType, string> = {
+  monthly: 'Monthly',
+  quarterly: 'Quarterly',
+  halfyearly: 'Half-yearly',
+  annual: 'Annual',
+}
+
+const FY_OPTIONS = ['FY25', 'FY26', 'FY27', 'FY28']
+
+function generateCycleName(cycleType: CycleType, period: string, fiscalYear: string): string {
+  if (!fiscalYear) return ''
+  if (cycleType === 'annual') return `Annual ${fiscalYear}`
+  if (!period) return ''
+  // For monthly, capitalize first letter
+  if (cycleType === 'monthly') {
+    const capitalized = period.charAt(0).toUpperCase() + period.slice(1)
+    return `${capitalized} ${fiscalYear}`
+  }
+  return `${period} ${fiscalYear}`
+}
+
 export function CycleForm({ departments, employeesByDept, unassignedEmployees, reviewTemplates }: Props) {
   const [state, action] = useActionState(createCycle, INITIAL)
   const [scopeType, setScopeType] = useState<'org' | 'dept'>('org')
@@ -30,6 +79,49 @@ export function CycleForm({ departments, employeesByDept, unassignedEmployees, r
   const [excludedEmps, setExcludedEmps] = useState<Set<string>>(new Set())
   const [includedEmps, setIncludedEmps] = useState<Set<string>>(new Set())
   const [expandedDepts, setExpandedDepts] = useState<Set<string>>(new Set())
+
+  // Cycle type state
+  const [cycleType, setCycleType] = useState<CycleType>('quarterly')
+  const [period, setPeriod] = useState<string>('Q1')
+  const [fiscalYear, setFiscalYear] = useState<string>('FY26')
+  const [nameOverridden, setNameOverridden] = useState(false)
+  const [cycleName, setCycleName] = useState('Q1 FY26')
+
+  const periodOptions = PERIOD_OPTIONS[cycleType]
+
+  const autoName = useMemo(
+    () => generateCycleName(cycleType, period, fiscalYear),
+    [cycleType, period, fiscalYear]
+  )
+
+  function handleCycleTypeChange(newType: CycleType) {
+    setCycleType(newType)
+    const newPeriodOptions = PERIOD_OPTIONS[newType]
+    const newPeriod = newPeriodOptions.length > 0 ? newPeriodOptions[0].value : ''
+    setPeriod(newPeriod)
+    if (!nameOverridden) {
+      setCycleName(generateCycleName(newType, newPeriod, fiscalYear))
+    }
+  }
+
+  function handlePeriodChange(newPeriod: string) {
+    setPeriod(newPeriod)
+    if (!nameOverridden) {
+      setCycleName(generateCycleName(cycleType, newPeriod, fiscalYear))
+    }
+  }
+
+  function handleFiscalYearChange(newFy: string) {
+    setFiscalYear(newFy)
+    if (!nameOverridden) {
+      setCycleName(generateCycleName(cycleType, period, newFy))
+    }
+  }
+
+  function handleNameChange(newName: string) {
+    setCycleName(newName)
+    setNameOverridden(newName !== autoName)
+  }
 
   function toggleDept(deptId: string) {
     const next = new Set(selectedDepts)
@@ -90,6 +182,8 @@ export function CycleForm({ departments, employeesByDept, unassignedEmployees, r
         .concat(unassignedEmployees)
     : []
 
+  const selectClassName = "w-full appearance-none rounded-lg border border-border bg-muted/30 px-3 py-2 pr-8 text-sm focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
+
   return (
     <form action={action} className="space-y-6">
       {state.error && (
@@ -111,28 +205,84 @@ export function CycleForm({ departments, employeesByDept, unassignedEmployees, r
         </>
       )}
 
-      {/* ── Section 1: Basic Info ── */}
+      {/* Hidden fields for cycle type data */}
+      <input type="hidden" name="cycle_type" value={cycleType} />
+      <input type="hidden" name="period" value={cycleType === 'annual' ? '' : period} />
+      <input type="hidden" name="fiscal_year" value={fiscalYear} />
+
+      {/* -- Section 1: Basic Info -- */}
       <section className="glass rounded-xl p-5 space-y-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Basic Info</h2>
 
-        <div className="space-y-2">
-          <Label htmlFor="name">Cycle Name</Label>
-          <Input id="name" name="name" placeholder="Q1 2026" required />
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="cycle_type_select">Cycle Type</Label>
+            <select
+              id="cycle_type_select"
+              value={cycleType}
+              onChange={e => handleCycleTypeChange(e.target.value as CycleType)}
+              className={selectClassName}
+            >
+              {(Object.keys(CYCLE_TYPE_LABELS) as CycleType[]).map(ct => (
+                <option key={ct} value={ct}>{CYCLE_TYPE_LABELS[ct]}</option>
+              ))}
+            </select>
+          </div>
+
+          {periodOptions.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="period_select">Period</Label>
+              <select
+                id="period_select"
+                value={period}
+                onChange={e => handlePeriodChange(e.target.value)}
+                className={selectClassName}
+              >
+                {periodOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="fiscal_year_select">Financial Year</Label>
+            <select
+              id="fiscal_year_select"
+              value={fiscalYear}
+              onChange={e => handleFiscalYearChange(e.target.value)}
+              className={selectClassName}
+            >
+              {FY_OPTIONS.map(fy => (
+                <option key={fy} value={fy}>{fy}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="quarter">Quarter</Label>
-            <Input id="quarter" name="quarter" placeholder="Q1" required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="year">Year</Label>
-            <Input id="year" name="year" type="number" defaultValue={2026} required />
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="name">Cycle Name</Label>
+          <Input
+            id="name"
+            name="name"
+            value={cycleName}
+            onChange={e => handleNameChange(e.target.value)}
+            placeholder="e.g. Q1 FY26"
+            required
+          />
+          {nameOverridden && (
+            <button
+              type="button"
+              onClick={() => { setCycleName(autoName); setNameOverridden(false) }}
+              className="text-xs text-primary hover:underline"
+            >
+              Reset to auto-generated: {autoName}
+            </button>
+          )}
         </div>
       </section>
 
-      {/* ── Section 2: Scope ── */}
+      {/* -- Section 2: Scope -- */}
       <section className="glass rounded-xl p-5 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Scope</h2>
@@ -257,7 +407,7 @@ export function CycleForm({ departments, employeesByDept, unassignedEmployees, r
         )}
       </section>
 
-      {/* ── Section 3: Competency Assessment ── */}
+      {/* -- Section 3: Competency Assessment -- */}
       <section className="glass rounded-xl p-5 space-y-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Competency Assessment</h2>
         <p className="text-xs text-muted-foreground">
@@ -275,7 +425,7 @@ export function CycleForm({ departments, employeesByDept, unassignedEmployees, r
               <select
                 id="review_template_id"
                 name="review_template_id"
-                className="w-full appearance-none rounded-lg border border-border bg-muted/30 px-3 py-2 pr-8 text-sm focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                className={selectClassName}
               >
                 <option value="">— None (KPI-only cycle) —</option>
                 {reviewTemplates.map(t => (
@@ -306,7 +456,7 @@ export function CycleForm({ departments, employeesByDept, unassignedEmployees, r
         )}
       </section>
 
-      {/* ── Section 4: Deadlines ── */}
+      {/* -- Section 4: Deadlines -- */}
       <section className="glass rounded-xl p-5 space-y-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Deadlines</h2>
         <div className="grid grid-cols-2 gap-4">

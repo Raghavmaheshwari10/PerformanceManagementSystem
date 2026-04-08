@@ -1,10 +1,11 @@
 export type ActionResult<T = null> = { data: T; error: null } | { data: null; error: string }
 
-export type UserRole = "employee" | "manager" | "hrbp" | "department_head" | "admin" | "founder" | "superadmin"
+export type UserRole = "employee" | "manager" | "hrbp" | "admin" | "superadmin" | "department_head" | "founder"
 export type CycleStatus = "draft" | "kpi_setting" | "self_review" | "manager_review" | "calibrating" | "locked" | "published"
 export type RatingTier = "FEE" | "EE" | "ME" | "SME" | "BE"
 export type ReviewStatus = "draft" | "submitted"
-export type NotificationType = "cycle_kpi_setting_open" | "cycle_self_review_open" | "cycle_manager_review_open" | "cycle_published" | "review_submitted" | "manager_review_submitted" | "admin_message" | "review_reminder" | "meeting_scheduled" | "meeting_reminder" | "meeting_mom_submitted"
+export type NotificationType = "cycle_kpi_setting_open" | "cycle_self_review_open" | "cycle_manager_review_open" | "cycle_published" | "review_submitted" | "manager_review_submitted" | "admin_message" | "review_reminder" | "meeting_scheduled" | "meeting_reminder" | "meeting_mom_submitted" | "aop_dept_target_assigned" | "aop_cascade_locked" | "aop_employee_targets_set" | "aop_mis_uploaded"
+export type CycleType = "monthly" | "quarterly" | "halfyearly" | "annual"
 export type NotificationStatus = "pending" | "sent" | "failed"
 
 export interface Department {
@@ -36,6 +37,12 @@ export interface User {
   department_id?: string | null
   department?: Department        // joined, optional
   is_also_employee: boolean
+  is_founder: boolean
+  fixed_ctc?: number | null
+  annual_variable?: number | null
+  retention_bonus?: number | null
+  onetime_bonus?: number | null
+  salary_currency?: string
   designation: string | null
   manager_id: string | null
   variable_pay: number
@@ -55,6 +62,9 @@ export interface Cycle {
   name: string
   quarter: string
   year: number
+  cycle_type: CycleType
+  period: string | null
+  fiscal_year: string | null
   status: CycleStatus
   kpi_setting_deadline: string | null
   self_review_deadline: string | null
@@ -391,5 +401,105 @@ export interface MeetingMinutes {
   concerns_raised: string | null
   submitted_by: string
   created_at: string
+  updated_at: string
+}
+
+// ─────────────────────────────────────────
+// AOP Cascade Types
+// ─────────────────────────────────────────
+
+export type AopMetric = "delivered_revenue" | "gross_margin" | "gmv"
+export type AopCascadeStatus = "draft" | "cascaded" | "locked"
+
+export interface OrgAop {
+  id: string
+  fiscal_year: string
+  metric: AopMetric
+  annual_target: number
+  apr: number
+  may: number
+  jun: number
+  jul: number
+  aug: number
+  sep: number
+  oct: number
+  nov: number
+  dec: number
+  jan: number
+  feb: number
+  mar: number
+  created_by: string
+  created_at: string
+  updated_at: string
+  department_aops?: DepartmentAop[]
+}
+
+export interface DepartmentAop {
+  id: string
+  org_aop_id: string
+  department_id: string
+  status: AopCascadeStatus
+  annual_target: number
+  apr: number
+  may: number
+  jun: number
+  jul: number
+  aug: number
+  sep: number
+  oct: number
+  nov: number
+  dec: number
+  jan: number
+  feb: number
+  mar: number
+  created_at: string
+  updated_at: string
+  department?: Department
+  employee_aops?: EmployeeAop[]
+}
+
+export interface EmployeeAop {
+  id: string
+  department_aop_id: string
+  employee_id: string
+  annual_target: number
+  apr: number
+  may: number
+  jun: number
+  jul: number
+  aug: number
+  sep: number
+  oct: number
+  nov: number
+  dec: number
+  jan: number
+  feb: number
+  mar: number
+  created_at: string
+  updated_at: string
+  employee?: User
+  mis_actuals?: EmployeeMisActual[]
+}
+
+export interface EmployeeMisActual {
+  id: string
+  employee_aop_id: string
+  month: string
+  actual_value: number
+  uploaded_by: string
+  created_at: string
+}
+
+// ─────────────────────────────────────────
+// Exchange Rate Types
+// ─────────────────────────────────────────
+
+export interface ExchangeRate {
+  id: string
+  fiscal_year: string
+  from_currency: string
+  to_currency: string
+  rate: number
+  updated_by: string
   updated_at: string
 }

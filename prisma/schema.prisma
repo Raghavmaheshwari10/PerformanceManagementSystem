@@ -89,6 +89,11 @@ enum NotificationType {
   meeting_scheduled
   meeting_reminder
   meeting_mom_submitted
+  kpi_comment
+  aop_dept_target_assigned
+  aop_cascade_locked
+  aop_employee_targets_set
+  aop_mis_uploaded
 
   @@map("notification_type")
 }
@@ -136,12 +141,64 @@ enum PeerReviewStatus {
   @@map("peer_review_status")
 }
 
+enum PipStatus {
+  draft
+  active
+  extended
+  completed
+  closed
+
+  @@map("pip_status")
+}
+
+enum PipOutcome {
+  improved
+  partially_improved
+  not_improved
+
+  @@map("pip_outcome")
+}
+
+enum PipMilestoneStatus {
+  pending
+  in_progress
+  completed
+  missed
+
+  @@map("pip_milestone_status")
+}
+
 enum AnswerType {
   rating
   text
   mixed
 
   @@map("answer_type")
+}
+
+enum CycleType {
+  monthly
+  quarterly
+  halfyearly
+  annual
+
+  @@map("cycle_type")
+}
+
+enum AopMetric {
+  delivered_revenue
+  gross_margin
+  gmv
+
+  @@map("aop_metric")
+}
+
+enum AopCascadeStatus {
+  draft
+  cascaded
+  locked
+
+  @@map("aop_cascade_status")
 }
 
 // ─────────────────────────────────────────
@@ -177,6 +234,8 @@ model Department {
   kra_template_departments KraTemplateDepartment[]
   competencies    Competency[]
   aop_targets     AopTarget[]
+  dept_goals      DeptGoal[]
+  department_aops DepartmentAop[]
 
   @@map("departments")
 }
@@ -194,6 +253,12 @@ model User {
   variable_pay  Decimal   @default(0) @db.Decimal(12, 2)
   is_active     Boolean   @default(true)
   is_also_employee Boolean @default(false)
+  is_founder       Boolean @default(false)
+  fixed_ctc        Decimal? @db.Decimal(12, 2)
+  annual_variable  Decimal? @db.Decimal(12, 2)
+  retention_bonus  Decimal? @db.Decimal(12, 2)
+  onetime_bonus    Decimal? @db.Decimal(12, 2)
+  salary_currency  String   @default("INR") // INR, AED, USD
   password_hash    String?
   reset_token              String?
   reset_token_expires_at   DateTime? @db.Timestamptz(6)
@@ -212,6 +277,7 @@ model User {
   hrbp_departments HrbpDepartment[]
   kpis_as_employee Kpi[]             @relation("KpiEmployee")
   kpis_as_manager  Kpi[]             @relation("KpiManager")
+  kpi_comments     KpiComment[]      @relation("KpiCommentAuthor")
   reviews          Review[]
   appraisals_as_employee Appraisal[] @relation("AppraisalEmployee")
   appraisals_as_manager  Appraisal[] @relation("AppraisalManager")
@@ -241,6 +307,21 @@ model User {
   meetings_as_hrbp     ReviewMeeting[] @relation("MeetingHrbp")
   meetings_scheduled   ReviewMeeting[] @relation("MeetingScheduler")
   mom_submitted        MeetingMinutes[] @relation("MomSubmitter")
+  top_talent_configs_updated TopTalentConfig[] @relation("TopTalentConfigUpdater")
+  pips_as_employee       Pip[]             @relation("PipEmployee")
+  pips_as_manager        Pip[]             @relation("PipManager")
+  pips_initiated         Pip[]             @relation("PipInitiator")
+  pips_as_hrbp           Pip[]             @relation("PipHrbp")
+  pips_as_skip_level     Pip[]             @relation("PipSkipLevel")
+  pip_milestones_signed  PipMilestone[]    @relation("PipMilestoneHrbpSigner")
+  pip_check_ins_created  PipCheckIn[]      @relation("PipCheckInCreator")
+  pip_documents_uploaded PipDocument[]     @relation("PipDocumentUploader")
+  org_goals_created  OrgGoal[]  @relation("OrgGoalCreator")
+  dept_goals_created DeptGoal[] @relation("DeptGoalCreator")
+  org_aops_created     OrgAop[]          @relation("OrgAopCreatedBy")
+  employee_aops        EmployeeAop[]     @relation("EmployeeAops")
+  mis_actuals_uploaded EmployeeMisActual[] @relation("MisActualUploader")
+  exchange_rates_updated ExchangeRate[] @relation("ExchangeRateUpdater")
 
   @@index([manager_id], name: "idx_users_manager")
   @@index([role], name: "idx_users_role")
@@ -264,6 +345,9 @@ model Cycle {
   name                    String
   quarter                 String
   year                    Int
+  cycle_type              CycleType   @default(quarterly)
+  period                  String?
+  fiscal_year             String?
   status                  CycleStatus @default(draft)
   kpi_setting_deadline    DateTime?   @db.Date
   self_review_deadline    DateTime?   @db.Date
@@ -296,6 +380,8 @@ model Cycle {
   departments     CycleDepartment[]
   cycle_employees CycleEmployee[]
   review_meetings ReviewMeeting[]
+  pips Pip[]
+  org_goals OrgGoal[]
 
   @@map("cycles")
 }
@@ -333,8 +419,11 @@ model Kpi {
   cycle_id    String   @db.Uuid
   employee_id String   @db.Uuid
   manager_id  String   @db.Uuid
-  kra_id      String?  @db.Uuid
-  title       String
+  kra_id          String?  @db.Uuid
+  dept_goal_id    String?  @db.Uuid
+  is_aop_linked   Boolean  @default(false)
+  employee_aop_id String?  @db.Uuid
+  title           String
   description String?
   unit        String     @default("percent")
   target      Decimal?   @db.Decimal(12, 2)
@@ -351,11 +440,28 @@ model Kpi {
   cycle    Cycle @relation(fields: [cycle_id], references: [id])
   employee User  @relation("KpiEmployee", fields: [employee_id], references: [id])
   manager  User  @relation("KpiManager", fields: [manager_id], references: [id])
-  kra      Kra?  @relation(fields: [kra_id], references: [id], onDelete: SetNull)
+  kra       Kra?      @relation(fields: [kra_id], references: [id], onDelete: SetNull)
+  dept_goal    DeptGoal?    @relation(fields: [dept_goal_id], references: [id], onDelete: SetNull)
+  employee_aop EmployeeAop? @relation(fields: [employee_aop_id], references: [id])
   mis_mappings KpiMisMapping[]
+  comments     KpiComment[]
 
   @@index([cycle_id, employee_id], name: "idx_kpis_cycle_employee")
   @@map("kpis")
+}
+
+model KpiComment {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  kpi_id     String   @db.Uuid
+  author_id  String   @db.Uuid
+  body       String
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  kpi    Kpi  @relation(fields: [kpi_id], references: [id], onDelete: Cascade)
+  author User @relation("KpiCommentAuthor", fields: [author_id], references: [id])
+
+  @@index([kpi_id, created_at])
+  @@map("kpi_comments")
 }
 
 model Kra {
@@ -392,6 +498,8 @@ model KpiTemplate {
   kra_template_id String?  @db.Uuid
   sort_order      Int      @default(0)
   is_active       Boolean  @default(true)
+  is_protected    Boolean  @default(false)
+  created_by      String?  @db.Uuid
   created_at      DateTime @default(now()) @db.Timestamptz(6)
 
   role_slug    RoleSlug?    @relation(fields: [role_slug_id], references: [id], onDelete: SetNull)
@@ -414,6 +522,8 @@ model KraTemplate {
   weight        Decimal? @db.Decimal(5, 2)
   sort_order    Int      @default(0)
   is_active     Boolean  @default(true)
+  is_protected  Boolean  @default(false)
+  created_by    String?  @db.Uuid
   created_at    DateTime @default(now()) @db.Timestamptz(6)
 
   role_slug     RoleSlug?     @relation(fields: [role_slug_id], references: [id], onDelete: SetNull)
@@ -898,4 +1008,267 @@ model ScoringConfig {
 
   @@unique([rating_tier], name: "uq_scoring_config_tier")
   @@map("scoring_configs")
+}
+
+model TopTalentConfig {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rating_tiers    String[] @default(["FEE", "EE"])
+  min_cycles      Int      @default(1)
+  score_threshold Int      @default(0)
+  mis_threshold   Int      @default(0)
+  updated_by      String?  @db.Uuid
+  updated_at      DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  updater User? @relation("TopTalentConfigUpdater", fields: [updated_by], references: [id])
+
+  @@map("top_talent_config")
+}
+
+model Pip {
+  id                      String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employee_id             String      @db.Uuid
+  manager_id              String      @db.Uuid
+  initiated_by            String      @db.Uuid
+  hrbp_id                 String      @db.Uuid
+  cycle_id                String?     @db.Uuid
+  skip_level_manager_id   String?     @db.Uuid
+  reason                  String
+  start_date              DateTime    @db.Date
+  end_date                DateTime    @db.Date
+  status                  PipStatus   @default(draft)
+  outcome                 PipOutcome?
+  employee_acknowledged_at DateTime?  @db.Timestamptz(6)
+  escalation_note         String?
+  auto_flag_next_cycle    Boolean     @default(true)
+  created_at              DateTime    @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime    @default(now()) @updatedAt @db.Timestamptz(6)
+
+  employee            User            @relation("PipEmployee", fields: [employee_id], references: [id])
+  manager             User            @relation("PipManager", fields: [manager_id], references: [id])
+  initiator           User            @relation("PipInitiator", fields: [initiated_by], references: [id])
+  hrbp                User            @relation("PipHrbp", fields: [hrbp_id], references: [id])
+  cycle               Cycle?          @relation(fields: [cycle_id], references: [id])
+  skip_level_manager  User?           @relation("PipSkipLevel", fields: [skip_level_manager_id], references: [id])
+  milestones          PipMilestone[]
+  check_ins           PipCheckIn[]
+  documents           PipDocument[]
+
+  @@index([employee_id], name: "idx_pips_employee")
+  @@index([manager_id], name: "idx_pips_manager")
+  @@index([hrbp_id], name: "idx_pips_hrbp")
+  @@index([status], name: "idx_pips_status")
+  @@map("pips")
+}
+
+model PipMilestone {
+  id                  String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  pip_id              String             @db.Uuid
+  title               String
+  description         String?
+  target_metric       String
+  due_date            DateTime           @db.Date
+  status              PipMilestoneStatus @default(pending)
+  hrbp_signed_off_at  DateTime?          @db.Timestamptz(6)
+  hrbp_signed_off_by  String?            @db.Uuid
+  sort_order          Int                @default(0)
+  created_at          DateTime           @default(now()) @db.Timestamptz(6)
+
+  pip          Pip   @relation(fields: [pip_id], references: [id], onDelete: Cascade)
+  hrbp_signer  User? @relation("PipMilestoneHrbpSigner", fields: [hrbp_signed_off_by], references: [id])
+
+  @@index([pip_id], name: "idx_pip_milestones_pip")
+  @@map("pip_milestones")
+}
+
+model PipCheckIn {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  pip_id            String   @db.Uuid
+  created_by        String   @db.Uuid
+  check_in_date     DateTime @db.Date
+  progress_rating   Int
+  notes             String
+  next_steps        String?
+  employee_response String?
+  created_at        DateTime @default(now()) @db.Timestamptz(6)
+
+  pip     Pip  @relation(fields: [pip_id], references: [id], onDelete: Cascade)
+  creator User @relation("PipCheckInCreator", fields: [created_by], references: [id])
+
+  @@index([pip_id], name: "idx_pip_check_ins_pip")
+  @@map("pip_check_ins")
+}
+
+model PipDocument {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  pip_id      String   @db.Uuid
+  uploaded_by String   @db.Uuid
+  file_name   String
+  file_url    String
+  file_type   String
+  description String?
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  pip      Pip  @relation(fields: [pip_id], references: [id], onDelete: Cascade)
+  uploader User @relation("PipDocumentUploader", fields: [uploaded_by], references: [id])
+
+  @@index([pip_id], name: "idx_pip_documents_pip")
+  @@map("pip_documents")
+}
+
+model OrgGoal {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String
+  description String?
+  cycle_id    String?    @db.Uuid
+  created_by  String     @db.Uuid
+  created_at  DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime   @default(now()) @updatedAt @db.Timestamptz(6)
+
+  cycle      Cycle?     @relation(fields: [cycle_id], references: [id])
+  creator    User       @relation("OrgGoalCreator", fields: [created_by], references: [id])
+  dept_goals DeptGoal[]
+
+  @@map("org_goals")
+}
+
+model DeptGoal {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title         String
+  description   String?
+  org_goal_id   String   @db.Uuid
+  department_id String   @db.Uuid
+  created_by    String   @db.Uuid
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  org_goal   OrgGoal    @relation(fields: [org_goal_id], references: [id], onDelete: Cascade)
+  department Department @relation(fields: [department_id], references: [id])
+  creator    User       @relation("DeptGoalCreator", fields: [created_by], references: [id])
+  kpis       Kpi[]
+
+  @@map("dept_goals")
+}
+
+// ─────────────────────────────────────────
+// AOP Cascade Models
+// ─────────────────────────────────────────
+
+model OrgAop {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fiscal_year   String
+  metric        AopMetric
+  annual_target Decimal   @db.Decimal(15, 2)
+  apr           Decimal   @db.Decimal(15, 2)
+  may           Decimal   @db.Decimal(15, 2)
+  jun           Decimal   @db.Decimal(15, 2)
+  jul           Decimal   @db.Decimal(15, 2)
+  aug           Decimal   @db.Decimal(15, 2)
+  sep           Decimal   @db.Decimal(15, 2)
+  oct           Decimal   @db.Decimal(15, 2)
+  nov           Decimal   @db.Decimal(15, 2)
+  dec           Decimal   @db.Decimal(15, 2)
+  jan           Decimal   @db.Decimal(15, 2)
+  feb           Decimal   @db.Decimal(15, 2)
+  mar           Decimal   @db.Decimal(15, 2)
+  created_by    String    @db.Uuid
+  created_at    DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime  @default(now()) @db.Timestamptz(6)
+
+  creator         User            @relation("OrgAopCreatedBy", fields: [created_by], references: [id])
+  department_aops DepartmentAop[]
+
+  @@unique([fiscal_year, metric])
+  @@map("org_aops")
+}
+
+model DepartmentAop {
+  id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_aop_id    String           @db.Uuid
+  department_id String           @db.Uuid
+  status        AopCascadeStatus @default(draft)
+  annual_target Decimal          @db.Decimal(15, 2)
+  apr           Decimal          @db.Decimal(15, 2)
+  may           Decimal          @db.Decimal(15, 2)
+  jun           Decimal          @db.Decimal(15, 2)
+  jul           Decimal          @db.Decimal(15, 2)
+  aug           Decimal          @db.Decimal(15, 2)
+  sep           Decimal          @db.Decimal(15, 2)
+  oct           Decimal          @db.Decimal(15, 2)
+  nov           Decimal          @db.Decimal(15, 2)
+  dec           Decimal          @db.Decimal(15, 2)
+  jan           Decimal          @db.Decimal(15, 2)
+  feb           Decimal          @db.Decimal(15, 2)
+  mar           Decimal          @db.Decimal(15, 2)
+  created_at    DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime         @default(now()) @db.Timestamptz(6)
+
+  org_aop       OrgAop        @relation(fields: [org_aop_id], references: [id], onDelete: Cascade)
+  department    Department    @relation(fields: [department_id], references: [id])
+  employee_aops EmployeeAop[]
+
+  @@unique([org_aop_id, department_id])
+  @@map("department_aops")
+}
+
+model EmployeeAop {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  department_aop_id String    @db.Uuid
+  employee_id       String    @db.Uuid
+  annual_target     Decimal   @db.Decimal(15, 2)
+  apr               Decimal   @db.Decimal(15, 2)
+  may               Decimal   @db.Decimal(15, 2)
+  jun               Decimal   @db.Decimal(15, 2)
+  jul               Decimal   @db.Decimal(15, 2)
+  aug               Decimal   @db.Decimal(15, 2)
+  sep               Decimal   @db.Decimal(15, 2)
+  oct               Decimal   @db.Decimal(15, 2)
+  nov               Decimal   @db.Decimal(15, 2)
+  dec               Decimal   @db.Decimal(15, 2)
+  jan               Decimal   @db.Decimal(15, 2)
+  feb               Decimal   @db.Decimal(15, 2)
+  mar               Decimal   @db.Decimal(15, 2)
+  exited_at         DateTime? @db.Timestamptz(6)
+  replacement_for   String?   @db.Uuid
+  created_at        DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime  @default(now()) @db.Timestamptz(6)
+
+  department_aop  DepartmentAop      @relation(fields: [department_aop_id], references: [id], onDelete: Cascade)
+  employee        User               @relation("EmployeeAops", fields: [employee_id], references: [id])
+  mis_actuals     EmployeeMisActual[]
+  kpis            Kpi[]
+  original_record EmployeeAop?       @relation("AopReplacement", fields: [replacement_for], references: [id])
+  replacements    EmployeeAop[]      @relation("AopReplacement")
+
+  @@unique([department_aop_id, employee_id])
+  @@map("employee_aops")
+}
+
+model EmployeeMisActual {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employee_aop_id String   @db.Uuid
+  month           String   // "apr", "may", etc.
+  actual_value    Decimal  @db.Decimal(15, 2)
+  uploaded_by     String   @db.Uuid
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  employee_aop EmployeeAop @relation(fields: [employee_aop_id], references: [id], onDelete: Cascade)
+  uploader     User        @relation("MisActualUploader", fields: [uploaded_by], references: [id])
+
+  @@unique([employee_aop_id, month])
+  @@map("employee_mis_actuals")
+}
+
+model ExchangeRate {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fiscal_year   String
+  from_currency String
+  to_currency   String   @default("INR")
+  rate          Decimal  @db.Decimal(10, 4)
+  updated_by    String   @db.Uuid
+  updated_at    DateTime @default(now()) @db.Timestamptz(6)
+
+  updater User @relation("ExchangeRateUpdater", fields: [updated_by], references: [id])
+
+  @@unique([fiscal_year, from_currency, to_currency])
+  @@map("exchange_rates")
 }

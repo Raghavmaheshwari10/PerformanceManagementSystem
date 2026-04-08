@@ -10,7 +10,7 @@ import type { User } from '@/lib/types'
 import { ROLE_LABELS } from '@/lib/constants'
 import { Pencil, Trash2 } from 'lucide-react'
 
-const ROLES = ['employee', 'manager', 'hrbp', 'admin'] as const
+const ROLES = ['employee', 'manager', 'hrbp', 'department_head', 'admin', 'founder', 'superadmin'] as const
 
 export function UsersTable({ users, departments }: { users: User[]; departments: { id: string; name: string }[] }) {
   const router = useRouter()

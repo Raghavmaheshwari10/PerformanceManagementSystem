@@ -14,6 +14,7 @@ const makeUser = (id: string): User => ({
   manager_id: null,
   variable_pay: 0,
   is_active: true,
+  is_founder: false,
   synced_at: new Date().toISOString(),
   created_at: new Date().toISOString(),
 })

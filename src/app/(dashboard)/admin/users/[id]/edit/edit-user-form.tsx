@@ -65,7 +65,10 @@ export function EditUserForm({ user, departments, managers, assignedDeptIds }: P
               <option value="employee">Employee</option>
               <option value="manager">Manager</option>
               <option value="hrbp">HRBP</option>
+              <option value="department_head">Department Head</option>
               <option value="admin">Admin</option>
+              <option value="founder">Founder</option>
+              <option value="superadmin">Super Admin</option>
             </select>
           </div>
           <div className="space-y-1">

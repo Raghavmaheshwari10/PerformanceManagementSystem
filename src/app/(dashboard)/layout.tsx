@@ -39,7 +39,15 @@ function notificationMessage(type: string, p: Record<string, string | undefined>
     case 'feedback_received':
       return name ? `${name} sent you feedback.` : 'You received new feedback.'
     case 'admin_message':
-      return p.text ?? 'You have a new message from admin.'
+      return p.title ? `${p.title}: ${p.body ?? ''}` : (p.text ?? 'You have a new message from admin.')
+    case 'aop_dept_target_assigned':
+      return p.body ?? 'AOP targets have been assigned to your department.'
+    case 'aop_cascade_locked':
+      return p.body ?? 'A department has locked their AOP cascade targets.'
+    case 'aop_employee_targets_set':
+      return p.body ?? 'Your AOP targets have been set by your department head.'
+    case 'aop_mis_uploaded':
+      return p.body ?? 'MIS actuals have been uploaded for your department.'
     default:
       return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
   }
@@ -97,6 +105,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (hasDirectReports && !availableRoles.includes('manager')) {
     availableRoles.push('manager')
   }
+  // Department heads always get manager view (they manage teams)
+  if (user.role === 'department_head' && !availableRoles.includes('manager')) {
+    availableRoles.push('manager')
+  }
 
   return (
     <ClientProviders initialOnboarded={!!user.onboarded_at}>
@@ -116,7 +128,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 </div>
                 <div>
                   <Greeting name={firstName} />
-                  <p className="text-xs text-slate-500">{{ admin: 'Admin', hrbp: 'HRBP', manager: 'Manager', employee: 'Employee', department_head: 'Department Head' }[user.role as string] ?? user.role} Dashboard</p>
+                  <p className="text-xs text-slate-500">{{ hrbp: 'HRBP', superadmin: 'Super Admin', department_head: 'Department Head', founder: 'Founder', admin: 'Admin', manager: 'Manager', employee: 'Employee' }[user.role] ?? user.role} Dashboard</p>
                 </div>
               </div>
               {/* Spacer for mobile (hamburger takes left side) */}

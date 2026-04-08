@@ -12,9 +12,10 @@ import {
   ClipboardCheck, History, Target, MessageSquare, Users2,
   UserCircle, LayoutDashboard, CalendarClock, UserCog,
   Building2, FileBarChart, Settings2, BarChart3, Scale,
-  ScrollText, BookOpen, HelpCircle, LogOut,
+  ScrollText, BookOpen, HelpCircle, LogOut, Star,
   Wallet, Bell, FileSpreadsheet, Menu, X,
   Mail, BadgeCheck, Video, PanelLeftClose, PanelLeftOpen,
+  AlertTriangle, Crosshair, Crown, Upload, DollarSign,
 } from 'lucide-react'
 
 interface NavItem {
@@ -39,6 +40,10 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'My Team',      href: '/manager',           icon: Users2 },
     { label: 'Team Payouts', href: '/manager/payouts',   icon: Wallet },
     { label: 'Team Reports', href: '/manager/reports',   icon: FileBarChart },
+    { label: 'Top Talent',       href: '/manager/top-talent',       icon: Star },
+    { label: 'Competency Gaps',  href: '/manager/competency-gaps',  icon: Target },
+    { label: 'Goal Cascading',   href: '/manager/goal-cascading',   icon: Target },
+    { label: 'PIP',              href: '/manager/pip',              icon: AlertTriangle },
     { label: 'MIS Tracking', href: '/manager/mis',       icon: BarChart3 },
     { label: 'My Review',    href: '/manager/my-review', icon: ClipboardCheck, section: 'divider' },
     { label: 'Help',         href: '#help',              icon: HelpCircle },
@@ -50,6 +55,10 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Employees',    href: '/hrbp/employees',    icon: Users2 },
     { label: 'Payouts',      href: '/hrbp/payouts',      icon: Wallet },
     { label: 'Reports',      href: '/hrbp/reports',      icon: BarChart3 },
+    { label: 'Top Talent',       href: '/hrbp/top-talent',       icon: Star },
+    { label: 'Competency Gaps',  href: '/hrbp/competency-gaps',  icon: Target },
+    { label: 'Goal Cascading',   href: '/hrbp/goal-cascading',   icon: Target },
+    { label: 'PIP',              href: '/hrbp/pip',              icon: AlertTriangle },
     { label: 'MIS Overview', href: '/hrbp/mis',          icon: BarChart3 },
     { label: 'Audit Log',    href: '/hrbp/audit-log',    icon: ScrollText },
     { label: 'My Review',    href: '/hrbp/my-review',    icon: ClipboardCheck, requireAlsoEmployee: true, section: 'divider' },
@@ -64,6 +73,9 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Roles',            href: '/admin/roles',            icon: BadgeCheck },
     { label: 'KPI Templates',    href: '/admin/kpi-templates',    icon: FileBarChart,    section: 'divider' },
     { label: 'KRA Templates',    href: '/admin/kra-templates',    icon: Target },
+    { label: 'AOP Targets',      href: '/admin/aop',              icon: Crosshair },
+    { label: 'Upload MIS Actuals', href: '/admin/aop/upload',     icon: Upload },
+    { label: 'Salary Data',        href: '/admin/aop/salary',     icon: DollarSign },
     { label: 'MIS Integration',  href: '/admin/mis',              icon: FileSpreadsheet },
     { label: 'Competencies',     href: '/admin/competencies',     icon: Target,          section: 'divider' },
     { label: 'Review Templates', href: '/admin/review-templates', icon: FileSpreadsheet },
@@ -72,6 +84,10 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Payout Config',    href: '/admin/payout-config',    icon: Wallet,          section: 'divider' },
     { label: 'Payouts',          href: '/admin/payouts',          icon: Settings2 },
     { label: 'Reports',          href: '/admin/reports',          icon: FileBarChart },
+    { label: 'Top Talent',       href: '/admin/top-talent',       icon: Star },
+    { label: 'Competency Gaps',  href: '/admin/competency-gaps',  icon: Target },
+    { label: 'Goal Cascading',   href: '/admin/goal-cascading',   icon: Target },
+    { label: 'PIP',              href: '/admin/pip',              icon: AlertTriangle },
     { label: 'Audit Log',        href: '/admin/audit-log',        icon: ScrollText },
     { label: 'Docs',             href: '/docs',                   icon: BookOpen,        section: 'divider' },
     { label: 'Help',             href: '#help',                   icon: HelpCircle },
@@ -81,30 +97,49 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Cycles',           href: '/admin/cycles',           icon: CalendarClock },
     { label: 'Users',            href: '/admin/users',            icon: UserCog,         section: 'divider' },
     { label: 'Departments',      href: '/admin/departments',      icon: Building2 },
+    { label: 'Roles',            href: '/admin/roles',            icon: BadgeCheck },
     { label: 'KPI Templates',    href: '/admin/kpi-templates',    icon: FileBarChart,    section: 'divider' },
     { label: 'KRA Templates',    href: '/admin/kra-templates',    icon: Target },
+    { label: 'AOP Templates',    href: '/admin/aop-templates',    icon: FileSpreadsheet },
+    { label: 'AOP Targets',      href: '/admin/aop',              icon: Crosshair },
+    { label: 'Upload MIS Actuals', href: '/admin/aop/upload',     icon: Upload },
+    { label: 'Salary Data',        href: '/admin/aop/salary',     icon: DollarSign },
     { label: 'MIS Integration',  href: '/admin/mis',              icon: FileSpreadsheet },
-    { label: 'Help',             href: '#help',                   icon: HelpCircle,      section: 'divider' },
-  ],
-  founder: [
-    { label: 'Founder View', href: '/admin/founder', icon: LayoutDashboard },
-    { label: 'Help',         href: '#help',          icon: HelpCircle,  section: 'divider' },
+    { label: 'Competencies',     href: '/admin/competencies',     icon: Target,          section: 'divider' },
+    { label: 'Review Templates', href: '/admin/review-templates', icon: FileSpreadsheet },
+    { label: 'Email Templates',  href: '/admin/email-templates',  icon: Mail },
+    { label: 'Notifications',    href: '/admin/notifications',    icon: Bell },
+    { label: 'Payout Config',    href: '/admin/payout-config',    icon: Wallet,          section: 'divider' },
+    { label: 'Payouts',          href: '/admin/payouts',          icon: Settings2 },
+    { label: 'Reports',          href: '/admin/reports',          icon: FileBarChart },
+    { label: 'Top Talent',       href: '/admin/top-talent',       icon: Star },
+    { label: 'Competency Gaps',  href: '/admin/competency-gaps',  icon: Target },
+    { label: 'Goal Cascading',   href: '/admin/goal-cascading',   icon: Target },
+    { label: 'PIP',              href: '/admin/pip',              icon: AlertTriangle },
+    { label: 'Audit Log',        href: '/admin/audit-log',        icon: ScrollText },
+    { label: 'Docs',             href: '/docs',                   icon: BookOpen,        section: 'divider' },
+    { label: 'Help',             href: '#help',                   icon: HelpCircle },
   ],
   department_head: [
-    { label: 'My Team',   href: '/manager',           icon: Users2 },
-    { label: 'My Review', href: '/employee',           icon: ClipboardCheck, section: 'divider' },
-    { label: 'Help',      href: '#help',               icon: HelpCircle },
+    { label: 'AOP Cascade',  href: '/department-head/aop',    icon: Crosshair },
+    { label: 'My Team',      href: '/department-head/team',   icon: Users2 },
+    { label: 'My Review',    href: '/department-head/review', icon: ClipboardCheck },
+    { label: 'Help',         href: '#help',                   icon: HelpCircle },
+  ],
+  founder: [
+    { label: 'Founder View', href: '/admin/founder',          icon: Crown },
+    { label: 'Help',         href: '#help',                   icon: HelpCircle },
   ],
 }
 
 const ROLE_COLORS: Record<UserRole, string> = {
   admin:           'bg-indigo-600',
   superadmin:      'bg-red-600',
-  founder:         'bg-yellow-600',
-  department_head: 'bg-cyan-600',
   employee:        'bg-emerald-600',
   manager:         'bg-amber-500',
   hrbp:            'bg-violet-600',
+  department_head: 'bg-cyan-600',
+  founder:         'bg-yellow-600',
 }
 
 function UserAvatar({ name, role }: { name: string; role?: UserRole }) {
@@ -120,33 +155,34 @@ function UserAvatar({ name, role }: { name: string; role?: UserRole }) {
 }
 
 const ROLE_HOME: Record<UserRole, string> = {
-  superadmin:      '/admin',
   admin:           '/admin',
-  founder:         '/admin/founder',
-  department_head: '/manager',
+  superadmin:      '/admin',
   manager:         '/manager',
   hrbp:            '/hrbp',
   employee:        '/employee',
+  department_head: '/department-head',
+  founder:         '/admin/founder',
 }
 
 const ROLE_DISPLAY: Record<string, string> = {
-  superadmin:      'Super Admin',
   admin:           'Admin',
-  founder:         'Founder',
-  department_head: 'Dept Head',
+  superadmin:      'Super Admin',
   manager:         'Manager',
   hrbp:            'HRBP',
   employee:        'Employee',
+  department_head: 'Department Head',
+  founder:         'Founder',
 }
 
 const STORAGE_KEY = 'pms-sidebar-collapsed'
 
 export function Sidebar({
-  role, userName, isAlsoEmployee = false, availableRoles = []
+  role, userName, isAlsoEmployee = false, isFounder = false, availableRoles = []
 }: {
   role: UserRole
   userName: string
   isAlsoEmployee?: boolean
+  isFounder?: boolean
   availableRoles?: string[]
 }) {
   const pathname = usePathname()
@@ -168,9 +204,10 @@ export function Sidebar({
   }
 
   // Determine active view based on current path
-  const activeView: UserRole = pathname.startsWith('/admin') ? 'admin'
+  const activeView: UserRole = pathname.startsWith('/admin') ? (role === 'superadmin' ? 'superadmin' : role === 'founder' ? 'founder' : 'admin')
     : pathname.startsWith('/manager') ? 'manager'
     : pathname.startsWith('/hrbp') ? 'hrbp'
+    : pathname.startsWith('/department-head') ? 'department_head'
     : 'employee'
 
   const currentRole = availableRoles.includes(activeView) ? activeView : role
@@ -237,7 +274,7 @@ export function Sidebar({
         {visibleItems.map((item, idx) => {
           const Icon = item.icon
           const isActive = item.href !== '#help' &&
-            (pathname === item.href || (item.href !== '/admin' && item.href !== '/employee' && pathname.startsWith(item.href)))
+            (pathname === item.href || (item.href !== '/admin' && item.href !== '/employee' && pathname.startsWith(item.href + '/')))
           const isExactActive = pathname === item.href
           const active = isActive || isExactActive
           const showDivider = item.section === 'divider' && idx > 0
@@ -294,7 +331,7 @@ export function Sidebar({
           <UserAvatar name={userName} role={role} />
           <div className="min-w-0">
             <p className="text-[13px] font-medium text-white/90 truncate leading-tight">{userName}</p>
-            <p className="text-[10px] text-white/40">{role === 'hrbp' ? 'HRBP' : role.charAt(0).toUpperCase() + role.slice(1)}</p>
+            <p className="text-[10px] text-white/40">{ROLE_DISPLAY[role] ?? (role.charAt(0).toUpperCase() + role.slice(1))}</p>
           </div>
         </div>
       </div>
@@ -342,7 +379,7 @@ export function Sidebar({
         {visibleItems.map((item, idx) => {
           const Icon = item.icon
           const isActive = item.href !== '#help' &&
-            (pathname === item.href || (item.href !== '/admin' && item.href !== '/employee' && pathname.startsWith(item.href)))
+            (pathname === item.href || (item.href !== '/admin' && item.href !== '/employee' && pathname.startsWith(item.href + '/')))
           const isExactActive = pathname === item.href
           const active = isActive || isExactActive
           const showDivider = item.section === 'divider' && idx > 0

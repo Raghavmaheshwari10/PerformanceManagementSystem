@@ -116,8 +116,13 @@ export async function toggleKraTemplateActive(id: string, current: boolean): Pro
   revalidatePath('/admin/kra-templates')
 }
 
-export async function deleteKraTemplate(id: string): Promise<void> {
+export async function deleteKraTemplate(id: string): Promise<ActionResult> {
   const user = await requireRole(['admin'])
+  const template = await prisma.kraTemplate.findUnique({ where: { id } })
+  if (!template) return { data: null, error: 'Template not found' }
+  if (template.is_protected && user.role !== 'superadmin') {
+    return { data: null, error: 'This template is protected and can only be deleted by a superadmin.' }
+  }
   await prisma.kraTemplate.delete({ where: { id } })
   await prisma.auditLog.create({
     data: {
@@ -129,4 +134,5 @@ export async function deleteKraTemplate(id: string): Promise<void> {
     },
   })
   revalidatePath('/admin/kra-templates')
+  return { data: null, error: null }
 }

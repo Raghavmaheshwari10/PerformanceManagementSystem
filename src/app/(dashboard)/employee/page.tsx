@@ -11,6 +11,7 @@ import { DownloadAppraisalButton } from '@/components/download-appraisal-button'
 import { CycleTimeline } from '@/components/cycle-timeline'
 import { RATING_TIERS } from '@/lib/constants'
 import type { Cycle, Kpi, Kra, Review, Appraisal, ReviewQuestionWithCompetency } from '@/lib/types'
+import { PipBanner } from '@/components/pip-banner'
 import { OnboardingChecklist } from '@/components/onboarding-checklist'
 import type { ChecklistItem } from '@/components/onboarding-checklist'
 import { markUserOnboarded } from '@/lib/tour-actions'
@@ -305,6 +306,7 @@ export default async function EmployeeReviewPage() {
 
   return (
     <div className="space-y-6">
+      <PipBanner />
       {showOnboarding && <OnboardingChecklist items={checklistItems} dismissAction={markUserOnboarded} />}
 
       {/* Header */}
@@ -756,6 +758,8 @@ export default async function EmployeeReviewPage() {
             kras={serializedKras}
             questions={templateQuestions}
             existingResponses={existingResponses}
+            currentUserId={user.id}
+            cycleStatus={resolvedStatus}
           />
         </div>
       )}

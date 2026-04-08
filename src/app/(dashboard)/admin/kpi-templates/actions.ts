@@ -90,8 +90,13 @@ export async function toggleTemplateActive(id: string, current: boolean): Promis
   revalidatePath('/admin/kpi-templates')
 }
 
-export async function deleteKpiTemplate(id: string): Promise<void> {
+export async function deleteKpiTemplate(id: string): Promise<ActionResult> {
   const user = await requireRole(['admin'])
+  const template = await prisma.kpiTemplate.findUnique({ where: { id } })
+  if (!template) return { data: null, error: 'Template not found' }
+  if (template.is_protected && user.role !== 'superadmin') {
+    return { data: null, error: 'This template is protected and can only be deleted by a superadmin.' }
+  }
   await prisma.kpiTemplate.delete({ where: { id } })
   await prisma.auditLog.create({
     data: {
@@ -103,4 +108,5 @@ export async function deleteKpiTemplate(id: string): Promise<void> {
     },
   })
   revalidatePath('/admin/kpi-templates')
+  return { data: null, error: null }
 }

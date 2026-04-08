@@ -113,6 +113,11 @@ export async function createUser(_prev: ActionResult | null, formData: FormData)
   const email         = (formData.get('email') as string)?.trim()
   const full_name     = (formData.get('full_name') as string)?.trim()
   const role          = formData.get('role') as UserRole
+
+  // Only superadmin can create superadmin users
+  if (role === 'superadmin' && admin.role !== 'superadmin') {
+    return { data: null, error: 'Only a superadmin can assign the superadmin role.' }
+  }
   const department_id = (formData.get('department_id') as string) || null
   const designation   = (formData.get('designation') as string)?.trim() || null
   const variable_pay  = parseFloat(formData.get('variable_pay') as string) || 0
@@ -188,12 +193,19 @@ export async function updateUser(_prev: ActionResult | null, formData: FormData)
   const emp_code      = (formData.get('emp_code') as string)?.trim() || null
   const full_name     = (formData.get('full_name') as string)?.trim()
   const role          = formData.get('role') as UserRole
+
+  // Only superadmin can assign or remove the superadmin role
+  const target = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } })
+  if ((role === 'superadmin' || target?.role === 'superadmin') && admin.role !== 'superadmin') {
+    return { data: null, error: 'Only a superadmin can assign or remove the superadmin role.' }
+  }
   const department_id = formData.get('department_id') as string || null
   const designation   = (formData.get('designation') as string)?.trim() || null
   const variable_pay  = parseFloat(formData.get('variable_pay') as string) || 0
   const manager_id    = formData.get('manager_id') as string || null
   const is_also_employee = formData.get('is_also_employee') === 'true'
   const is_active     = formData.get('is_active') === 'true'
+  const salary_currency = (formData.get('salary_currency') as string)?.trim() || 'INR'
 
   // Get old values for audit
   const old = await prisma.user.findUnique({
@@ -213,6 +225,7 @@ export async function updateUser(_prev: ActionResult | null, formData: FormData)
       manager_id,
       is_also_employee: role === 'hrbp' ? is_also_employee : false,
       is_active,
+      salary_currency,
     },
   })
 
@@ -317,6 +330,11 @@ export async function updateUserRole(userId: string, role: string): Promise<void
     where: { id: userId },
     select: { role: true },
   })
+
+  // Only superadmin can assign or remove the superadmin role
+  if ((role === 'superadmin' || target?.role === 'superadmin') && user.role !== 'superadmin') {
+    throw new Error('Only a superadmin can assign or remove the superadmin role.')
+  }
 
   try {
     await prisma.user.update({
@@ -438,6 +456,12 @@ export async function revokeInvite(userId: string): Promise<ActionResult> {
 export async function deleteUser(userId: string): Promise<ActionResult> {
   const admin = await requireRole(['admin'])
 
+  // Only superadmin can delete a superadmin account
+  const targetUser = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } })
+  if (targetUser?.role === 'superadmin' && admin.role !== 'superadmin') {
+    return { data: null, error: 'Only a superadmin can delete another superadmin account.' }
+  }
+
   // Check for dependent records that represent submitted work
   // KPIs are safe to cascade-delete (handled in the transaction below)
   const [reviews, appraisals] = await Promise.all([
@@ -469,6 +493,7 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
       prisma.feedback.deleteMany({ where: { OR: [{ from_user_id: userId }, { to_user_id: userId }] } }),
       prisma.reviewResponse.deleteMany({ where: { respondent_id: userId } }),
       prisma.kra.deleteMany({ where: { employee_id: userId } }),
+      prisma.kpiComment.deleteMany({ where: { author_id: userId } }),
       prisma.kpi.deleteMany({ where: { OR: [{ employee_id: userId }, { manager_id: userId }] } }),
       // Unlink direct reports and cycles created by this user
       prisma.user.updateMany({ where: { manager_id: userId }, data: { manager_id: null } }),
@@ -521,6 +546,18 @@ export async function bulkUpdateDepartment(userIds: string[], departmentId: stri
 export async function bulkUpdateRole(userIds: string[], role: UserRole): Promise<ActionResult> {
   const admin = await requireRole(['admin'])
 
+  // Only superadmin can bulk-assign superadmin role
+  if (role === 'superadmin' && admin.role !== 'superadmin') {
+    return { data: null, error: 'Only a superadmin can assign the superadmin role.' }
+  }
+  // Check if any target users are superadmins (non-superadmin cannot change their role)
+  if (admin.role !== 'superadmin') {
+    const superadmins = await prisma.user.count({ where: { id: { in: userIds }, role: 'superadmin' } })
+    if (superadmins > 0) {
+      return { data: null, error: 'Only a superadmin can change the role of a superadmin account.' }
+    }
+  }
+
   await prisma.user.updateMany({
     where: { id: { in: userIds } },
     data: { role: role as import('@prisma/client').UserRole },
@@ -563,6 +600,14 @@ export async function bulkToggleActive(userIds: string[], isActive: boolean): Pr
 export async function bulkDeleteUsers(userIds: string[]): Promise<ActionResult> {
   const admin = await requireRole(['admin'])
 
+  // Only superadmin can delete superadmin accounts
+  if (admin.role !== 'superadmin') {
+    const superadmins = await prisma.user.count({ where: { id: { in: userIds }, role: 'superadmin' } })
+    if (superadmins > 0) {
+      return { data: null, error: 'Only a superadmin can delete a superadmin account.' }
+    }
+  }
+
   const blocked: string[] = []
   const deletable: string[] = []
 
@@ -583,6 +628,7 @@ export async function bulkDeleteUsers(userIds: string[]): Promise<ActionResult> 
       prisma.hrbpDepartment.deleteMany({ where: { hrbp_id: { in: deletable } } }),
       prisma.cycleEmployee.deleteMany({ where: { employee_id: { in: deletable } } }),
       prisma.peerReviewRequest.deleteMany({ where: { OR: [{ reviewee_id: { in: deletable } }, { peer_user_id: { in: deletable } }, { requested_by: { in: deletable } }] } }),
+      prisma.kpiComment.deleteMany({ where: { author_id: { in: deletable } } }),
       prisma.kpi.deleteMany({ where: { OR: [{ employee_id: { in: deletable } }, { manager_id: { in: deletable } }] } }),
       prisma.kra.deleteMany({ where: { employee_id: { in: deletable } } }),
       prisma.user.deleteMany({ where: { id: { in: deletable } } }),

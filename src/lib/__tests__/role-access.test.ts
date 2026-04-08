@@ -1,4 +1,4 @@
-import { vi } from 'vitest'
+import { vi, describe, it, expect, beforeEach } from 'vitest'
 
 // ---------------------------------------------------------------------------
 // Module mocks — must be declared BEFORE importing the functions under test
@@ -49,7 +49,7 @@ import {
   makeHrbp,
 } from '@/test/helpers'
 
-import type { UserRole } from '@/lib/types'
+import type { UserRole, CycleStatus } from '@/lib/types'
 
 // ---------------------------------------------------------------------------
 // Typed references for the mocked functions
@@ -58,7 +58,7 @@ import type { UserRole } from '@/lib/types'
 const mockAuth = auth as ReturnType<typeof vi.fn>
 const mockFindUnique = prisma.user.findUnique as ReturnType<typeof vi.fn>
 const mockCount = prisma.user.count as ReturnType<typeof vi.fn>
-const mockRedirect = redirect as ReturnType<typeof vi.fn>
+const mockRedirect = redirect as unknown as ReturnType<typeof vi.fn>
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -378,7 +378,7 @@ describe('Cycle transition role matrix', () => {
     it.each(revertable)(
       '%s → %s revert is allowed ONLY for admin',
       (from, _to) => {
-        const rule = getRevertRequirements(from as UserRole)
+        const rule = getRevertRequirements(from as CycleStatus)
         expect(rule).not.toBeNull()
         expect(rule!.allowedRoles).toEqual(['admin'])
       },
