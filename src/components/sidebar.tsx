@@ -73,6 +73,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Roles',            href: '/admin/roles',            icon: BadgeCheck },
     { label: 'KPI Templates',    href: '/admin/kpi-templates',    icon: FileBarChart,    section: 'divider' },
     { label: 'KRA Templates',    href: '/admin/kra-templates',    icon: Target },
+    { label: 'AOP Targets',      href: '/admin/aop',              icon: Crosshair },
     { label: 'MIS Integration',  href: '/admin/mis',              icon: FileSpreadsheet },
     { label: 'Competencies',     href: '/admin/competencies',     icon: Target,          section: 'divider' },
     { label: 'Review Templates', href: '/admin/review-templates', icon: FileSpreadsheet },
