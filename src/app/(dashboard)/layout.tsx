@@ -116,21 +116,21 @@ export default async function DashboardLayout({ children }: { children: React.Re
             isAlsoEmployee={user.is_also_employee ?? false}
             availableRoles={availableRoles}
           />
-          <div className="flex flex-1 flex-col overflow-hidden gradient-mesh noise-overlay bg-slate-950">
-            <header className="relative z-10 flex items-center justify-between bg-slate-900/80 backdrop-blur-sm border-b border-white/10 px-6 py-3 lg:px-8">
+          <div className="flex flex-1 flex-col overflow-hidden gradient-mesh noise-overlay">
+            <header className="relative z-10 flex items-center justify-between bg-white/80 backdrop-blur-sm border-b border-indigo-100/50 px-6 py-3 lg:px-8">
               <div className="hidden lg:flex items-center gap-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white text-sm font-bold shadow-md shadow-indigo-500/20">
                   {firstName[0]}
                 </div>
                 <div>
                   <Greeting name={firstName} />
-                  <p className="text-xs text-white/50">{{ hrbp: 'HRBP', superadmin: 'Super Admin', department_head: 'Department Head', founder: 'Founder', admin: 'Admin', manager: 'Manager', employee: 'Employee' }[user.role] ?? user.role} Dashboard</p>
+                  <p className="text-xs text-slate-500">{{ hrbp: 'HRBP', superadmin: 'Super Admin', department_head: 'Department Head', founder: 'Founder', admin: 'Admin', manager: 'Manager', employee: 'Employee' }[user.role] ?? user.role} Dashboard</p>
                 </div>
               </div>
               {/* Spacer for mobile (hamburger takes left side) */}
               <div className="lg:hidden" />
               <div className="flex items-center gap-3">
-                <div className="hidden md:flex items-center gap-1.5 rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-xs text-white/50">
+                <div className="hidden md:flex items-center gap-1.5 rounded-lg bg-indigo-50/50 border border-indigo-100/50 px-3 py-1.5 text-xs text-slate-500">
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
                   {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                 </div>
