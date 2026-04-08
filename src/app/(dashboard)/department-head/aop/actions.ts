@@ -4,6 +4,7 @@ import { requireRole } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { upsertEmployeeAop, lockDepartmentCascade } from '@/lib/db/aop'
 import { revalidatePath } from 'next/cache'
+import { createKpisFromCascade } from '@/lib/aop-kpi-sync'
 import type { ActionResult } from '@/lib/types'
 
 const MONTHS = ['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'] as const
@@ -141,6 +142,18 @@ export async function lockCascade(_prev: ActionResult, formData: FormData): Prom
         },
       },
     })
+
+    // Auto-create KPIs for each active cycle in this fiscal year
+    const activeCycles = await prisma.cycle.findMany({
+      where: {
+        fiscal_year: deptAop.org_aop.fiscal_year,
+        status: { not: 'published' },
+      },
+    })
+
+    for (const cycle of activeCycles) {
+      await createKpisFromCascade(department_aop_id, cycle.id)
+    }
   } catch (e) {
     return { data: null, error: e instanceof Error ? e.message : 'Failed to lock cascade' }
   }
