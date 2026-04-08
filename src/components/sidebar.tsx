@@ -15,7 +15,7 @@ import {
   ScrollText, BookOpen, HelpCircle, LogOut, Star,
   Wallet, Bell, FileSpreadsheet, Menu, X,
   Mail, BadgeCheck, Video, PanelLeftClose, PanelLeftOpen,
-  AlertTriangle, Crosshair, Crown, Upload,
+  AlertTriangle, Crosshair, Crown, Upload, DollarSign,
 } from 'lucide-react'
 
 interface NavItem {
@@ -75,6 +75,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'KRA Templates',    href: '/admin/kra-templates',    icon: Target },
     { label: 'AOP Targets',      href: '/admin/aop',              icon: Crosshair },
     { label: 'Upload MIS Actuals', href: '/admin/aop/upload',     icon: Upload },
+    { label: 'Salary Data',        href: '/admin/aop/salary',     icon: DollarSign },
     { label: 'MIS Integration',  href: '/admin/mis',              icon: FileSpreadsheet },
     { label: 'Competencies',     href: '/admin/competencies',     icon: Target,          section: 'divider' },
     { label: 'Review Templates', href: '/admin/review-templates', icon: FileSpreadsheet },

@@ -42,6 +42,7 @@ export interface User {
   annual_variable?: number | null
   retention_bonus?: number | null
   onetime_bonus?: number | null
+  salary_currency?: string
   designation: string | null
   manager_id: string | null
   variable_pay: number
@@ -487,4 +488,18 @@ export interface EmployeeMisActual {
   actual_value: number
   uploaded_by: string
   created_at: string
+}
+
+// ─────────────────────────────────────────
+// Exchange Rate Types
+// ─────────────────────────────────────────
+
+export interface ExchangeRate {
+  id: string
+  fiscal_year: string
+  from_currency: string
+  to_currency: string
+  rate: number
+  updated_by: string
+  updated_at: string
 }

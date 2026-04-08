@@ -251,6 +251,7 @@ model User {
   annual_variable  Decimal? @db.Decimal(12, 2)
   retention_bonus  Decimal? @db.Decimal(12, 2)
   onetime_bonus    Decimal? @db.Decimal(12, 2)
+  salary_currency  String   @default("INR") // INR, AED, USD
   password_hash    String?
   reset_token              String?
   reset_token_expires_at   DateTime? @db.Timestamptz(6)
@@ -313,6 +314,7 @@ model User {
   org_aops_created     OrgAop[]          @relation("OrgAopCreatedBy")
   employee_aops        EmployeeAop[]     @relation("EmployeeAops")
   mis_actuals_uploaded EmployeeMisActual[] @relation("MisActualUploader")
+  exchange_rates_updated ExchangeRate[] @relation("ExchangeRateUpdater")
 
   @@index([manager_id], name: "idx_users_manager")
   @@index([role], name: "idx_users_role")
@@ -1226,4 +1228,19 @@ model EmployeeMisActual {
 
   @@unique([employee_aop_id, month])
   @@map("employee_mis_actuals")
+}
+
+model ExchangeRate {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fiscal_year   String
+  from_currency String
+  to_currency   String   @default("INR")
+  rate          Decimal  @db.Decimal(10, 4)
+  updated_by    String   @db.Uuid
+  updated_at    DateTime @default(now()) @db.Timestamptz(6)
+
+  updater User @relation("ExchangeRateUpdater", fields: [updated_by], references: [id])
+
+  @@unique([fiscal_year, from_currency, to_currency])
+  @@map("exchange_rates")
 }

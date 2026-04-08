@@ -194,6 +194,7 @@ export async function updateUser(_prev: ActionResult | null, formData: FormData)
   const manager_id    = formData.get('manager_id') as string || null
   const is_also_employee = formData.get('is_also_employee') === 'true'
   const is_active     = formData.get('is_active') === 'true'
+  const salary_currency = (formData.get('salary_currency') as string)?.trim() || 'INR'
 
   // Get old values for audit
   const old = await prisma.user.findUnique({
@@ -213,6 +214,7 @@ export async function updateUser(_prev: ActionResult | null, formData: FormData)
       manager_id,
       is_also_employee: role === 'hrbp' ? is_also_employee : false,
       is_active,
+      salary_currency,
     },
   })
 
