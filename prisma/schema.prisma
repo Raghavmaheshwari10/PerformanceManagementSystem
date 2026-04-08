@@ -179,6 +179,22 @@ enum CycleType {
   @@map("cycle_type")
 }
 
+enum AopMetric {
+  delivered_revenue
+  gross_margin
+  gmv
+
+  @@map("aop_metric")
+}
+
+enum AopCascadeStatus {
+  draft
+  cascaded
+  locked
+
+  @@map("aop_cascade_status")
+}
+
 // ─────────────────────────────────────────
 // Models
 // ─────────────────────────────────────────
@@ -212,6 +228,7 @@ model Department {
   competencies    Competency[]
   aop_targets     AopTarget[]
   dept_goals      DeptGoal[]
+  department_aops DepartmentAop[]
 
   @@map("departments")
 }
@@ -293,6 +310,9 @@ model User {
   pip_documents_uploaded PipDocument[]     @relation("PipDocumentUploader")
   org_goals_created  OrgGoal[]  @relation("OrgGoalCreator")
   dept_goals_created DeptGoal[] @relation("DeptGoalCreator")
+  org_aops_created     OrgAop[]          @relation("OrgAopCreatedBy")
+  employee_aops        EmployeeAop[]     @relation("EmployeeAops")
+  mis_actuals_uploaded EmployeeMisActual[] @relation("MisActualUploader")
 
   @@index([manager_id], name: "idx_users_manager")
   @@index([role], name: "idx_users_role")
@@ -390,9 +410,11 @@ model Kpi {
   cycle_id    String   @db.Uuid
   employee_id String   @db.Uuid
   manager_id  String   @db.Uuid
-  kra_id        String?  @db.Uuid
-  dept_goal_id  String?  @db.Uuid
-  title         String
+  kra_id          String?  @db.Uuid
+  dept_goal_id    String?  @db.Uuid
+  is_aop_linked   Boolean  @default(false)
+  employee_aop_id String?  @db.Uuid
+  title           String
   description String?
   unit        String     @default("percent")
   target      Decimal?   @db.Decimal(12, 2)
@@ -410,7 +432,8 @@ model Kpi {
   employee User  @relation("KpiEmployee", fields: [employee_id], references: [id])
   manager  User  @relation("KpiManager", fields: [manager_id], references: [id])
   kra       Kra?      @relation(fields: [kra_id], references: [id], onDelete: SetNull)
-  dept_goal DeptGoal? @relation(fields: [dept_goal_id], references: [id], onDelete: SetNull)
+  dept_goal    DeptGoal?    @relation(fields: [dept_goal_id], references: [id], onDelete: SetNull)
+  employee_aop EmployeeAop? @relation(fields: [employee_aop_id], references: [id])
   mis_mappings KpiMisMapping[]
   comments     KpiComment[]
 
@@ -1098,4 +1121,109 @@ model DeptGoal {
   kpis       Kpi[]
 
   @@map("dept_goals")
+}
+
+// ─────────────────────────────────────────
+// AOP Cascade Models
+// ─────────────────────────────────────────
+
+model OrgAop {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fiscal_year   String
+  metric        AopMetric
+  annual_target Decimal   @db.Decimal(15, 2)
+  apr           Decimal   @db.Decimal(15, 2)
+  may           Decimal   @db.Decimal(15, 2)
+  jun           Decimal   @db.Decimal(15, 2)
+  jul           Decimal   @db.Decimal(15, 2)
+  aug           Decimal   @db.Decimal(15, 2)
+  sep           Decimal   @db.Decimal(15, 2)
+  oct           Decimal   @db.Decimal(15, 2)
+  nov           Decimal   @db.Decimal(15, 2)
+  dec           Decimal   @db.Decimal(15, 2)
+  jan           Decimal   @db.Decimal(15, 2)
+  feb           Decimal   @db.Decimal(15, 2)
+  mar           Decimal   @db.Decimal(15, 2)
+  created_by    String    @db.Uuid
+  created_at    DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime  @default(now()) @db.Timestamptz(6)
+
+  creator         User            @relation("OrgAopCreatedBy", fields: [created_by], references: [id])
+  department_aops DepartmentAop[]
+
+  @@unique([fiscal_year, metric])
+  @@map("org_aops")
+}
+
+model DepartmentAop {
+  id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  org_aop_id    String           @db.Uuid
+  department_id String           @db.Uuid
+  status        AopCascadeStatus @default(draft)
+  annual_target Decimal          @db.Decimal(15, 2)
+  apr           Decimal          @db.Decimal(15, 2)
+  may           Decimal          @db.Decimal(15, 2)
+  jun           Decimal          @db.Decimal(15, 2)
+  jul           Decimal          @db.Decimal(15, 2)
+  aug           Decimal          @db.Decimal(15, 2)
+  sep           Decimal          @db.Decimal(15, 2)
+  oct           Decimal          @db.Decimal(15, 2)
+  nov           Decimal          @db.Decimal(15, 2)
+  dec           Decimal          @db.Decimal(15, 2)
+  jan           Decimal          @db.Decimal(15, 2)
+  feb           Decimal          @db.Decimal(15, 2)
+  mar           Decimal          @db.Decimal(15, 2)
+  created_at    DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime         @default(now()) @db.Timestamptz(6)
+
+  org_aop       OrgAop        @relation(fields: [org_aop_id], references: [id], onDelete: Cascade)
+  department    Department    @relation(fields: [department_id], references: [id])
+  employee_aops EmployeeAop[]
+
+  @@unique([org_aop_id, department_id])
+  @@map("department_aops")
+}
+
+model EmployeeAop {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  department_aop_id String   @db.Uuid
+  employee_id       String   @db.Uuid
+  annual_target     Decimal  @db.Decimal(15, 2)
+  apr               Decimal  @db.Decimal(15, 2)
+  may               Decimal  @db.Decimal(15, 2)
+  jun               Decimal  @db.Decimal(15, 2)
+  jul               Decimal  @db.Decimal(15, 2)
+  aug               Decimal  @db.Decimal(15, 2)
+  sep               Decimal  @db.Decimal(15, 2)
+  oct               Decimal  @db.Decimal(15, 2)
+  nov               Decimal  @db.Decimal(15, 2)
+  dec               Decimal  @db.Decimal(15, 2)
+  jan               Decimal  @db.Decimal(15, 2)
+  feb               Decimal  @db.Decimal(15, 2)
+  mar               Decimal  @db.Decimal(15, 2)
+  created_at        DateTime @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime @default(now()) @db.Timestamptz(6)
+
+  department_aop DepartmentAop     @relation(fields: [department_aop_id], references: [id], onDelete: Cascade)
+  employee       User              @relation("EmployeeAops", fields: [employee_id], references: [id])
+  mis_actuals    EmployeeMisActual[]
+  kpis           Kpi[]
+
+  @@unique([department_aop_id, employee_id])
+  @@map("employee_aops")
+}
+
+model EmployeeMisActual {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employee_aop_id String   @db.Uuid
+  month           String   // "apr", "may", etc.
+  actual_value    Decimal  @db.Decimal(15, 2)
+  uploaded_by     String   @db.Uuid
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  employee_aop EmployeeAop @relation(fields: [employee_aop_id], references: [id], onDelete: Cascade)
+  uploader     User        @relation("MisActualUploader", fields: [uploaded_by], references: [id])
+
+  @@unique([employee_aop_id, month])
+  @@map("employee_mis_actuals")
 }

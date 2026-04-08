@@ -402,3 +402,89 @@ export interface MeetingMinutes {
   created_at: string
   updated_at: string
 }
+
+// ─────────────────────────────────────────
+// AOP Cascade Types
+// ─────────────────────────────────────────
+
+export type AopMetric = "delivered_revenue" | "gross_margin" | "gmv"
+export type AopCascadeStatus = "draft" | "cascaded" | "locked"
+
+export interface OrgAop {
+  id: string
+  fiscal_year: string
+  metric: AopMetric
+  annual_target: number
+  apr: number
+  may: number
+  jun: number
+  jul: number
+  aug: number
+  sep: number
+  oct: number
+  nov: number
+  dec: number
+  jan: number
+  feb: number
+  mar: number
+  created_by: string
+  created_at: string
+  updated_at: string
+  department_aops?: DepartmentAop[]
+}
+
+export interface DepartmentAop {
+  id: string
+  org_aop_id: string
+  department_id: string
+  status: AopCascadeStatus
+  annual_target: number
+  apr: number
+  may: number
+  jun: number
+  jul: number
+  aug: number
+  sep: number
+  oct: number
+  nov: number
+  dec: number
+  jan: number
+  feb: number
+  mar: number
+  created_at: string
+  updated_at: string
+  department?: Department
+  employee_aops?: EmployeeAop[]
+}
+
+export interface EmployeeAop {
+  id: string
+  department_aop_id: string
+  employee_id: string
+  annual_target: number
+  apr: number
+  may: number
+  jun: number
+  jul: number
+  aug: number
+  sep: number
+  oct: number
+  nov: number
+  dec: number
+  jan: number
+  feb: number
+  mar: number
+  created_at: string
+  updated_at: string
+  employee?: User
+  mis_actuals?: EmployeeMisActual[]
+}
+
+export interface EmployeeMisActual {
+  id: string
+  employee_aop_id: string
+  month: string
+  actual_value: number
+  uploaded_by: string
+  created_at: string
+}
