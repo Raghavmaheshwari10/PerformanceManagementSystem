@@ -88,8 +88,9 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
       case 'delete': {
         const ok = await confirm({
           title: `Delete ${ids.length} user(s)?`,
-          body: 'This cannot be undone. Users with reviews or appraisals will be skipped automatically.',
+          description: 'This cannot be undone. Users with reviews or appraisals will be skipped automatically.',
           confirmLabel: 'Delete',
+          variant: 'destructive',
         })
         if (!ok) { setBulkLoading(false); return }
         result = await bulkDeleteUsers(ids)
@@ -110,7 +111,7 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
   }
 
   async function handleDeleteSingle(userId: string, name: string) {
-    const ok = await confirm({ title: `Delete "${name}"?`, body: 'This cannot be undone. If they have reviews or appraisals, deletion will fail.', confirmLabel: 'Delete' })
+    const ok = await confirm({ title: `Delete "${name}"?`, description: 'This cannot be undone. If they have reviews or appraisals, deletion will fail.', confirmLabel: 'Delete', variant: 'destructive' })
     if (!ok) return
     startTransition(async () => {
       const result = await deleteUser(userId)
