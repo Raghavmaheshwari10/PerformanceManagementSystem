@@ -9,6 +9,7 @@ import { updateUserRole, toggleUserActive, deleteUser, bulkUpdateDepartment, bul
 import type { User } from '@/lib/types'
 import { ROLE_LABELS } from '@/lib/constants'
 import { Pencil, Trash2 } from 'lucide-react'
+import { useConfirm } from '@/lib/confirm'
 
 const ROLES = ['employee', 'manager', 'hrbp', 'department_head', 'admin', 'founder', 'superadmin'] as const
 
@@ -16,6 +17,7 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const confirm = useConfirm()
 
   const search = searchParams.get('search') ?? ''
   const roleFilter = searchParams.get('role') ?? ''
@@ -83,13 +85,16 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
       case 'deactivate':
         result = await bulkToggleActive(ids, false)
         break
-      case 'delete':
-        if (!confirm(`Delete ${ids.length} user(s)? This cannot be undone. Users with reviews/appraisals will be skipped.`)) {
-          setBulkLoading(false)
-          return
-        }
+      case 'delete': {
+        const ok = await confirm({
+          title: `Delete ${ids.length} user(s)?`,
+          body: 'This cannot be undone. Users with reviews or appraisals will be skipped automatically.',
+          confirmLabel: 'Delete',
+        })
+        if (!ok) { setBulkLoading(false); return }
         result = await bulkDeleteUsers(ids)
         break
+      }
       default:
         setBulkLoading(false)
         return
@@ -105,7 +110,8 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
   }
 
   async function handleDeleteSingle(userId: string, name: string) {
-    if (!confirm(`Delete "${name}"? This cannot be undone. If they have reviews/appraisals, deletion will fail.`)) return
+    const ok = await confirm({ title: `Delete "${name}"?`, body: 'This cannot be undone. If they have reviews or appraisals, deletion will fail.', confirmLabel: 'Delete' })
+    if (!ok) return
     startTransition(async () => {
       const result = await deleteUser(userId)
       if (result.error) alert(result.error)
