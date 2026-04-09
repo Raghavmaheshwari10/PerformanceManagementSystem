@@ -98,8 +98,8 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
         {/* Content */}
         <div className="relative z-10">
           <div className="flex items-center gap-3">
-            <img src="/icon.svg" alt="PMS" className="size-9 rounded-lg" />
-            <span className="text-sm font-medium tracking-wide text-white/90">PMS</span>
+            <img src="/icon.svg" alt="EMB Global" className="size-9 rounded-lg" />
+            <span className="text-sm font-medium tracking-wide text-white/90">EMB Global</span>
           </div>
         </div>
 

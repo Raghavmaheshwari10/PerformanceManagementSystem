@@ -186,8 +186,8 @@ function wrapEmailHtml(body: string): string {
   <!-- Header -->
   <tr><td style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:24px 32px">
     <table width="100%" cellpadding="0" cellspacing="0"><tr>
-      <td><span style="color:#ffffff;font-size:18px;font-weight:700;letter-spacing:-0.3px">PMS</span>
-        <span style="color:#c7d2fe;font-size:11px;margin-left:8px;text-transform:uppercase;letter-spacing:1px">EMB Global</span></td>
+      <td><span style="color:#ffffff;font-size:18px;font-weight:700;letter-spacing:-0.3px">EMB Global</span>
+        <span style="color:#c7d2fe;font-size:11px;margin-left:8px;text-transform:uppercase;letter-spacing:1px">Performance Management</span></td>
     </tr></table>
   </td></tr>
   <!-- Body -->

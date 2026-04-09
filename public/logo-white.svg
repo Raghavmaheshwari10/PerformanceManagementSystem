@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 130" fill="none">
+  <!-- EMB text - white for dark backgrounds -->
+  <text x="10" y="62" font-family="'Inter','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="62" fill="white" letter-spacing="-1.5">EMB</text>
+  <!-- Leaf cluster next to EMB -->
+  <g transform="translate(205,30)">
+    <g fill="#4abe6a">
+      <path d="M0-3 C2.2-6.5 3-12 0-15 C-3-12 -2.2-6.5 0-3Z" transform="rotate(0)"/>
+      <path d="M0-3 C2.2-6.5 3-12 0-15 C-3-12 -2.2-6.5 0-3Z" transform="rotate(45)"/>
+      <path d="M0-3 C2.2-6.5 3-12 0-15 C-3-12 -2.2-6.5 0-3Z" transform="rotate(90)"/>
+      <path d="M0-3 C2.2-6.5 3-12 0-15 C-3-12 -2.2-6.5 0-3Z" transform="rotate(135)"/>
+      <path d="M0-3 C2.2-6.5 3-12 0-15 C-3-12 -2.2-6.5 0-3Z" transform="rotate(180)"/>
+      <path d="M0-3 C2.2-6.5 3-12 0-15 C-3-12 -2.2-6.5 0-3Z" transform="rotate(225)"/>
+      <path d="M0-3 C2.2-6.5 3-12 0-15 C-3-12 -2.2-6.5 0-3Z" transform="rotate(270)"/>
+      <path d="M0-3 C2.2-6.5 3-12 0-15 C-3-12 -2.2-6.5 0-3Z" transform="rotate(315)"/>
+    </g>
+  </g>
+  <!-- GLOBAL text - white -->
+  <text x="10" y="120" font-family="'Inter','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="62" fill="white" letter-spacing="-1.5">GLOBAL</text>
+</svg>
