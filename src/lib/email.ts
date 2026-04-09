@@ -15,7 +15,7 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string): Prom
   await resend.emails.send({
     from: fromAddress,
     to,
-    subject: 'Reset your password — PMS',
+    subject: 'Reset your password — EMB Global',
     html: `
       <p>Hello,</p>
       <p>You requested a password reset. Click the link below to set a new password:</p>
@@ -31,7 +31,7 @@ export async function sendInviteEmail(to: string, inviteUrl: string, fullName: s
   await resend.emails.send({
     from: fromAddress,
     to,
-    subject: `Welcome to PMS, ${firstName}! Set up your account`,
+    subject: `Welcome to EMB Global, ${firstName}! Set up your account`,
     html: `
       <!DOCTYPE html>
       <html>
@@ -43,8 +43,8 @@ export async function sendInviteEmail(to: string, inviteUrl: string, fullName: s
               <!-- Header -->
               <tr>
                 <td style="background:linear-gradient(135deg,#1a3a2a 0%,#2d5a3f 100%);padding:32px 40px;text-align:center;">
-                  <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:-0.3px;">PMS</h1>
-                  <p style="margin:4px 0 0;color:rgba(255,255,255,0.7);font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;">EMB Global</p>
+                  <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:-0.3px;">EMB Global</h1>
+                  <p style="margin:4px 0 0;color:rgba(255,255,255,0.7);font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;">Performance Management</p>
                 </td>
               </tr>
               <!-- Body -->
@@ -91,7 +91,7 @@ export async function sendInviteEmail(to: string, inviteUrl: string, fullName: s
               <tr>
                 <td style="padding:20px 40px 28px;border-top:1px solid #f1f5f9;">
                   <p style="margin:0;color:#cbd5e1;font-size:11px;text-align:center;">
-                    PMS &mdash; Performance Management System &bull; EMB Global
+                    EMB Global &mdash; Performance Management System
                   </p>
                 </td>
               </tr>
@@ -166,7 +166,7 @@ export function generateIcsContent(params: {
   return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//PMS EMB Global//Performance Management System//EN',
+    'PRODID:-//EMB Global//Performance Management System//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:REQUEST',
     'BEGIN:VEVENT',
@@ -217,7 +217,7 @@ function wrapEmail(body: string): string {
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:32px 16px"><tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1)">
-<tr><td style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:24px 32px"><span style="color:#ffffff;font-size:18px;font-weight:700">PMS</span><span style="color:#c7d2fe;font-size:11px;margin-left:8px;text-transform:uppercase;letter-spacing:1px">EMB Global</span></td></tr>
+<tr><td style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:24px 32px"><span style="color:#ffffff;font-size:18px;font-weight:700">EMB Global</span><span style="color:#c7d2fe;font-size:11px;margin-left:8px;text-transform:uppercase;letter-spacing:1px">Performance Management</span></td></tr>
 <tr><td style="padding:32px">${body}</td></tr>
 <tr><td style="background:#f8fafc;padding:20px 32px;border-top:1px solid #e2e8f0"><p style="color:#94a3b8;font-size:12px;margin:0;line-height:1.5">This is an automated message from the Performance Management System.<br>EMB Global &middot; <a href="${appUrl}" style="color:#6366f1;text-decoration:none">pms.emb.global</a></p></td></tr>
 </table></td></tr></table></body></html>`
@@ -375,7 +375,7 @@ export async function dispatchPendingNotifications(recipientId: string): Promise
       const emailEnabled = pref?.email_enabled ?? true
       const inAppEnabled = pref?.in_app_enabled ?? true
 
-      // Skip PMS email for meeting_scheduled — Google Calendar API sends the
+      // Skip email for meeting_scheduled — Google Calendar API sends the
       // native invite (with accept/decline, Meet link, calendar integration).
       // We still keep the in-app notification and Slack DM.
       const skipEmail = notif.type === 'meeting_scheduled'
@@ -400,9 +400,9 @@ export async function dispatchPendingNotifications(recipientId: string): Promise
             (_, key) => payload[key] ?? ''
           )
         } else {
-          subject = NOTIFICATION_SUBJECTS[notif.type] ?? 'PMS Notification'
+          subject = NOTIFICATION_SUBJECTS[notif.type] ?? 'EMB Global Notification'
           html = NOTIFICATION_HTML[notif.type]?.(payload)
-            ?? '<p>You have a new notification in PMS.</p>'
+            ?? '<p>You have a new notification from EMB Global.</p>'
         }
 
         await sendNotificationEmail(notif.recipient.email, subject, html)

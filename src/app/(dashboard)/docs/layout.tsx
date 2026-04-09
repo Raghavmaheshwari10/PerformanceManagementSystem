@@ -1,6 +1,6 @@
 import { requireRole } from '@/lib/auth'
 
-export const metadata = { title: 'System Documentation — PMS' }
+export const metadata = { title: 'System Documentation — EMB Global' }
 
 export default async function DocsLayout({ children }: { children: React.ReactNode }) {
   await requireRole(['admin', 'hrbp', 'manager', 'employee'])

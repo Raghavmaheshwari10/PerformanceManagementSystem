@@ -78,7 +78,7 @@ function AcceptInviteForm() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-[1.75rem] font-semibold tracking-tight text-white">Welcome to PMS</h1>
+        <h1 className="text-[1.75rem] font-semibold tracking-tight text-white">Welcome to EMB Global</h1>
         <p className="mt-1 text-sm text-white/40">Set your password to activate your account.</p>
       </div>
 

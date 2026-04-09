@@ -85,27 +85,27 @@ export default async function ProfilePage() {
 
         <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
           <div>
-            <p className="text-xs text-white/40">Full Name</p>
+            <p className="text-xs text-muted-foreground">Full Name</p>
             <p className="font-medium">{fullUser.full_name}</p>
           </div>
           <div>
-            <p className="text-xs text-white/40">Email</p>
+            <p className="text-xs text-muted-foreground">Email</p>
             <p className="font-medium">{fullUser.email}</p>
           </div>
           <div>
-            <p className="text-xs text-white/40">Role</p>
+            <p className="text-xs text-muted-foreground">Role</p>
             <p className="font-medium">{fullUser.role === 'hrbp' ? 'HRBP' : fullUser.role.charAt(0).toUpperCase() + fullUser.role.slice(1)}</p>
           </div>
           <div>
-            <p className="text-xs text-white/40">Designation</p>
+            <p className="text-xs text-muted-foreground">Designation</p>
             <p className="font-medium">{fullUser.designation ?? '—'}</p>
           </div>
           <div>
-            <p className="text-xs text-white/40">Department</p>
+            <p className="text-xs text-muted-foreground">Department</p>
             <p className="font-medium">{fullUser.department?.name ?? '—'}</p>
           </div>
           <div>
-            <p className="text-xs text-white/40">Manager</p>
+            <p className="text-xs text-muted-foreground">Manager</p>
             <p className="font-medium">{fullUser.manager?.full_name ?? '—'}</p>
           </div>
         </div>

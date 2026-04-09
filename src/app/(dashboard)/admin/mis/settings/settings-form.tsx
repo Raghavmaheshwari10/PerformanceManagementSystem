@@ -188,7 +188,7 @@ export function MisSettingsForm({ config, scoringConfigs, departments }: Props) 
       <form action={mappingAction} className="glass rounded-lg border p-6 space-y-5">
         <h2 className="text-lg font-semibold">Department Mapping</h2>
         <p className="text-sm text-muted-foreground">
-          Map MIS department codes to PMS departments for automatic data routing.
+          Map MIS department codes to system departments for automatic data routing.
         </p>
 
         {mappingState.error && (
@@ -210,7 +210,7 @@ export function MisSettingsForm({ config, scoringConfigs, departments }: Props) 
               </div>
               <span className="pb-2 text-muted-foreground">&rarr;</span>
               <div className="space-y-1.5 flex-1">
-                {idx === 0 && <Label>PMS Department</Label>}
+                {idx === 0 && <Label>Department</Label>}
                 <select
                   value={m.departmentId}
                   onChange={e => updateMapping(idx, 'departmentId', e.target.value)}

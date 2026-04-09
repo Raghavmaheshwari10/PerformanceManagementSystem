@@ -97,10 +97,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
 
         {/* Content */}
         <div className="relative z-10">
-          <div className="flex items-center gap-3">
-            <img src="/icon.svg" alt="PMS" className="size-9 rounded-lg" />
-            <span className="text-sm font-medium tracking-wide text-white/90">PMS</span>
-          </div>
+          <img src="/emb-logo.svg" alt="EMB Global" className="h-8" />
         </div>
 
         <div className="relative z-10 space-y-4">
@@ -126,8 +123,17 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Right content panel */}
-      <div className="flex w-full items-center justify-center p-6 lg:w-[52%]" style={{ background: '#09090b' }}>
-        <div className="w-full max-w-[420px]">
+      <div className="relative flex w-full items-center justify-center p-6 lg:w-[52%]" style={{ background: '#09090b' }}>
+        {/* Subtle leaf background pattern */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage: 'url(/leaf-bg.svg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+        <div className="relative z-10 w-full max-w-[420px]">
           {children}
         </div>
       </div>
