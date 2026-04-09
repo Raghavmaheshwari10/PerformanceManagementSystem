@@ -375,7 +375,7 @@ export function GoalCascadingDashboard({
         {tree.length === 0 && isAdmin && (
           <div className="glass p-8 text-center">
             <Target className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">No org goals yet. Click "Org Goal" above to create one.</p>
+            <p className="text-sm text-muted-foreground">No org goals yet. Click &quot;Org Goal&quot; above to create one.</p>
           </div>
         )}
 
