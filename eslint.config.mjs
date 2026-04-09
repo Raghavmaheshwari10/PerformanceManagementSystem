@@ -19,8 +19,20 @@ const eslintConfig = defineConfig([
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "warn",
-      // React Compiler plugin enforces strict purity rules — downgrade until codebase is fully compliant
-      "react-compiler/react-compiler": "warn",
+      // react-hooks v7 added strict React Compiler rules — downgrade until codebase is compliant
+      "react-hooks/purity": "warn",
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/set-state-in-render": "warn",
+      "react-hooks/static-components": "warn",
+      "react-hooks/use-memo": "warn",
+      "react-hooks/component-hook-factories": "warn",
+      "react-hooks/preserve-manual-memoization": "warn",
+      "react-hooks/immutability": "warn",
+      "react-hooks/globals": "warn",
+      "react-hooks/refs": "warn",
+      "react-hooks/error-boundaries": "warn",
+      "react-hooks/config": "warn",
+      "react-hooks/gating": "warn",
     },
   },
   // Relax strict rules for test files — mocks legitimately use `any`
