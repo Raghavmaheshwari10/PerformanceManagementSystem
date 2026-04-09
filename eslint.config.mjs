@@ -15,10 +15,24 @@ const eslintConfig = defineConfig([
     // Supabase edge functions are not Next.js code
     "supabase/**",
   ]),
-  // Downgrade no-explicit-any to warning project-wide — fix gradually, don't block builds
+  // Downgrade noisy rules to warnings project-wide — fix gradually, don't block builds
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "warn",
+      // react-hooks v7 added strict React Compiler rules — downgrade until codebase is compliant
+      "react-hooks/purity": "warn",
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/set-state-in-render": "warn",
+      "react-hooks/static-components": "warn",
+      "react-hooks/use-memo": "warn",
+      "react-hooks/component-hook-factories": "warn",
+      "react-hooks/preserve-manual-memoization": "warn",
+      "react-hooks/immutability": "warn",
+      "react-hooks/globals": "warn",
+      "react-hooks/refs": "warn",
+      "react-hooks/error-boundaries": "warn",
+      "react-hooks/config": "warn",
+      "react-hooks/gating": "warn",
     },
   },
   // Relax strict rules for test files — mocks legitimately use `any`

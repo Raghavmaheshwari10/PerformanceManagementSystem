@@ -125,15 +125,13 @@ export function PipDashboard({
           </h1>
           {subtitle && <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>}
         </div>
-        {role !== 'admin' && (
-          <a
-            href={`/${role}/pip/new`}
-            className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2 text-sm font-medium text-white shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/30 transition-all"
-          >
-            <Plus className="h-4 w-4" />
-            New PIP
-          </a>
-        )}
+        <a
+          href={`/${role}/pip/new`}
+          className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2 text-sm font-medium text-white shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/30 transition-all"
+        >
+          <Plus className="h-4 w-4" />
+          New PIP
+        </a>
       </div>
 
       {/* Tab Navigation */}

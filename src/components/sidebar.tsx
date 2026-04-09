@@ -220,6 +220,26 @@ export function Sidebar({
     router.push('/login')
   }
 
+  // Build a set of all nav hrefs to detect parent/child overlaps.
+  // If a nav item's href is a prefix of another nav item's href,
+  // only use exact match for the parent to avoid double-highlighting.
+  const allHrefs = visibleItems.map(i => i.href).filter(h => h !== '#help')
+  const parentHrefs = new Set(
+    allHrefs.filter(href => allHrefs.some(other => other !== href && other.startsWith(href + '/')))
+  )
+
+  function isItemActive(href: string): boolean {
+    if (href === '#help') return false
+    // Exact match always wins
+    if (pathname === href) return true
+    // For parent routes (e.g. /admin/aop when /admin/aop/upload also exists), use exact match only
+    if (parentHrefs.has(href)) return false
+    // Dashboard roots: exact match only
+    if (href === '/admin' || href === '/employee') return false
+    // Otherwise, prefix match (for sub-routes like /admin/pip/123)
+    return pathname.startsWith(href + '/')
+  }
+
   // ── Full (expanded) sidebar content ──
   const expandedContent = (
     <>
@@ -273,10 +293,7 @@ export function Sidebar({
       <nav className="flex-1 overflow-y-auto px-3 pb-2">
         {visibleItems.map((item, idx) => {
           const Icon = item.icon
-          const isActive = item.href !== '#help' &&
-            (pathname === item.href || (item.href !== '/admin' && item.href !== '/employee' && pathname.startsWith(item.href + '/')))
-          const isExactActive = pathname === item.href
-          const active = isActive || isExactActive
+          const active = isItemActive(item.href)
           const showDivider = item.section === 'divider' && idx > 0
 
           const element = item.href === '#help' ? (
@@ -378,10 +395,7 @@ export function Sidebar({
       <nav className="flex-1 overflow-y-auto px-2 space-y-0.5">
         {visibleItems.map((item, idx) => {
           const Icon = item.icon
-          const isActive = item.href !== '#help' &&
-            (pathname === item.href || (item.href !== '/admin' && item.href !== '/employee' && pathname.startsWith(item.href + '/')))
-          const isExactActive = pathname === item.href
-          const active = isActive || isExactActive
+          const active = isItemActive(item.href)
           const showDivider = item.section === 'divider' && idx > 0
 
           const element = item.href === '#help' ? (

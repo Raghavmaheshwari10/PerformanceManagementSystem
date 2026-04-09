@@ -35,8 +35,8 @@ import {
   getFounderDepartmentSummary,
   markEmployeeExited,
   createReplacementAop,
-  MONTHS,
 } from '@/lib/db/aop'
+import { MONTHS } from '@/lib/constants/aop'
 
 const mockPrisma = prisma as any
 
@@ -63,7 +63,7 @@ function equalMonthly(annual: number): Record<string, number> {
 /** Creates a monthly targets object with specific values */
 function makeMonthly(values: number[]): Record<string, number> {
   const result: Record<string, number> = {}
-  MONTHS.forEach((m, i) => { result[m] = values[i] ?? 0 })
+  MONTHS.forEach((m: string, i: number) => { result[m] = values[i] ?? 0 })
   return result
 }
 

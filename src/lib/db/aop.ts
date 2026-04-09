@@ -2,8 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import type { AopMetric, AopCascadeStatus } from '@/lib/types'
-
-const MONTHS = ['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'] as const
+import { MONTHS } from '@/lib/constants/aop'
 
 type MonthlyTargets = Record<(typeof MONTHS)[number], number>
 
