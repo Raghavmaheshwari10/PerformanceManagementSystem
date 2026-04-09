@@ -135,7 +135,7 @@ export default async function HrbpMisPage(props: {
                         {ragBadge(ach, Number(t.red_threshold), Number(t.amber_threshold))}
                       </div>
                       <p className="text-lg font-semibold">{ytd.toLocaleString('en-IN')} <span className="text-sm text-muted-foreground">/ {annual.toLocaleString('en-IN')} {UNIT_LABELS[t.unit] ?? t.unit}</span></p>
-                      <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all ${
                             ach >= Number(t.amber_threshold) ? 'bg-emerald-500' : ach >= Number(t.red_threshold) ? 'bg-amber-500' : 'bg-red-500'
@@ -155,13 +155,13 @@ export default async function HrbpMisPage(props: {
               <div className="glass overflow-hidden rounded-xl">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-white/8 bg-white/[0.03]">
-                      <th className="p-3 text-left text-white/50">Employee</th>
-                      <th className="p-3 text-left text-white/50">Metric</th>
-                      <th className="p-3 text-right text-white/50">Annual Target</th>
-                      <th className="p-3 text-right text-white/50">YTD Actual</th>
-                      <th className="p-3 text-right text-white/50">Achievement</th>
-                      <th className="p-3 text-center text-white/50">RAG</th>
+                    <tr className="border-b border-border bg-muted/30">
+                      <th className="p-3 text-left text-muted-foreground">Employee</th>
+                      <th className="p-3 text-left text-muted-foreground">Metric</th>
+                      <th className="p-3 text-right text-muted-foreground">Annual Target</th>
+                      <th className="p-3 text-right text-muted-foreground">YTD Actual</th>
+                      <th className="p-3 text-right text-muted-foreground">Achievement</th>
+                      <th className="p-3 text-center text-muted-foreground">RAG</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -171,9 +171,9 @@ export default async function HrbpMisPage(props: {
                         const ytd = Number(t.ytd_actual ?? 0)
                         const ach = annual > 0 ? (ytd / annual) * 100 : 0
                         return (
-                          <tr key={t.id} className="border-b border-white/5">
+                          <tr key={t.id} className="border-b border-border">
                             <td className="p-3 font-medium">{idx === 0 ? empName : ''}</td>
-                            <td className="p-3 text-white/70">{t.metric_name}</td>
+                            <td className="p-3 text-muted-foreground">{t.metric_name}</td>
                             <td className="p-3 text-right">{annual.toLocaleString('en-IN')} {UNIT_LABELS[t.unit] ?? t.unit}</td>
                             <td className="p-3 text-right">{ytd.toLocaleString('en-IN')}</td>
                             <td className="p-3 text-right">{ach.toFixed(1)}%</td>

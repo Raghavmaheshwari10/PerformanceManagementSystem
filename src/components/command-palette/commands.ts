@@ -27,7 +27,7 @@ export const STATIC_COMMANDS: PaletteCommand[] = [
   { id: 'nav-admin-users', label: 'Manage Users', href: '/admin/users', roles: ['admin'], keywords: ['users', 'people', 'employees', 'team'] },
   { id: 'nav-admin-audit', label: 'Audit Log', href: '/admin/audit-log', roles: ['admin'], keywords: ['audit', 'log'] },
   // Help — all roles (empty array = all)
-  { id: 'help-overview', label: 'Help: What is PMS?', href: '/help/what-is-pms', roles: [] as UserRole[], keywords: ['help', 'about', 'overview', 'what'] },
+  { id: 'help-overview', label: 'Help: System Overview', href: '/help/what-is-pms', roles: [] as UserRole[], keywords: ['help', 'about', 'overview', 'what'] },
   { id: 'help-kpis', label: 'Help: Setting KPIs', href: '/help/setting-kpis', roles: [] as UserRole[], keywords: ['help', 'kpi', 'goals'] },
   { id: 'help-self-review', label: 'Help: Self Review', href: '/help/self-review', roles: [] as UserRole[], keywords: ['help', 'review', 'rating', 'self'] },
   { id: 'help-centre', label: 'Browse Help Centre', href: '/help', roles: [] as UserRole[], keywords: ['help', 'docs', 'documentation'] },

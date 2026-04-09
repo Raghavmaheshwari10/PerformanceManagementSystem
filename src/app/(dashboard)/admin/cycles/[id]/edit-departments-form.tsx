@@ -19,7 +19,7 @@ export function EditDepartmentsForm({ cycleId, allDepartments, selectedDepartmen
   return (
     <div className="glass p-4 space-y-3">
       <h2 className="font-semibold text-sm">Edit Department Scope</h2>
-      <p className="text-xs text-white/50">
+      <p className="text-xs text-muted-foreground">
         Select departments to scope this cycle. Leave all unchecked for org-wide.
       </p>
       <form action={formAction}>

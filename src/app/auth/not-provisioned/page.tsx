@@ -7,7 +7,7 @@ export default function NotProvisionedPage() {
       <div className="space-y-2">
         <h1 className="text-2xl font-bold">Account Not Set Up</h1>
         <p className="max-w-md text-muted-foreground">
-          Your Google account has been verified, but you haven&apos;t been added to PMS yet.
+          Your Google account has been verified, but you haven&apos;t been added to the system yet.
           Please contact your HR administrator to get access.
         </p>
       </div>

@@ -94,7 +94,7 @@ export function buildSlackBlocks(title: string, body: string, linkUrl?: string):
       elements: [
         {
           type: 'button',
-          text: { type: 'plain_text', text: 'Open in PMS' },
+          text: { type: 'plain_text', text: 'Open in EMB Global' },
           url: linkUrl,
           style: 'primary',
         },

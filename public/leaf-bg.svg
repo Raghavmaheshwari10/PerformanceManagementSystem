@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" fill="none">
+  <!-- Decorative leaf outlines - subtle background pattern -->
+  <g stroke="#d1e8d5" stroke-width="1.2" fill="none">
+    <!-- Large leaf bottom-left -->
+    <path d="M-50,950 C50,700 150,500 200,350 C250,500 200,750 100,950Z"/>
+    <!-- Large leaf center -->
+    <path d="M300,900 C350,650 450,450 550,350 C550,500 500,700 400,900Z"/>
+    <!-- Large leaf right -->
+    <path d="M600,950 C650,750 750,600 850,500 C800,650 750,800 650,950Z"/>
+    <!-- Medium leaf upper-center -->
+    <path d="M350,700 C400,500 500,350 600,250 C580,400 520,580 420,700Z"/>
+    <!-- Curved arc bottom -->
+    <path d="M-100,850 C100,750 350,700 600,750 C750,780 850,850 950,950"/>
+  </g>
+</svg>

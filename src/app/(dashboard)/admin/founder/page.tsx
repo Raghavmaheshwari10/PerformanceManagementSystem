@@ -33,8 +33,8 @@ export default async function FounderViewPage(props: {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Founder View</h1>
-        <p className="text-sm text-white/50 mt-1">
+        <h1 className="text-2xl font-bold text-foreground">Founder View</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Org-wide AOP performance, team sizing, and CTC across all departments
         </p>
       </div>
