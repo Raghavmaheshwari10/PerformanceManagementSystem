@@ -35,8 +35,8 @@ import {
   getFounderDepartmentSummary,
   markEmployeeExited,
   createReplacementAop,
-  MONTHS,
 } from '@/lib/db/aop'
+import { MONTHS } from '@/lib/constants/aop'
 
 const mockPrisma = prisma as any
 

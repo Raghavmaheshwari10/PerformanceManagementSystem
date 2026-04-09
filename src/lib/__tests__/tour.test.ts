@@ -1,4 +1,10 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+
+// Mock tour-actions to avoid prisma dependency
+vi.mock('@/lib/tour-actions', () => ({
+  markUserOnboarded: vi.fn(),
+}))
+
 import { getTourForPath } from '../tour-content'
 import { tourReducer, type TourState } from '../tour'
 
