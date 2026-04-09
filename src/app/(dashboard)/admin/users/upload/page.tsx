@@ -353,7 +353,7 @@ export default function UploadUsersPage() {
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
             Paste a Google Sheets URL. The sheet must be shared with{' '}
-            <strong>"Anyone with the link"</strong> (Viewer access).
+            <strong>&quot;Anyone with the link&quot;</strong> (Viewer access).
           </p>
           <div className="space-y-2">
             <Label htmlFor="sheetUrl">Google Sheets URL</Label>

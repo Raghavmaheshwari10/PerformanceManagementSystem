@@ -217,6 +217,15 @@ function DepartmentNode({
 // ── Main tree component ──
 
 export function AopCascadeTree({ orgAop, departments, singleDepartmentId }: CascadeTreeProps) {
+  // Hooks must be called before any early returns (Rules of Hooks)
+  const deptHeadMap = useMemo(() => {
+    const map: Record<string, string | undefined> = {}
+    for (const d of departments) {
+      map[d.id] = d.dept_head
+    }
+    return map
+  }, [departments])
+
   if (!orgAop) {
     return (
       <div className="glass rounded-xl border border-white/10 p-8 text-center">
@@ -227,15 +236,6 @@ export function AopCascadeTree({ orgAop, departments, singleDepartmentId }: Casc
       </div>
     )
   }
-
-  // Build a dept_head lookup from departments prop
-  const deptHeadMap = useMemo(() => {
-    const map: Record<string, string | undefined> = {}
-    for (const d of departments) {
-      map[d.id] = d.dept_head
-    }
-    return map
-  }, [departments])
 
   // Filter to single department if specified
   const visibleDepts = singleDepartmentId
