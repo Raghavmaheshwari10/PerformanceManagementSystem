@@ -51,10 +51,10 @@ function escapeCsvField(value: string): string {
 // ─── 1. Create PIP ───────────────────────────────────────────────────
 
 export async function createPip(
-  _prev: ActionResult,
+  _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  const user = await requireRole(['manager', 'hrbp'])
+  const user = await requireRole(['admin', 'manager', 'hrbp'])
 
   const parsed = createPipSchema.safeParse({
     employeeId: formData.get('employee_id'),
@@ -101,7 +101,7 @@ export async function createPip(
           })
         : null
       if (!hrbpAssignment) {
-        return { data: null, error: 'No HRBP assigned for employee department' }
+        return { data: null, error: 'No HRBP assigned for this employee\'s department. Please assign an HRBP first in Admin > Users.' }
       }
       hrbpId = hrbpAssignment.hrbp_id
     }
