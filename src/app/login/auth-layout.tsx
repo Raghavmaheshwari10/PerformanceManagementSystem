@@ -126,8 +126,17 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Right content panel */}
-      <div className="flex w-full items-center justify-center p-6 lg:w-[52%]" style={{ background: '#09090b' }}>
-        <div className="w-full max-w-[420px]">
+      <div className="relative flex w-full items-center justify-center p-6 lg:w-[52%]" style={{ background: '#09090b' }}>
+        {/* Subtle leaf background pattern */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage: 'url(/leaf-bg.svg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+        <div className="relative z-10 w-full max-w-[420px]">
           {children}
         </div>
       </div>
