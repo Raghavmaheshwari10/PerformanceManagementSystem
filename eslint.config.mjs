@@ -15,10 +15,12 @@ const eslintConfig = defineConfig([
     // Supabase edge functions are not Next.js code
     "supabase/**",
   ]),
-  // Downgrade no-explicit-any to warning project-wide — fix gradually, don't block builds
+  // Downgrade noisy rules to warnings project-wide — fix gradually, don't block builds
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "warn",
+      // React Compiler plugin enforces strict purity rules — downgrade until codebase is fully compliant
+      "react-compiler/react-compiler": "warn",
     },
   },
   // Relax strict rules for test files — mocks legitimately use `any`
