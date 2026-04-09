@@ -246,11 +246,8 @@ export function Sidebar({
       {/* Logo */}
       <div className="px-5 pt-5 pb-4">
         <div className="flex items-center gap-3">
-          <img src="/icon.svg" alt="EMB Global" className="h-8 w-8 rounded-lg" />
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-white tracking-tight leading-none">EMB Global</p>
-            <p className="text-[9px] font-semibold text-white/40 uppercase tracking-[0.15em] mt-0.5">Performance Management</p>
-          </div>
+          <img src="/emb-logo.svg" alt="EMB Global" className="h-8" />
+          <div className="min-w-0 flex-1" />
           {/* Collapse button — desktop only */}
           <button
             onClick={toggleCollapsed}
