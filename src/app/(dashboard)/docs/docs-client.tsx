@@ -250,7 +250,7 @@ export default function DocsClient({ userRole }: { userRole: UserRole }) {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">System Documentation</h1>
             <p className="text-muted-foreground mt-1 text-sm">
-              Complete reference guide for all PMS users — employees, managers, HRBPs, and admins.
+              Complete reference guide for all users — employees, managers, HRBPs, and admins.
             </p>
           </div>
           {/* Role filter */}
@@ -317,7 +317,7 @@ export default function DocsClient({ userRole }: { userRole: UserRole }) {
         <section>
           <SectionHeading id="overview">Overview</SectionHeading>
           <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-            PMS is the organisation&apos;s performance review, goal tracking, and variable payout management system.
+            EMB Global&apos;s Performance Management System is the organisation&apos;s performance review, goal tracking, and variable payout management system.
             Each quarter, a <strong>review cycle</strong> is created and progresses through seven stages — from KPI setting
             through to published payouts. Cycles can be scoped to specific departments, and each department advances
             through stages independently. The system enforces role-based access at every step and maintains a full audit trail.

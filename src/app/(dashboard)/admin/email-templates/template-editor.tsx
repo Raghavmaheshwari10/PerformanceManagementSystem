@@ -122,19 +122,19 @@ const AVAILABLE_VARIABLES: Record<string, { key: string; desc: string }[]> = {
   cycle_kpi_setting_open: [
     { key: 'cycle_name', desc: 'Cycle name (e.g., Q1 2026)' },
     { key: 'employee_name', desc: 'Recipient name' },
-    { key: 'link', desc: 'Link to PMS' },
+    { key: 'link', desc: 'Link to portal' },
   ],
   cycle_self_review_open: [
     { key: 'cycle_name', desc: 'Cycle name' },
     { key: 'deadline', desc: 'Submission deadline' },
     { key: 'employee_name', desc: 'Recipient name' },
-    { key: 'link', desc: 'Link to PMS' },
+    { key: 'link', desc: 'Link to portal' },
   ],
   cycle_manager_review_open: [
     { key: 'cycle_name', desc: 'Cycle name' },
     { key: 'deadline', desc: 'Review deadline' },
     { key: 'employee_name', desc: 'Recipient name' },
-    { key: 'link', desc: 'Link to PMS' },
+    { key: 'link', desc: 'Link to portal' },
   ],
   cycle_published: [
     { key: 'cycle_name', desc: 'Cycle name' },
@@ -488,7 +488,7 @@ export function TemplateEditor({ templates }: TemplateEditorProps) {
                   placeholder="<p>Your email content here...</p>"
                 />
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Emails are automatically wrapped with a branded header (PMS / EMB Global) and footer. You only need to write the body content.
+                  Emails are automatically wrapped with a branded EMB Global header and footer. You only need to write the body content.
                 </p>
               </div>
 

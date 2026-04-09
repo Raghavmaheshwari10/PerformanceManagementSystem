@@ -15,7 +15,7 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string): Prom
   await resend.emails.send({
     from: fromAddress,
     to,
-    subject: 'Reset your password — PMS',
+    subject: 'Reset your password — EMB Global',
     html: `
       <p>Hello,</p>
       <p>You requested a password reset. Click the link below to set a new password:</p>
@@ -31,7 +31,7 @@ export async function sendInviteEmail(to: string, inviteUrl: string, fullName: s
   await resend.emails.send({
     from: fromAddress,
     to,
-    subject: `Welcome to PMS, ${firstName}! Set up your account`,
+    subject: `Welcome to EMB Global, ${firstName}! Set up your account`,
     html: `
       <!DOCTYPE html>
       <html>
@@ -91,7 +91,7 @@ export async function sendInviteEmail(to: string, inviteUrl: string, fullName: s
               <tr>
                 <td style="padding:20px 40px 28px;border-top:1px solid #f1f5f9;">
                   <p style="margin:0;color:#cbd5e1;font-size:11px;text-align:center;">
-                    PMS &mdash; Performance Management System &bull; EMB Global
+                    EMB Global &mdash; Performance Management System
                   </p>
                 </td>
               </tr>
@@ -166,7 +166,7 @@ export function generateIcsContent(params: {
   return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//PMS EMB Global//Performance Management System//EN',
+    'PRODID:-//EMB Global//Performance Management System//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:REQUEST',
     'BEGIN:VEVENT',
@@ -375,7 +375,7 @@ export async function dispatchPendingNotifications(recipientId: string): Promise
       const emailEnabled = pref?.email_enabled ?? true
       const inAppEnabled = pref?.in_app_enabled ?? true
 
-      // Skip PMS email for meeting_scheduled — Google Calendar API sends the
+      // Skip email for meeting_scheduled — Google Calendar API sends the
       // native invite (with accept/decline, Meet link, calendar integration).
       // We still keep the in-app notification and Slack DM.
       const skipEmail = notif.type === 'meeting_scheduled'
@@ -400,9 +400,9 @@ export async function dispatchPendingNotifications(recipientId: string): Promise
             (_, key) => payload[key] ?? ''
           )
         } else {
-          subject = NOTIFICATION_SUBJECTS[notif.type] ?? 'PMS Notification'
+          subject = NOTIFICATION_SUBJECTS[notif.type] ?? 'EMB Global Notification'
           html = NOTIFICATION_HTML[notif.type]?.(payload)
-            ?? '<p>You have a new notification in PMS.</p>'
+            ?? '<p>You have a new notification from EMB Global.</p>'
         }
 
         await sendNotificationEmail(notif.recipient.email, subject, html)
