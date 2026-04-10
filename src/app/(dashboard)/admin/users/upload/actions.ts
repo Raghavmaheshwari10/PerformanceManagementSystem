@@ -118,6 +118,8 @@ export async function uploadUsersWithMapping(
   const rows = parseCsvText(csvText)
   if (rows.length === 0) return { data: null, error: 'CSV is empty or could not be parsed.' }
 
+  const createInactive = formData.get('create_inactive') === 'true'
+
   let added = 0, updated = 0, skipped = 0, invited = 0
   const skippedReasons: string[] = []
   const emailToId = new Map<string, string>()
@@ -189,22 +191,24 @@ export async function uploadUsersWithMapping(
       })
       updated++
     } else {
-      // Generate invite token for new users
-      const invite_token = crypto.randomBytes(32).toString('hex')
-      const invite_token_expires_at = new Date(Date.now() + 72 * 60 * 60 * 1000) // 72hr expiry
+      // Generate invite token for new users (skip if creating inactive/data-only)
+      const invite_token = createInactive ? null : crypto.randomBytes(32).toString('hex')
+      const invite_token_expires_at = createInactive ? null : new Date(Date.now() + 72 * 60 * 60 * 1000) // 72hr expiry
 
       const newUser = await prisma.user.create({
         data: {
           ...(userData as Parameters<typeof prisma.user.create>[0]['data']),
-          is_active: true,
+          is_active: !createInactive,
           zimyo_id: (userData.zimyo_id as string | undefined) ?? `manual_${Date.now()}_${Math.random().toString(36).slice(2)}`,
           invite_token,
           invite_token_expires_at,
-          invited_at: new Date(),
+          invited_at: createInactive ? null : new Date(),
         },
       })
       emailToId.set(mapped.email, newUser.id)
-      newlyCreatedEmails.push({ email: mapped.email, name: mapped.full_name || mapped.email, token: invite_token })
+      if (!createInactive && invite_token) {
+        newlyCreatedEmails.push({ email: mapped.email, name: mapped.full_name || mapped.email, token: invite_token })
+      }
       added++
     }
     validRows.push({ original: row, mapped })
@@ -254,7 +258,7 @@ export async function uploadUsersWithMapping(
       changed_by: user.id,
       action: 'csv_upload',
       entity_type: 'user',
-      new_value: { added, updated, skipped, invited, source },
+      new_value: { added, updated, skipped, invited, source, createInactive },
     },
   })
 
