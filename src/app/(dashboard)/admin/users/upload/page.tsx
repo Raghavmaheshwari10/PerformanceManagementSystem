@@ -109,6 +109,7 @@ export default function UploadUsersPage() {
   const [fetching,    setFetching]    = useState(false)
   const [fetchError,  setFetchError]  = useState('')
   const [showResults, setShowResults] = useState(false)
+  const [createInactive, setCreateInactive] = useState(false)
 
   const [state, action] = useActionState(async (...args: Parameters<typeof uploadUsersWithMapping>) => {
     const result = await uploadUsersWithMapping(...args)
@@ -145,7 +146,7 @@ export default function UploadUsersPage() {
   }
 
   function reset() {
-    setStage('source'); setCsvText(''); setHeaders([]); setMapping({}); setSheetUrl(''); setFetchError(''); setShowResults(false)
+    setStage('source'); setCsvText(''); setHeaders([]); setMapping({}); setSheetUrl(''); setFetchError(''); setShowResults(false); setCreateInactive(false)
   }
 
   // ── done stage ─────────────────────────────────────────────────────────────
@@ -207,10 +208,11 @@ export default function UploadUsersPage() {
         </div>
 
         <form action={action} className="space-y-6">
-          {/* Hidden: source + data */}
+          {/* Hidden: source + data + mode */}
           <input type="hidden" name="source"   value={source} />
           <input type="hidden" name="csvText"  value={source === 'csv'    ? csvText  : ''} />
           <input type="hidden" name="sheetUrl" value={source === 'sheets' ? sheetUrl : ''} />
+          <input type="hidden" name="create_inactive" value={createInactive ? 'true' : 'false'} />
 
           {state.error && (
             <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{state.error}</p>
@@ -277,9 +279,29 @@ export default function UploadUsersPage() {
             </div>
           )}
 
+          {/* Data-only mode (no employee access) */}
+          <div className="rounded-lg border bg-amber-50/50 dark:bg-amber-950/20 p-4 space-y-2">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={createInactive}
+                onChange={e => setCreateInactive(e.target.checked)}
+                className="mt-0.5 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+              />
+              <div>
+                <span className="text-sm font-medium text-amber-900 dark:text-amber-300">Data only — do not give employee access</span>
+                <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+                  Users will be created as <strong>inactive</strong>. No invite emails will be sent. All data (salary, department, manager) will be available for reports and analytics. You can activate users later from the Users table when ready to grant access.
+                </p>
+              </div>
+            </label>
+          </div>
+
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" onClick={reset}>← Back</Button>
-            <SubmitButton pendingLabel="Importing users…">Import {source === 'sheets' ? 'from Sheet' : 'CSV'}</SubmitButton>
+            <SubmitButton pendingLabel="Importing users…">
+              {createInactive ? 'Import as Data Only' : `Import ${source === 'sheets' ? 'from Sheet' : 'CSV'}`}
+            </SubmitButton>
           </div>
         </form>
       </div>
