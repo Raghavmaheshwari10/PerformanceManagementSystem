@@ -32,6 +32,14 @@ export function NewPipForm({ employees, cycles, departments, redirectBase }: Pro
   // Default dates: start = today, end = 90 days from now
   const today = new Date().toISOString().split('T')[0]
   const ninetyDays = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const [startDate, setStartDate] = useState(today)
+  const [endDate, setEndDate] = useState(ninetyDays)
+
+  const setDuration = (days: number) => {
+    const start = startDate || today
+    setStartDate(start)
+    setEndDate(new Date(new Date(start).getTime() + days * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+  }
 
   // If creation succeeded, redirect
   if (state && !state.error) {
@@ -122,6 +130,34 @@ export function NewPipForm({ employees, cycles, departments, redirectBase }: Pro
         <p className="text-[11px] text-muted-foreground">Minimum 10 characters. Be specific about performance gaps.</p>
       </div>
 
+      {/* Duration quick-select */}
+      <div className="space-y-2">
+        <label className="text-xs font-medium">PIP Duration</label>
+        <div className="flex gap-2">
+          {[30, 60, 90].map(days => {
+            // Check if current selection matches this duration
+            const diffMs = new Date(endDate).getTime() - new Date(startDate).getTime()
+            const currentDays = Math.round(diffMs / (24 * 60 * 60 * 1000))
+            const isActive = currentDays === days
+            return (
+              <button
+                key={days}
+                type="button"
+                onClick={() => setDuration(days)}
+                className={`rounded-full border px-4 py-1.5 text-xs font-medium transition-colors ${
+                  isActive
+                    ? 'border-indigo-500 bg-indigo-500 text-white'
+                    : 'border-border bg-background text-foreground hover:border-indigo-300 hover:bg-indigo-50'
+                }`}
+              >
+                {days} Days
+              </button>
+            )
+          })}
+          <span className="text-[11px] text-muted-foreground self-center ml-1">or set custom dates below</span>
+        </div>
+      </div>
+
       {/* Dates */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1">
@@ -131,7 +167,8 @@ export function NewPipForm({ employees, cycles, departments, redirectBase }: Pro
             name="start_date"
             type="date"
             required
-            defaultValue={today}
+            value={startDate}
+            onChange={e => setStartDate(e.target.value)}
             className="w-full rounded border bg-background px-3 py-2 text-sm"
           />
         </div>
@@ -142,7 +179,8 @@ export function NewPipForm({ employees, cycles, departments, redirectBase }: Pro
             name="end_date"
             type="date"
             required
-            defaultValue={ninetyDays}
+            value={endDate}
+            onChange={e => setEndDate(e.target.value)}
             className="w-full rounded border bg-background px-3 py-2 text-sm"
           />
           <p className="text-[11px] text-muted-foreground">Typical PIP duration: 30-90 days</p>
