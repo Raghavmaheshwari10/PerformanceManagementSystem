@@ -50,9 +50,9 @@ function ProgressBar({ value }: { value: number }) {
   )
 }
 
-/* ── Org Goal Modal ── */
+/* ── Org Goal Form (inline, full-width) ── */
 
-function GoalModal({
+function GoalForm({
   open,
   onClose,
   editingGoal,
@@ -73,81 +73,82 @@ function GoalModal({
   const [description, setDescription] = useState(editingGoal?.description ?? '')
   const [cycleId, setCycleId] = useState(editingGoal?.cycleId ?? selectedCycleId)
 
-  // Sync state when editingGoal changes
   const key = editingGoal?.id ?? 'new'
 
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="glass w-full max-w-md p-6 space-y-4 mx-4" onClick={e => e.stopPropagation()}>
+    <div className="rounded-lg border border-indigo-200 bg-card p-6 space-y-5 shadow-sm">
+      <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">
           {editingGoal ? 'Edit Org Goal' : 'New Org Goal'}
         </h2>
+        <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-sm">✕</button>
+      </div>
 
-        <div className="space-y-3">
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Title</label>
-            <input
-              key={`title-${key}`}
-              defaultValue={editingGoal?.title ?? ''}
-              onChange={e => setTitle(e.target.value)}
-              placeholder="Enter goal title..."
-              className="w-full rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm backdrop-blur focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
-              maxLength={200}
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Description</label>
-            <textarea
-              key={`desc-${key}`}
-              defaultValue={editingGoal?.description ?? ''}
-              onChange={e => setDescription(e.target.value)}
-              placeholder="Optional description..."
-              rows={3}
-              className="w-full rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm backdrop-blur focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30 resize-none"
-              maxLength={1000}
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Cycle</label>
-            <select
-              key={`cycle-${key}`}
-              defaultValue={editingGoal?.cycleId ?? selectedCycleId}
-              onChange={e => setCycleId(e.target.value)}
-              className="w-full appearance-none rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm backdrop-blur focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
-            >
-              <option value="">No cycle</option>
-              {cycles.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1 sm:col-span-2">
+          <label className="text-sm font-medium">Title *</label>
+          <input
+            key={`title-${key}`}
+            defaultValue={editingGoal?.title ?? ''}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="Enter goal title..."
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
+            maxLength={200}
+            autoFocus
+          />
         </div>
 
-        <div className="flex justify-end gap-2 pt-2">
-          <button
-            onClick={onClose}
-            className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted/30 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            disabled={isPending || !title.trim()}
-            onClick={() => onSubmit({ title: title.trim(), description: description.trim() || undefined, cycleId: cycleId || undefined })}
-            className="rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2 text-sm font-medium text-white shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/30 transition-all disabled:opacity-50"
-          >
-            {isPending ? 'Saving...' : editingGoal ? 'Update' : 'Create'}
-          </button>
+        <div className="space-y-1 sm:col-span-2">
+          <label className="text-sm font-medium">Description</label>
+          <textarea
+            key={`desc-${key}`}
+            defaultValue={editingGoal?.description ?? ''}
+            onChange={e => setDescription(e.target.value)}
+            placeholder="Optional description..."
+            rows={3}
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30 resize-y"
+            maxLength={1000}
+          />
         </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Cycle</label>
+          <select
+            key={`cycle-${key}`}
+            defaultValue={editingGoal?.cycleId ?? selectedCycleId}
+            onChange={e => setCycleId(e.target.value)}
+            className="w-full appearance-none rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
+          >
+            <option value="">No cycle</option>
+            {cycles.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-2 pt-2 border-t border-border">
+        <button
+          onClick={onClose}
+          className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted/30 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          disabled={isPending || !title.trim()}
+          onClick={() => onSubmit({ title: title.trim(), description: description.trim() || undefined, cycleId: cycleId || undefined })}
+          className="rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2 text-sm font-medium text-white shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/30 transition-all disabled:opacity-50"
+        >
+          {isPending ? 'Saving...' : editingGoal ? 'Update' : 'Create'}
+        </button>
       </div>
     </div>
   )
 }
 
-/* ── Dept Goal Modal ── */
+/* ── Dept Goal Form (inline, full-width) ── */
 
-function DeptGoalModal({
+function DeptGoalForm({
   open,
   onClose,
   orgGoalId,
@@ -169,66 +170,68 @@ function DeptGoalModal({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="glass w-full max-w-md p-6 space-y-4 mx-4" onClick={e => e.stopPropagation()}>
+    <div className="rounded-lg border border-indigo-200 bg-card p-6 space-y-5 shadow-sm">
+      <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">New Department Goal</h2>
+        <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-sm">✕</button>
+      </div>
 
-        <div className="space-y-3">
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Title</label>
-            <input
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              placeholder="Enter goal title..."
-              className="w-full rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm backdrop-blur focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
-              maxLength={200}
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Description</label>
-            <textarea
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              placeholder="Optional description..."
-              rows={3}
-              className="w-full rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm backdrop-blur focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30 resize-none"
-              maxLength={1000}
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Department</label>
-            <select
-              value={departmentId}
-              onChange={e => setDepartmentId(e.target.value)}
-              className="w-full appearance-none rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm backdrop-blur focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
-            >
-              {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-            </select>
-          </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1 sm:col-span-2">
+          <label className="text-sm font-medium">Title *</label>
+          <input
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="Enter goal title..."
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
+            maxLength={200}
+            autoFocus
+          />
         </div>
 
-        <div className="flex justify-end gap-2 pt-2">
-          <button
-            onClick={onClose}
-            className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted/30 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            disabled={isPending || !title.trim() || !departmentId}
-            onClick={() => onSubmit({
-              title: title.trim(),
-              description: description.trim() || undefined,
-              orgGoalId,
-              departmentId,
-            })}
-            className="rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2 text-sm font-medium text-white shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/30 transition-all disabled:opacity-50"
-          >
-            {isPending ? 'Saving...' : 'Create'}
-          </button>
+        <div className="space-y-1 sm:col-span-2">
+          <label className="text-sm font-medium">Description</label>
+          <textarea
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            placeholder="Optional description..."
+            rows={3}
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30 resize-y"
+            maxLength={1000}
+          />
         </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Department *</label>
+          <select
+            value={departmentId}
+            onChange={e => setDepartmentId(e.target.value)}
+            className="w-full appearance-none rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
+          >
+            {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-2 pt-2 border-t border-border">
+        <button
+          onClick={onClose}
+          className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted/30 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          disabled={isPending || !title.trim() || !departmentId}
+          onClick={() => onSubmit({
+            title: title.trim(),
+            description: description.trim() || undefined,
+            orgGoalId,
+            departmentId,
+          })}
+          className="rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2 text-sm font-medium text-white shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/30 transition-all disabled:opacity-50"
+        >
+          {isPending ? 'Saving...' : 'Create'}
+        </button>
       </div>
     </div>
   )
@@ -584,8 +587,8 @@ export function GoalCascadingDashboard({
         </div>
       )}
 
-      {/* Org Goal Modal */}
-      <GoalModal
+      {/* Org Goal Form (inline) */}
+      <GoalForm
         key={editingOrg?.id ?? 'new'}
         open={showOrgModal}
         onClose={() => { setShowOrgModal(false); setEditingOrg(null) }}
@@ -596,9 +599,9 @@ export function GoalCascadingDashboard({
         onSubmit={handleSaveOrgGoal}
       />
 
-      {/* Dept Goal Modal */}
+      {/* Dept Goal Form (inline) */}
       {showDeptModal && (
-        <DeptGoalModal
+        <DeptGoalForm
           key={showDeptModal}
           open={!!showDeptModal}
           onClose={() => setShowDeptModal(null)}

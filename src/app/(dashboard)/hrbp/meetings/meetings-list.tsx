@@ -76,6 +76,16 @@ export function MeetingsList({ data, hrbpId }: { data: CycleData[]; hrbpId: stri
   const [viewMom, setViewMom] = useState<{ minutes: MeetingMinutesData; employeeName: string } | null>(null)
 
   // Full-page views — replace the meetings list when active
+  if (viewMom) {
+    return (
+      <ViewMomPage
+        minutes={viewMom.minutes}
+        employeeName={viewMom.employeeName}
+        onClose={() => setViewMom(null)}
+      />
+    )
+  }
+
   if (scheduleFor) {
     return (
       <SchedulePage
@@ -247,14 +257,6 @@ export function MeetingsList({ data, hrbpId }: { data: CycleData[]; hrbpId: stri
         )
       })}
 
-      {/* View MOM Modal */}
-      {viewMom && (
-        <ViewMomModal
-          minutes={viewMom.minutes}
-          employeeName={viewMom.employeeName}
-          onClose={() => setViewMom(null)}
-        />
-      )}
     </div>
   )
 }
@@ -522,23 +524,26 @@ function MomFormPage({ meetingId, employeeName, onClose }: {
   )
 }
 
-function ViewMomModal({ minutes, employeeName, onClose }: {
+function ViewMomPage({ minutes, employeeName, onClose }: {
   minutes: MeetingMinutesData; employeeName: string; onClose: () => void
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 backdrop-blur-sm py-8" onClick={onClose}>
-      <div className="w-full max-w-2xl rounded-xl bg-white shadow-xl mx-4 my-auto" onClick={e => e.stopPropagation()}>
-        <div className="border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <button onClick={onClose} className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700">
+          <ChevronRight className="h-4 w-4 rotate-180" /> Back to Meetings
+        </button>
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white">
+        <div className="border-b border-slate-100 px-6 py-5 flex items-center justify-between">
           <div>
-            <h3 className="text-base font-semibold text-slate-900">Minutes of Meeting</h3>
-            <p className="text-sm text-slate-500 mt-0.5">{employeeName} &middot; {new Date(minutes.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+            <h2 className="text-lg font-semibold text-slate-900">Minutes of Meeting</h2>
+            <p className="text-sm text-slate-500 mt-1">{employeeName} &middot; {new Date(minutes.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
-            <XCircle className="h-5 w-5" />
-          </button>
         </div>
 
-        <div className="px-6 py-4 space-y-5 max-h-[70vh] overflow-y-auto">
+        <div className="px-6 py-6 space-y-5">
           <MomSection title="Key Discussion Points" content={minutes.key_discussion_points} />
           <MomSection title="Employee's Strengths" content={minutes.strengths_highlighted} />
           <MomSection title="Areas for Improvement" content={minutes.areas_for_improvement} />
@@ -583,6 +588,12 @@ function ViewMomModal({ minutes, employeeName, onClose }: {
               <p className="text-sm text-amber-900 whitespace-pre-wrap ml-6">{minutes.concerns_raised}</p>
             </div>
           )}
+        </div>
+
+        <div className="flex justify-end px-6 py-4 border-t border-slate-100">
+          <button onClick={onClose} className="rounded-lg border border-slate-200 px-5 py-2.5 text-sm text-slate-600 hover:bg-slate-50">
+            Back to Meetings
+          </button>
         </div>
       </div>
     </div>
