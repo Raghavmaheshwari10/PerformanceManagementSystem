@@ -6,7 +6,7 @@ import { canTransition, getTransitionRequirements, getPreviousStatus, getRevertR
 import { notifyUsers } from '@/lib/email'
 import { getScopedEmployeeWhere } from '@/lib/cycle-helpers'
 import type { ActionResult, CycleStatus } from '@/lib/types'
-import type { NotificationType } from '@prisma/client'
+import type { NotificationType, CycleType } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import logger from '@/lib/logger'
@@ -42,7 +42,7 @@ export async function createCycle(_prev: ActionResult, formData: FormData): Prom
         name,
         quarter,
         year,
-        cycle_type: cycle_type as 'monthly' | 'quarterly' | 'halfyearly' | 'annual',
+        cycle_type: cycle_type as CycleType,
         period: period || null,
         fiscal_year: fiscal_year || null,
         review_template_id: reviewTemplateId,
