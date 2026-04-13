@@ -220,11 +220,11 @@ export async function getSalaryData() {
   await requireRole(['admin'])
 
   const employees = await prisma.user.findMany({
-    where: { is_active: true },
     select: {
       id: true,
       full_name: true,
       email: true,
+      is_active: true,
       salary_currency: true,
       fixed_ctc: true,
       annual_variable: true,
@@ -239,6 +239,7 @@ export async function getSalaryData() {
     id: e.id,
     full_name: e.full_name,
     email: e.email,
+    is_active: e.is_active,
     salary_currency: e.salary_currency,
     fixed_ctc: e.fixed_ctc ? Number(e.fixed_ctc) : null,
     annual_variable: e.annual_variable ? Number(e.annual_variable) : null,

@@ -12,6 +12,7 @@ interface EmployeeRow {
   id: string
   full_name: string
   email: string
+  is_active?: boolean
   salary_currency: string
   fixed_ctc: number | null
   annual_variable: number | null
@@ -356,7 +357,12 @@ export function SalaryPage({ currentFy, initialRates, employees }: SalaryPagePro
                 return (
                   <tr key={emp.id} className="hover:bg-gray-50 transition-colors">
                     <td className="py-3 pr-4 px-4">
-                      <div className="font-medium text-gray-900">{emp.full_name}</div>
+                      <div className="font-medium text-gray-900">
+                        {emp.full_name}
+                        {emp.is_active === false && (
+                          <span className="ml-1.5 inline-flex rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">Inactive</span>
+                        )}
+                      </div>
                       <div className="text-xs text-slate-400">{emp.email}</div>
                     </td>
                     <td className="py-3 pr-4 px-4 text-slate-600">{emp.department_name}</td>
