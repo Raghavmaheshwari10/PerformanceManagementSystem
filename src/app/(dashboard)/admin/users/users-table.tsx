@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect, useRef, useCallback } from 'react'
-import { useRouter, useSearchParams, usePathname } from 'next/navigation'
+import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -14,37 +13,13 @@ import { useConfirm } from '@/lib/confirm'
 const ROLES = ['employee', 'manager', 'hrbp', 'department_head', 'admin', 'founder', 'superadmin'] as const
 
 export function UsersTable({ users, departments }: { users: User[]; departments: { id: string; name: string }[] }) {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
   const confirm = useConfirm()
 
-  const roleFilter = searchParams.get('role') ?? ''
-  const deptFilter = searchParams.get('dept') ?? ''
-  const activeFilter = searchParams.get('active') ?? ''
-
-  // Local search state — decoupled from URL to avoid losing keystrokes
-  const [searchLocal, setSearchLocal] = useState(searchParams.get('search') ?? '')
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const updateParam = useCallback((key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString())
-    value ? params.set(key, value) : params.delete(key)
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
-  }, [searchParams, pathname, router])
-
-  // Sync URL → local state when URL changes externally (e.g. back/forward nav)
-  useEffect(() => {
-    const urlSearch = searchParams.get('search') ?? ''
-    setSearchLocal(prev => prev !== urlSearch ? urlSearch : prev)
-  }, [searchParams])
-
-  // Debounce search → URL (300ms)
-  function handleSearchChange(value: string) {
-    setSearchLocal(value)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => updateParam('search', value), 300)
-  }
+  // All filters as local state — no URL sync needed since filtering is client-side
+  const [search, setSearch] = useState('')
+  const [roleFilter, setRoleFilter] = useState('')
+  const [deptFilter, setDeptFilter] = useState('')
+  const [activeFilter, setActiveFilter] = useState('')
 
   const [, startTransition] = useTransition()
   const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -56,7 +31,7 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
   const deptNames = [...new Set(users.map(u => u.department?.name).filter(Boolean))].sort() as string[]
 
   const filtered = users.filter(u => {
-    if (searchLocal && !u.full_name.toLowerCase().includes(searchLocal.toLowerCase()) && !u.email.toLowerCase().includes(searchLocal.toLowerCase())) return false
+    if (search && !u.full_name.toLowerCase().includes(search.toLowerCase()) && !u.email.toLowerCase().includes(search.toLowerCase())) return false
     if (roleFilter && u.role !== roleFilter) return false
     if (deptFilter && u.department?.name !== deptFilter) return false
     if (activeFilter === 'active' && !u.is_active) return false
@@ -141,14 +116,14 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
       <div className="flex flex-wrap gap-3">
         <Input
           placeholder="Search name or email..."
-          value={searchLocal}
-          onChange={e => handleSearchChange(e.target.value)}
+          value={search}
+          onChange={e => setSearch(e.target.value)}
           className="max-w-xs bg-white/5 border-white/10 text-foreground placeholder:text-foreground/30"
           aria-label="Search users"
         />
         <select
           value={roleFilter}
-          onChange={e => updateParam('role', e.target.value)}
+          onChange={e => setRoleFilter(e.target.value)}
           className="rounded-md border border-input bg-background px-3 py-1.5 text-sm text-foreground"
           aria-label="Filter by role"
         >
@@ -157,7 +132,7 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
         </select>
         <select
           value={deptFilter}
-          onChange={e => updateParam('dept', e.target.value)}
+          onChange={e => setDeptFilter(e.target.value)}
           className="rounded-md border border-input bg-background px-3 py-1.5 text-sm text-foreground"
           aria-label="Filter by department"
         >
@@ -166,7 +141,7 @@ export function UsersTable({ users, departments }: { users: User[]; departments:
         </select>
         <select
           value={activeFilter}
-          onChange={e => updateParam('active', e.target.value)}
+          onChange={e => setActiveFilter(e.target.value)}
           className="rounded-md border border-input bg-background px-3 py-1.5 text-sm text-foreground"
           aria-label="Filter by status"
         >
