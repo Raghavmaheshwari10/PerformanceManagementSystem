@@ -404,6 +404,25 @@ export async function toggleUserActive(userId: string, currentActive: boolean): 
     }
   }
 
+  // On activation: auto-send invite if user was never invited (no password, no token)
+  if (!currentActive) {
+    const employee = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, full_name: true, password_hash: true, invite_token: true },
+    })
+    if (employee && !employee.password_hash && !employee.invite_token) {
+      const invite_token = crypto.randomBytes(32).toString('hex')
+      const invite_token_expires_at = new Date(Date.now() + 72 * 60 * 60 * 1000)
+      await prisma.user.update({
+        where: { id: userId },
+        data: { invite_token, invite_token_expires_at, invited_at: new Date() },
+      })
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://pms.emb.global'
+      const inviteUrl = `${appUrl}/login/accept-invite?token=${invite_token}`
+      sendInviteEmail(employee.email, inviteUrl, employee.full_name).catch(console.error)
+    }
+  }
+
   revalidatePath('/admin/users')
 }
 
@@ -584,6 +603,25 @@ export async function bulkToggleActive(userIds: string[], isActive: boolean): Pr
     where: { id: { in: userIds } },
     data: { is_active: isActive },
   })
+
+  // On bulk activation: auto-send invites to users who were never invited
+  if (isActive) {
+    const uninvited = await prisma.user.findMany({
+      where: { id: { in: userIds }, password_hash: null, invite_token: null },
+      select: { id: true, email: true, full_name: true },
+    })
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://pms.emb.global'
+    for (const u of uninvited) {
+      const invite_token = crypto.randomBytes(32).toString('hex')
+      const invite_token_expires_at = new Date(Date.now() + 72 * 60 * 60 * 1000)
+      await prisma.user.update({
+        where: { id: u.id },
+        data: { invite_token, invite_token_expires_at, invited_at: new Date() },
+      })
+      const inviteUrl = `${appUrl}/login/accept-invite?token=${invite_token}`
+      sendInviteEmail(u.email, inviteUrl, u.full_name).catch(console.error)
+    }
+  }
 
   await prisma.auditLog.create({
     data: {
